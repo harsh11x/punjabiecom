@@ -1,372 +1,551 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { useSocket } from '@/hooks/useSocket'
-import { toast } from 'sonner'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { 
   Package, 
   ShoppingCart, 
   Users, 
-  TrendingUp, 
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  RefreshCw,
+  BarChart3, 
+  Plus, 
+  Edit, 
+  Trash2, 
   Eye,
-  EyeOff,
-  IndianRupee
+  LogOut,
+  EyeOff
 } from 'lucide-react'
+import { toast } from 'sonner'
 
-interface DashboardStats {
-  products: {
-    totalProducts: number
-    activeProducts: number
-    inactiveProducts: number
-    totalStock: number
-    lowStockProducts: number
-    outOfStockProducts: number
-  }
-  orders: {
-    totalOrders: number
-    totalRevenue: number
-    pendingOrders: number
-    processingOrders: number
-    shippedOrders: number
-    deliveredOrders: number
-    cancelledOrders: number
-  }
-  users: {
-    totalUsers: number
-    activeUsers: number
-    adminUsers: number
-  }
-  today: {
-    count: number
-    revenue: number
-  }
-  week: {
-    count: number
-    revenue: number
-  }
-  month: {
-    count: number
-    revenue: number
-  }
-  recentOrders: any[]
-  topProducts: any[]
-  salesTrend: any[]
+interface Product {
+  _id: string
+  name: string
+  punjabiName: string
+  price: number
+  originalPrice: number
+  category: string
+  subcategory: string
+  stock: number
+  isActive: boolean
+  createdAt: string
 }
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const socket = useSocket()
+interface Order {
+  _id: string
+  orderNumber: string
+  customer: {
+    fullName: string
+    email: string
+  }
+  total: number
+  status: string
+  createdAt: string
+}
+
+export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
+  const [activeTab, setActiveTab] = useState('dashboard')
+  const [products, setProducts] = useState<Product[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingOrders: 0
+  })
+  
+  const [loginForm, setLoginForm] = useState({
+    email: '',
+    password: ''
+  })
+  const [error, setError] = useState('')
+  const router = useRouter()
 
   useEffect(() => {
-    fetchDashboardStats()
+    checkAuth()
   }, [])
 
-  useEffect(() => {
-    if (socket?.socket) {
-      // Join admin room for real-time notifications
-      socket.socket.emit('join-admin')
-
-      // Listen for real-time updates
-      socket.socket.on('order-notification', (data) => {
-        toast.success(`New order received: ${data.order.orderNumber}`)
-        fetchDashboardStats() // Refresh stats
-      })
-
-      socket.socket.on('product-update', (data) => {
-        fetchDashboardStats() // Refresh stats when products are updated
-      })
-
-      return () => {
-        socket.socket.off('order-notification')
-        socket.socket.off('product-update')
-      }
-    }
-  }, [socket])
-
-  const fetchDashboardStats = async (showRefreshing = false) => {
+  const checkAuth = async () => {
     try {
-      if (showRefreshing) setRefreshing(true)
-      
-      const response = await fetch('/api/admin/dashboard', {
+      const response = await fetch('/api/admin/auth/verify', {
         credentials: 'include'
       })
       
       if (response.ok) {
-        const data = await response.json()
-        setStats(data.data)
-      } else {
-        toast.error('Failed to fetch dashboard data')
+        setIsAuthenticated(true)
+        fetchDashboardData()
       }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
-      toast.error('Error fetching dashboard data')
+      console.error('Auth check failed:', error)
     } finally {
-      setLoading(false)
-      if (showRefreshing) setRefreshing(false)
+      setIsLoading(false)
     }
   }
 
-  const handleRefresh = () => {
-    fetchDashboardStats(true)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(loginForm),
+        credentials: 'include'
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setIsAuthenticated(true)
+        fetchDashboardData()
+        toast.success('Admin login successful!')
+      } else {
+        setError(result.error || 'Login failed')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('An error occurred during login')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  if (loading) {
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch products
+      const productsResponse = await fetch('/api/admin/products')
+      if (productsResponse.ok) {
+        const productsData = await productsResponse.json()
+        setProducts(productsData.data || [])
+      }
+
+      // Fetch orders
+      const ordersResponse = await fetch('/api/admin/orders')
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json()
+        setOrders(ordersData.data || [])
+      }
+
+      // Calculate stats
+      const productsData = products.length > 0 ? products : (await productsResponse.json()).data || []
+      const ordersData = orders.length > 0 ? orders : (await ordersResponse.json()).data || []
+      
+      setStats({
+        totalProducts: productsData.length,
+        totalOrders: ordersData.length,
+        totalRevenue: ordersData.reduce((sum: number, order: Order) => sum + order.total, 0),
+        pendingOrders: ordersData.filter((order: Order) => order.status === 'pending').length
+      })
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+      setIsAuthenticated(false)
+      setActiveTab('dashboard')
+      toast.success('Logged out successfully')
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
+  const deleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return
+
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setProducts(products.filter(p => p._id !== productId))
+        toast.success('Product deleted successfully')
+        fetchDashboardData()
+      } else {
+        toast.error('Failed to delete product')
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast.error('Error deleting product')
+    }
+  }
+
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-full"></div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-full flex items-center justify-center border-4 border-amber-300 shadow-lg">
+                <span className="text-white font-bold text-2xl drop-shadow-lg">ਪ</span>
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-red-900 mb-2">Admin Panel</h1>
+            <p className="text-amber-700">Punjab Heritage Admin Access</p>
+          </div>
+
+          <Card className="shadow-xl border-2 border-amber-200">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl text-center text-red-900">Sign In</CardTitle>
+              <CardDescription className="text-center text-amber-700">
+                Enter your credentials to access the admin panel
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                {error && (
+                  <Alert className="border-red-200 bg-red-50">
+                    <AlertDescription className="text-red-800">
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-red-900 font-medium">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    className="border-2 border-amber-200 focus:border-red-400"
+                    value={loginForm.email}
+                    onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-red-900 font-medium">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      className="pr-10 border-2 border-amber-200 focus:border-red-400"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-amber-600" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-amber-600" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:via-red-700 hover:to-amber-700 text-white font-semibold py-2 px-4 shadow-lg border-2 border-amber-400"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Signing in...</span>
+                    </div>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="text-center mt-6">
+            <p className="text-sm text-amber-700">
+              Need access? Contact the system administrator
+            </p>
+          </div>
         </div>
       </div>
     )
   }
 
-  const getOrderStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'confirmed': return 'bg-blue-100 text-blue-800'
-      case 'processing': return 'bg-purple-100 text-purple-800'
-      case 'shipped': return 'bg-orange-100 text-orange-800'
-      case 'delivered': return 'bg-green-100 text-green-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getOrderStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="h-4 w-4" />
-      case 'confirmed': return <CheckCircle className="h-4 w-4" />
-      case 'processing': return <AlertCircle className="h-4 w-4" />
-      case 'shipped': return <Package className="h-4 w-4" />
-      case 'delivered': return <CheckCircle className="h-4 w-4" />
-      case 'cancelled': return <XCircle className="h-4 w-4" />
-      default: return <AlertCircle className="h-4 w-4" />
-    }
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Header with Real-time Indicator */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Real-time admin panel - Live updates enabled</p>
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white shadow-lg">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">ਪ</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-amber-100">Admin Panel</h1>
+                <p className="text-sm text-amber-200">Punjab Heritage Management</p>
+              </div>
+            </div>
+            
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="text-amber-100 hover:bg-red-700/50 hover:text-white"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </Button>
-      </div>
+      </header>
 
-      {/* Main Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{stats?.products?.totalProducts || 0}</div>
-            <p className="text-xs text-gray-600">
-              {stats?.products?.activeProducts || 0} active, {stats?.products?.inactiveProducts || 0} inactive
-            </p>
-          </CardContent>
-        </Card>
+      {/* Navigation Tabs */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Button
+            variant={activeTab === 'dashboard' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('dashboard')}
+            className={activeTab === 'dashboard' ? 'bg-red-600 hover:bg-red-700' : ''}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Dashboard
+          </Button>
+          <Button
+            variant={activeTab === 'products' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('products')}
+            className={activeTab === 'products' ? 'bg-red-600 hover:bg-red-700' : ''}
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Products
+          </Button>
+          <Button
+            variant={activeTab === 'orders' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('orders')}
+            className={activeTab === 'orders' ? 'bg-red-600 hover:bg-red-700' : ''}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Orders
+          </Button>
+        </div>
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{stats?.orders?.totalOrders || 0}</div>
-            <p className="text-xs text-gray-600">
-              {stats?.today?.count || 0} today, {stats?.week?.count || 0} this week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{stats?.users?.totalUsers || 0}</div>
-            <p className="text-xs text-gray-600">
-              {stats?.users?.activeUsers || 0} active users
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Revenue</CardTitle>
-            <IndianRupee className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">₹{stats?.orders?.totalRevenue?.toLocaleString() || 0}</div>
-            <p className="text-xs text-gray-600">
-              ₹{stats?.today?.revenue?.toLocaleString() || 0} today
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Inventory Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-              <Package className="h-4 w-4 mr-2" />
-              Total Stock
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats?.products?.totalStock || 0}</div>
-            <p className="text-xs text-gray-600">Items in inventory</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              Low Stock
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats?.products?.lowStockProducts || 0}</div>
-            <p className="text-xs text-gray-600">Products with ≤5 items</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-              <XCircle className="h-4 w-4 mr-2" />
-              Out of Stock
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats?.products?.outOfStockProducts || 0}</div>
-            <p className="text-xs text-gray-600">Products with 0 items</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Order Status Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats?.orders?.pendingOrders || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Processing</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats?.orders?.processingOrders || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Shipped</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{stats?.orders?.shippedOrders || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Delivered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.orders?.deliveredOrders || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Cancelled</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats?.orders?.cancelledOrders || 0}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Orders */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
-          <CardDescription>Latest orders - Updates in real-time</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-            <div className="space-y-4">
-              {stats.recentOrders.map((order: any) => (
-                <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+                <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
+                      <Package className="h-6 w-6 text-white" />
+                    </div>
                     <div>
-                      <p className="font-medium text-gray-900">#{order.orderNumber}</p>
-                      <p className="text-sm text-gray-600">{order.user?.name || 'Guest User'}</p>
+                      <p className="text-sm text-gray-600">Total Products</p>
+                      <p className="text-2xl font-bold text-red-900">{stats.totalProducts}</p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+                <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">₹{order.total?.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
+                      <ShoppingCart className="h-6 w-6 text-white" />
                     </div>
-                    <Badge className={`${getOrderStatusColor(order.status)} flex items-center space-x-1`}>
-                      {getOrderStatusIcon(order.status)}
-                      <span className="capitalize">{order.status}</span>
-                    </Badge>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Orders</p>
+                      <p className="text-2xl font-bold text-red-900">{stats.totalOrders}</p>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
+                      <BarChart3 className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Total Revenue</p>
+                      <p className="text-2xl font-bold text-red-900">₹{stats.totalRevenue.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pending Orders</p>
+                      <p className="text-2xl font-bold text-red-900">{stats.pendingOrders}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+                <CardHeader>
+                  <CardTitle className="text-red-900">Recent Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {products.slice(0, 5).map((product) => (
+                      <div key={product._id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200">
+                        <div>
+                          <p className="font-semibold text-red-900">{product.name}</p>
+                          <p className="text-sm text-amber-700">₹{product.price}</p>
+                        </div>
+                        <Badge variant={product.isActive ? "default" : "secondary"}>
+                          {product.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+                <CardHeader>
+                  <CardTitle className="text-red-900">Recent Orders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {orders.slice(0, 5).map((order) => (
+                      <div key={order._id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200">
+                        <div>
+                          <p className="font-semibold text-red-900">#{order.orderNumber}</p>
+                          <p className="text-sm text-amber-700">{order.customer.fullName}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-red-900">₹{order.total}</p>
+                          <Badge variant="outline">{order.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Products Tab */}
+        {activeTab === 'products' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-red-900">Products Management</h2>
+              <Button 
+                className="bg-gradient-to-r from-red-700 to-amber-600 hover:from-red-800 hover:to-amber-700"
+                onClick={() => {
+                  // Add product functionality
+                  toast.info('Add product functionality coming soon!')
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            </div>
+
+            <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {products.map((product) => (
+                    <div key={product._id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-amber-200">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-red-900">{product.name}</h3>
+                        <p className="text-sm text-amber-700">{product.punjabiName}</p>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <span className="text-sm text-gray-600">₹{product.price}</span>
+                          <span className="text-sm text-gray-600">Stock: {product.stock}</span>
+                          <span className="text-sm text-gray-600">{product.category}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => deleteProduct(product._id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No recent orders found</p>
-              <p className="text-sm text-gray-500">New orders will appear here in real-time</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Orders Tab */}
+        {activeTab === 'orders' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-red-900">Orders Management</h2>
+
+            <Card className="border-2 border-amber-200 bg-gradient-to-br from-white to-amber-50">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div key={order._id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-amber-200">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-red-900">#{order.orderNumber}</h3>
+                        <p className="text-sm text-amber-700">{order.customer.fullName}</p>
+                        <p className="text-sm text-gray-600">{order.customer.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-red-900">₹{order.total}</p>
+                        <Badge variant="outline">{order.status}</Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

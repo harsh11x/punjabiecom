@@ -6,63 +6,45 @@ import { requireAdmin } from '@/lib/auth-middleware'
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request)
-    await connectDB()
     
+    const dbConnection = await connectDB()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const search = searchParams.get('search')
+    const limit = parseInt(searchParams.get('limit') || '50')
     const category = searchParams.get('category')
-    const status = searchParams.get('status') // 'active', 'inactive', 'all'
-    
-    // Build query
+    const search = searchParams.get('search')
+
     const query: any = {}
     
-    if (status === 'active') {
-      query.isActive = true
-    } else if (status === 'inactive') {
-      query.isActive = false
-    }
-    
-    if (category && category !== 'all') {
+    if (category) {
       query.category = category
     }
     
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { punjabiName: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { punjabiName: { $regex: search, $options: 'i' } }
       ]
     }
-    
-    // Calculate skip value for pagination
+
     const skip = (page - 1) * limit
-    
-    // Execute query with population
-    const products = await Product.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean()
-    
-    // Get total count for pagination
-    const total = await Product.countDocuments(query)
-    
-    // Get statistics
-    const stats = await Product.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalProducts: { $sum: 1 },
-          activeProducts: { $sum: { $cond: ['$isActive', 1, 0] } },
-          inactiveProducts: { $sum: { $cond: ['$isActive', 0, 1] } },
-          totalStock: { $sum: '$stock' },
-          lowStockProducts: { $sum: { $cond: [{ $lte: ['$stock', 5] }, 1, 0] } }
-        }
-      }
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(query)
     ])
-    
+
     return NextResponse.json({
       success: true,
       data: products,
@@ -71,27 +53,12 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         pages: Math.ceil(total / limit)
-      },
-      stats: stats[0] || {
-        totalProducts: 0,
-        activeProducts: 0,
-        inactiveProducts: 0,
-        totalStock: 0,
-        lowStockProducts: 0
       }
     })
   } catch (error: any) {
-    console.error('Error fetching admin products:', error)
-    
-    if (error.message === 'Admin access required' || error.message === 'Authentication required') {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 401 }
-      )
-    }
-    
+    console.error('Error fetching products:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
+      { success: false, error: error.message || 'Failed to fetch products' },
       { status: 500 }
     )
   }
