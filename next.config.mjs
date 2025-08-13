@@ -10,9 +10,7 @@ const nextConfig = {
     unoptimized: true,
     domains: ['localhost', 'vercel.app', 'punjabijuttiandfulkari.com'],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
-  },
+  serverExternalPackages: ['mongoose'],
 }
 
 export default nextConfig
