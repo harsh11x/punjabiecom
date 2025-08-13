@@ -6,7 +6,15 @@ import { requireAdmin } from '@/lib/auth-middleware'
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request)
-    await connectDB()
+    
+    // Try to connect to database, but don't fail if not available during build
+    const dbConnection = await connectDB()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
     
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || 'daily' // daily, weekly, monthly

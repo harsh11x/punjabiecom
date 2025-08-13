@@ -1,9 +1,10 @@
 import mongoose from 'mongoose'
 
-const MONGODB_URI = process.env.MONGODB_URI!
+const MONGODB_URI = process.env.MONGODB_URI
 
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
+// Don't throw error during build time, only during runtime
+if (!MONGODB_URI && typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+  console.warn('Please define the MONGODB_URI environment variable inside .env.local')
 }
 
 /**
@@ -18,6 +19,12 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  // If no MONGODB_URI is provided, return null (for build time)
+  if (!MONGODB_URI) {
+    console.warn('MONGODB_URI not provided, skipping database connection')
+    return null
+  }
+
   if (cached.conn) {
     return cached.conn
   }
@@ -36,6 +43,7 @@ async function dbConnect() {
     cached.conn = await cached.promise
   } catch (e) {
     cached.promise = null
+    console.error('MongoDB connection error:', e)
     throw e
   }
 

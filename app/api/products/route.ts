@@ -5,7 +5,14 @@ import { requireAdmin } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
+    // Try to connect to database, but don't fail if not available during build
+    const dbConnection = await connectDB()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
     
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
@@ -110,7 +117,15 @@ export async function POST(request: NextRequest) {
   try {
     // Require admin authentication for creating products
     await requireAdmin(request)
-    await connectDB()
+    
+    // Try to connect to database, but don't fail if not available during build
+    const dbConnection = await connectDB()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
     
     const body = await request.json()
     
