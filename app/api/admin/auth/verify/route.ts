@@ -5,7 +5,22 @@ import jwt from 'jsonwebtoken'
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
+    // Check if JWT secret is available
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication configuration not available' },
+        { status: 503 }
+      )
+    }
+    
+    const dbConnection = await connectDB()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
     
     // Get token from cookies
     const token = request.cookies.get('admin-token')?.value
@@ -18,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    const decoded = jwt.verify(token, jwtSecret) as any
     
     if (!decoded || !decoded.adminId) {
       return NextResponse.json(

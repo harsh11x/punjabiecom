@@ -2,13 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
 import { requireAuth } from '@/lib/auth-middleware'
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
-
 export async function POST(request: NextRequest) {
   try {
+    // Check if Razorpay credentials are available
+    const keyId = process.env.RAZORPAY_KEY_ID
+    const keySecret = process.env.RAZORPAY_KEY_SECRET
+    
+    if (!keyId || !keySecret) {
+      return NextResponse.json(
+        { success: false, error: 'Payment gateway configuration not available' },
+        { status: 503 }
+      )
+    }
+    
+    // Initialize Razorpay only when needed
+    const razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    })
+    
     // Require authentication for payment creation
     const user = await requireAuth(request)
     

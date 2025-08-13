@@ -5,12 +5,21 @@ import Order from '@/models/Order'
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Razorpay credentials are available
+    const keySecret = process.env.RAZORPAY_KEY_SECRET
+    if (!keySecret) {
+      return NextResponse.json(
+        { success: false, error: 'Payment gateway configuration not available' },
+        { status: 503 }
+      )
+    }
+    
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order_id } = await request.json()
     
     // Verify signature
     const body = razorpay_order_id + '|' + razorpay_payment_id
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .createHmac('sha256', keySecret)
       .update(body.toString())
       .digest('hex')
     
@@ -24,7 +33,13 @@ export async function POST(request: NextRequest) {
     }
     
     // Update order payment status
-    await dbConnect()
+    const dbConnection = await dbConnect()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
     
     const order = await Order.findByIdAndUpdate(
       order_id,

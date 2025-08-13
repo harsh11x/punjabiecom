@@ -5,7 +5,22 @@ import Admin from '@/models/Admin'
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect()
+    // Check if JWT secret is available
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication configuration not available' },
+        { status: 503 }
+      )
+    }
+    
+    const dbConnection = await dbConnect()
+    if (!dbConnection) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 503 }
+      )
+    }
     
     const { email, password } = await request.json()
     
@@ -47,7 +62,7 @@ export async function POST(request: NextRequest) {
         email: admin.email, 
         role: admin.role 
       },
-      process.env.JWT_SECRET!,
+      jwtSecret,
       { expiresIn: '7d' }
     )
     
