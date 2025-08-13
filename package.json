@@ -1,7 +1,12 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "punjabi-ecommerce-store",
+  "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
     "build": "next build",
     "dev": "concurrently \"next dev\" \"node server.js\"",
@@ -10,7 +15,11 @@
     "lint": "next lint",
     "start": "NODE_ENV=production node server.js",
     "seed": "node scripts/seed-database.js",
-    "production": "npm run build && npm run start"
+    "production": "pnpm run build && pnpm run start",
+    "install:clean": "rm -rf node_modules pnpm-lock.yaml && pnpm install",
+    "setup": "pnpm install && pnpm run seed",
+    "server": "node server.js",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
