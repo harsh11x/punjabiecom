@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import User from '@/models/User'
+import { findUserById } from '@/lib/file-store'
 import jwt from 'jsonwebtoken'
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
-    
     const token = request.cookies.get('auth-token')?.value
 
     if (!token) {
@@ -20,7 +17,7 @@ export async function GET(request: NextRequest) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any
     
     // Find user by ID
-    const user = await User.findById(decoded.userId).select('-password')
+    const user = await findUserById(decoded.userId)
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -31,13 +28,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           phone: user.phone,
           address: user.address,
           role: user.role,
-          isVerified: user.isVerified
+          isVerified: !!user.isVerified
         }
       },
       { status: 200 }

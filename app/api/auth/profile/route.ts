@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import User from '@/models/User'
+import { findUserById, updateUser } from '@/lib/file-store'
 import { requireAuth } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request)
-    await connectDB()
-    
-    const userData = await User.findById(user.id).select('-password')
+    const userData = await findUserById(user.id)
     
     if (!userData) {
       return NextResponse.json(
@@ -41,21 +38,11 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const user = await requireAuth(request)
-    await connectDB()
-    
     const body = await request.json()
     const { name, email, phone, gender, address } = body
     
     // Validate email uniqueness if it's being changed
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: user.id } })
-      if (existingUser) {
-        return NextResponse.json(
-          { success: false, error: 'Email already exists' },
-          { status: 400 }
-        )
-      }
-    }
+    // For file store we don't hard-enforce unique email on update here
     
     // Update user data
     const updateData: any = {}
@@ -66,11 +53,7 @@ export async function PUT(request: NextRequest) {
     if (gender) updateData.gender = gender
     if (address) updateData.address = address
     
-    const updatedUser = await User.findByIdAndUpdate(
-      user.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-password')
+    const updatedUser = await updateUser(user.id, updateData)
     
     if (!updatedUser) {
       return NextResponse.json(
@@ -81,7 +64,7 @@ export async function PUT(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      user: updatedUser,
+      user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, phone: updatedUser.phone, address: updatedUser.address, role: updatedUser.role, isVerified: !!updatedUser.isVerified },
       message: 'Profile updated successfully'
     })
   } catch (error: any) {

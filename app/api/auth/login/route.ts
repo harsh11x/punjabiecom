@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import User from '@/models/User'
+import { findUserByEmail, verifyPassword, signUserToken, addSession } from '@/lib/file-store'
 import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-    
     const { email, password } = await request.json()
 
     // Validate required fields
@@ -18,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email
-    const user = await User.findOne({ email })
+    const user = await findUserByEmail(email)
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -27,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check password
-    const isPasswordValid = await user.comparePassword(password)
+    const isPasswordValid = await verifyPassword(user, password)
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -36,23 +33,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '7d' }
-    )
+    const token = signUserToken(user)
+    const expiresMs = 7 * 24 * 60 * 60 * 1000
+    await addSession(token, user.id, Date.now() + expiresMs)
 
     // Create response
     const response = NextResponse.json(
       {
         message: 'Login successful',
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role
-        }
+        user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role }
       },
       { status: 200 }
     )

@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { connectDB } from '@/lib/mongodb'
-import User from '@/models/User'
+import { findUserById } from '@/lib/file-store'
 
 export interface AuthUser {
   id: string
@@ -21,16 +20,14 @@ export async function verifyAuth(request: NextRequest): Promise<AuthUser | null>
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any
     
-    await connectDB()
-    
     // Find user by ID
-    const user = await User.findById(decoded.userId).select('-password')
+    const user = await findUserById(decoded.userId)
     if (!user) {
       return null
     }
 
     return {
-      id: user._id.toString(),
+      id: user.id,
       email: user.email,
       role: user.role,
       name: user.name

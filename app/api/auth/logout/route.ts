@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { removeSession } from '@/lib/file-store'
 
 export async function POST(request: NextRequest) {
   try {
+    const token = request.cookies.get('auth-token')?.value
+    if (token) {
+      try { await removeSession(token) } catch {}
+    }
+
     const response = NextResponse.json(
       { message: 'Logout successful' },
       { status: 200 }
