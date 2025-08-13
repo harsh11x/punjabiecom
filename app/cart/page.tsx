@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useCart } from '@/contexts/CartContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { 
   ShoppingCart, 
@@ -22,7 +22,7 @@ import { toast } from 'sonner'
 
 export default function CartPage() {
   const { state, updateQuantity, removeItem, clearCart } = useCart()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const handleQuantityChange = (id: string, size: string, color: string, newQuantity: number) => {

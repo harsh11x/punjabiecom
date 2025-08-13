@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,7 +28,7 @@ import {
 } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { user, updateProfile, isAuthenticated } = useAuth()
+  const { user, updateUserProfile, isAuthenticated } = useFirebaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)

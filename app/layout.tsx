@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { CartProvider } from '@/contexts/CartContext'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -29,12 +29,12 @@ html {
         `}</style>
       </head>
       <body>
-        <AuthProvider>
+        <FirebaseAuthProvider>
           <CartProvider>
             {children}
             <Toaster />
           </CartProvider>
-        </AuthProvider>
+        </FirebaseAuthProvider>
       </body>
     </html>
   )

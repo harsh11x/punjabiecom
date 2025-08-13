@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import { useAuth } from './AuthContext'
+import { useFirebaseAuth } from './FirebaseAuthContext'
 import { useSocket } from '@/hooks/useSocket'
 import { toast } from 'sonner'
 
@@ -129,7 +129,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState)
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user } = useFirebaseAuth()
   const socket = useSocket()
 
   // Load cart from localStorage on mount (for non-authenticated users)

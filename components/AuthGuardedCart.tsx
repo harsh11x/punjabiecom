@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/contexts/AuthContext'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { ShoppingCart, Plus } from 'lucide-react'
@@ -34,7 +34,7 @@ export function AuthGuardedCart({
   variant = 'add-to-cart',
   className
 }: AuthGuardedCartProps) {
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user } = useFirebaseAuth()
   const { addItem } = useCart()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')

@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MobileNav } from "@/components/mobile-nav"
 import { ShoppingCart } from "@/components/shopping-cart"
 import { AuthGuardedCart } from "@/components/AuthGuardedCart"
-import { useAuth } from "@/contexts/AuthContext"
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext"
 import { AuthModal } from "@/components/auth/AuthModal"
 
 interface Product {
@@ -35,7 +35,7 @@ interface Product {
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,7 @@ interface ShippingAddress {
 }
 
 export default function CheckoutPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useFirebaseAuth()
   const { state: cartState } = useCart()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
