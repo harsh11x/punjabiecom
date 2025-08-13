@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
 import { ArrowLeft, Heart, Users, Award, Truck, Star } from 'lucide-react'
 
 export default function AboutPage() {
@@ -252,6 +253,9 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

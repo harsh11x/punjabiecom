@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ResponsiveProductCard } from "@/components/responsive-product-card"
 import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 import { FeaturedProductsClient } from "@/components/featured-products-client"
 
 interface Product {
@@ -515,6 +516,8 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
 import { 
   Heart, 
   Star, 
@@ -345,6 +346,9 @@ export default function OurStoryPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }
