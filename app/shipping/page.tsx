@@ -99,138 +99,62 @@ export default function ShippingPage() {
             <div className="space-y-6">
               <div className="border rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-red-900">Standard Delivery</h3>
-                  <Badge className="bg-green-100 text-green-800">Most Popular</Badge>
+                  <div>
+                    <h4 className="font-semibold text-lg">Standard Delivery</h4>
+                    <p className="text-gray-600">3-7 business days</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-lg">₹99</p>
+                    <p className="text-sm text-gray-500">or Free above ₹999</p>
+                  </div>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Delivery Time</h4>
-                    <ul className="space-y-1 text-gray-700">
-                      <li>• Punjab: 1-2 business days</li>
-                      <li>• North India: 2-4 business days</li>
-                      <li>• Rest of India: 3-7 business days</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Shipping Cost</h4>
-                    <ul className="space-y-1 text-gray-700">
-                      <li>• FREE on orders ≥ ₹999</li>
-                      <li>• ₹99 for orders < ₹999</li>
-                      <li>• FREE shipping within Punjab</li>
-                    </ul>
-                  </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <MapPin className="h-4 w-4" />
+                  <span>Available across India</span>
                 </div>
               </div>
 
-              <div className="border rounded-lg p-6">
+              <div className="border rounded-lg p-6 bg-gradient-to-r from-green-50 to-blue-50">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-red-900">Express Delivery</h3>
-                  <Badge className="bg-blue-100 text-blue-800">Fastest</Badge>
+                  <div>
+                    <h4 className="font-semibold text-lg">Express Delivery</h4>
+                    <p className="text-gray-600">1-3 business days</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-lg">₹199</p>
+                    <p className="text-sm text-gray-500">or Free above ₹1499</p>
+                  </div>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Delivery Time</h4>
-                    <ul className="space-y-1 text-gray-700">
-                      <li>• Punjab: Same day / Next day</li>
-                      <li>• Delhi NCR: 1-2 business days</li>
-                      <li>• Major cities: 2-3 business days</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Shipping Cost</h4>
-                    <ul className="space-y-1 text-gray-700">
-                      <li>• ₹199 for all orders</li>
-                      <li>• Available in select cities</li>
-                      <li>• Order before 2 PM for same day</li>
-                    </ul>
-                  </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <MapPin className="h-4 w-4" />
+                  <span>Available in major cities</span>
                 </div>
               </div>
 
-              <div className="border rounded-lg p-6">
+              <div className="border rounded-lg p-6 bg-gradient-to-r from-purple-50 to-pink-50">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-red-900">Cash on Delivery (COD)</h3>
-                  <Badge className="bg-amber-100 text-amber-800">Pay on Delivery</Badge>
+                  <div>
+                    <h4 className="font-semibold text-lg">Same Day Delivery</h4>
+                    <p className="text-gray-600">Order by 12 PM, delivered same day</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-lg">₹299</p>
+                    <p className="text-sm text-gray-500">Limited areas</p>
+                  </div>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Availability</h4>
-                    <ul className="space-y-1 text-gray-700">
-                      <li>• Available across India</li>
-                      <li>• Standard delivery times apply</li>
-                      <li>• Pay when you receive</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Additional Charges</h4>
-                    <ul className="space-y-1 text-gray-700">
-                      <li>• ₹49 COD charges</li>
-                      <li>• FREE COD on orders ≥ ₹1499</li>
-                      <li>• Cash payment only</li>
-                    </ul>
-                  </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <MapPin className="h-4 w-4" />
+                  <span>Available in select cities</span>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Delivery Areas */}
+        {/* Delivery Process */}
         <Card className="mb-12">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <MapPin className="h-5 w-5" />
-              <span>Delivery Areas</span>
-            </CardTitle>
-            <CardDescription>
-              We deliver to the following locations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-red-900">Punjab (1-2 days)</h3>
-                <ul className="space-y-1 text-gray-700 text-sm">
-                  <li>• Amritsar</li>
-                  <li>• Ludhiana</li>
-                  <li>• Jalandhar</li>
-                  <li>• Patiala</li>
-                  <li>• Chandigarh</li>
-                  <li>• All other Punjab cities</li>
-                </ul>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-red-900">North India (2-4 days)</h3>
-                <ul className="space-y-1 text-gray-700 text-sm">
-                  <li>• Delhi NCR</li>
-                  <li>• Haryana</li>
-                  <li>• Himachal Pradesh</li>
-                  <li>• Rajasthan</li>
-                  <li>• Uttar Pradesh</li>
-                  <li>• Uttarakhand</li>
-                </ul>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-red-900">Rest of India (3-7 days)</h3>
-                <ul className="space-y-1 text-gray-700 text-sm">
-                  <li>• Maharashtra</li>
-                  <li>• Gujarat</li>
-                  <li>• Karnataka</li>
-                  <li>• Tamil Nadu</li>
-                  <li>• West Bengal</li>
-                  <li>• All other states</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Order Processing */}
-        <Card className="mb-12">
-          <CardHeader>
-            <CardTitle>Order Processing Timeline</CardTitle>
+            <CardTitle>Delivery Process</CardTitle>
             <CardDescription>
               Here's what happens after you place your order
             </CardDescription>
@@ -238,31 +162,31 @@ export default function ShippingPage() {
           <CardContent>
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   1
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">Order Confirmation</h4>
                   <p className="text-gray-700 text-sm">
-                    You'll receive an email confirmation within minutes of placing your order.
+                    You'll receive an email and SMS confirmation with your order details.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   2
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">Order Processing</h4>
+                  <h4 className="font-semibold text-gray-900">Processing</h4>
                   <p className="text-gray-700 text-sm">
-                    Our team carefully picks and packs your items (1-2 business days).
+                    We carefully pack your authentic Punjabi products with love and care.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   3
                 </div>
                 <div>

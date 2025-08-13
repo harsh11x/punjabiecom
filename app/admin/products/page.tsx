@@ -57,200 +57,193 @@ interface ProductStats {
   lowStockProducts: number
 }
 
-export default function AdminProducts() {
+interface ProductFormData {
+  name: string
+  punjabiName: string
+  description: string
+  punjabiDescription: string
+  price: number
+  originalPrice: number
+  category: string
+  subcategory: string
+  images: string[]
+  colors: string[]
+  sizes: string[]
+  stock: number
+  badge: string
+  badgeEn: string
+}
+
+export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
-  const [stats, setStats] = useState<ProductStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [stats, setStats] = useState<ProductStats | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [formLoading, setFormLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-
-  const socket = useSocket({
-    onProductUpdate: () => {
-      fetchProducts()
-      toast.success('Product updated in real-time!')
-    }
-  })
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     punjabiName: '',
     description: '',
     punjabiDescription: '',
-    price: '',
-    originalPrice: '',
-    category: '',
+    price: 0,
+    originalPrice: 0,
+    category: 'men',
     subcategory: '',
-    stock: '',
     images: [''],
     colors: [''],
     sizes: [''],
+    stock: 0,
     badge: '',
-    badgeEn: '',
-    isActive: true
+    badgeEn: ''
   })
+
+  const socket = useSocket()
 
   useEffect(() => {
     fetchProducts()
-  }, [currentPage, selectedCategory, selectedStatus, searchTerm])
+    fetchStats()
+  }, [])
 
   useEffect(() => {
     if (socket) {
+      // Join admin room for real-time notifications
+      socket.emit('join-admin')
+
+      // Listen for real-time updates
       socket.on('product-update', (data) => {
-        fetchProducts() // Refresh products on real-time updates
-        toast.success('Product inventory updated')
+        toast.success(`Product updated: ${data.product.name}`)
+        fetchProducts()
+        fetchStats()
+      })
+
+      socket.on('product-added', (data) => {
+        toast.success(`New product added: ${data.product.name}`)
+        fetchProducts()
+        fetchStats()
+      })
+
+      socket.on('product-deleted', (data) => {
+        toast.success(`Product deleted: ${data.product.name}`)
+        fetchProducts()
+        fetchStats()
       })
 
       return () => {
         socket.off('product-update')
+        socket.off('product-added')
+        socket.off('product-deleted')
       }
     }
   }, [socket])
 
-  const fetchProducts = async (showRefreshing = false) => {
+  const fetchProducts = async () => {
     try {
-      if (showRefreshing) setRefreshing(true)
+      setLoading(true)
+      const response = await fetch('/api/admin/products')
+      const result = await response.json()
       
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '12',
-        ...(searchTerm && { search: searchTerm }),
-        ...(selectedCategory !== 'all' && { category: selectedCategory }),
-        ...(selectedStatus !== 'all' && { status: selectedStatus })
-      })
-
-      const response = await fetch(`/api/admin/products?${params}`, {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data.data || [])
-        setStats(data.stats)
-        setTotalPages(data.pagination?.pages || 1)
+      if (result.success) {
+        setProducts(result.data)
       } else {
         toast.error('Failed to fetch products')
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      toast.error('Error fetching products')
+      toast.error('Failed to fetch products')
     } finally {
       setLoading(false)
-      if (showRefreshing) setRefreshing(false)
     }
   }
 
-  const handleRefresh = () => {
-    fetchProducts(true)
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/admin/products/stats')
+      const result = await response.json()
+      
+      if (result.success) {
+        setStats(result.data)
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    }
   }
 
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormLoading(true)
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await Promise.all([fetchProducts(), fetchStats()])
+    setRefreshing(false)
+    toast.success('Products refreshed')
+  }
 
+  const handleAddProduct = async (productData: ProductFormData) => {
     try {
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        originalPrice: parseFloat(formData.originalPrice),
-        stock: parseInt(formData.stock),
-        images: formData.images.filter(img => img.trim()),
-        colors: formData.colors.filter(color => color.trim()),
-        sizes: formData.sizes.filter(size => size.trim())
-      }
-
+      setFormLoading(true)
       const response = await fetch('/api/admin/products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
       })
-
-      const data = await response.json()
-
-      if (response.ok) {
+      
+      const result = await response.json()
+      
+      if (result.success) {
         toast.success('Product added successfully')
         setIsAddModalOpen(false)
         resetForm()
         fetchProducts()
+        fetchStats()
         
         // Emit real-time update
         if (socket) {
-          socket.emit('inventory-update', {
-            productId: data.data._id,
-            stock: data.data.stock,
-            isActive: data.data.isActive
-          })
+          socket.emit('product-added', { product: result.data })
         }
       } else {
-        toast.error(data.error || 'Failed to add product')
+        toast.error(result.error || 'Failed to add product')
       }
     } catch (error) {
       console.error('Error adding product:', error)
-      toast.error('Error adding product')
+      toast.error('Failed to add product')
     } finally {
       setFormLoading(false)
     }
   }
 
-  const handleEditProduct = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleEditProduct = async (productData: ProductFormData) => {
     if (!editingProduct) return
     
-    setFormLoading(true)
-
     try {
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        originalPrice: parseFloat(formData.originalPrice),
-        stock: parseInt(formData.stock),
-        images: formData.images.filter(img => img.trim()),
-        colors: formData.colors.filter(color => color.trim()),
-        sizes: formData.sizes.filter(size => size.trim())
-      }
-
+      setFormLoading(true)
       const response = await fetch(`/api/admin/products/${editingProduct._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
       })
-
-      const data = await response.json()
-
-      if (response.ok) {
+      
+      const result = await response.json()
+      
+      if (result.success) {
         toast.success('Product updated successfully')
         setIsEditModalOpen(false)
         setEditingProduct(null)
         resetForm()
         fetchProducts()
+        fetchStats()
         
         // Emit real-time update
         if (socket) {
-          socket.emit('inventory-update', {
-            productId: data.data._id,
-            stock: data.data.stock,
-            isActive: data.data.isActive
-          })
+          socket.emit('product-update', { product: result.data })
         }
       } else {
-        toast.error(data.error || 'Failed to update product')
+        toast.error(result.error || 'Failed to update product')
       }
     } catch (error) {
       console.error('Error updating product:', error)
-      toast.error('Error updating product')
+      toast.error('Failed to update product')
     } finally {
       setFormLoading(false)
     }
@@ -258,43 +251,49 @@ export default function AdminProducts() {
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return
-
+    
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+        method: 'DELETE'
       })
-
-      if (response.ok) {
+      
+      const result = await response.json()
+      
+      if (result.success) {
         toast.success('Product deleted successfully')
         fetchProducts()
+        fetchStats()
+        
+        // Emit real-time update
+        if (socket) {
+          socket.emit('product-deleted', { product: result.data })
+        }
       } else {
-        toast.error('Failed to delete product')
+        toast.error(result.error || 'Failed to delete product')
       }
     } catch (error) {
       console.error('Error deleting product:', error)
-      toast.error('Error deleting product')
+      toast.error('Failed to delete product')
     }
   }
 
-  const openEditModal = (product: Product) => {
+  const handleEdit = (product: Product) => {
     setEditingProduct(product)
     setFormData({
       name: product.name,
       punjabiName: product.punjabiName,
       description: product.description,
       punjabiDescription: product.punjabiDescription,
-      price: product.price.toString(),
-      originalPrice: product.originalPrice.toString(),
+      price: product.price,
+      originalPrice: product.originalPrice,
       category: product.category,
       subcategory: product.subcategory || '',
-      stock: product.stock.toString(),
-      images: product.images.length > 0 ? product.images : [''],
-      colors: product.colors.length > 0 ? product.colors : [''],
-      sizes: product.sizes.length > 0 ? product.sizes : [''],
+      images: product.images,
+      colors: product.colors,
+      sizes: product.sizes,
+      stock: product.stock,
       badge: product.badge || '',
-      badgeEn: product.badgeEn || '',
-      isActive: product.isActive
+      badgeEn: product.badgeEn || ''
     })
     setIsEditModalOpen(true)
   }
@@ -305,64 +304,72 @@ export default function AdminProducts() {
       punjabiName: '',
       description: '',
       punjabiDescription: '',
-      price: '',
-      originalPrice: '',
-      category: '',
+      price: 0,
+      originalPrice: 0,
+      category: 'men',
       subcategory: '',
-      stock: '',
       images: [''],
       colors: [''],
       sizes: [''],
+      stock: 0,
       badge: '',
-      badgeEn: '',
-      isActive: true
+      badgeEn: ''
     })
   }
 
-  const addArrayField = (field: 'images' | 'colors' | 'sizes') => {
+  const addArrayField = (field: keyof Pick<ProductFormData, 'images' | 'colors' | 'sizes'>) => {
     setFormData(prev => ({
       ...prev,
       [field]: [...prev[field], '']
     }))
   }
 
-  const updateArrayField = (field: 'images' | 'colors' | 'sizes', index: number, value: string) => {
+  const updateArrayField = (field: keyof Pick<ProductFormData, 'images' | 'colors' | 'sizes'>, index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].map((item, i) => i === index ? value : item)
     }))
   }
 
-  const removeArrayField = (field: 'images' | 'colors' | 'sizes', index: number) => {
+  const removeArrayField = (field: keyof Pick<ProductFormData, 'images' | 'colors' | 'sizes'>, index: number) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index)
     }))
   }
 
-  const categories = ['all', 'men', 'women', 'kids', 'phulkari']
-  const statusOptions = ['all', 'active', 'inactive']
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.punjabiName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-            <p className="text-gray-600">Manage your product inventory</p>
+            <div className="h-8 bg-gray-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
           </div>
-          <Button disabled>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
+          <div className="flex space-x-2">
+            <div className="h-10 bg-gray-200 rounded w-24"></div>
+            <div className="h-10 bg-gray-200 rounded w-32"></div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i}>
               <CardContent className="p-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                    <div className="h-6 bg-gray-200 rounded w-16"></div>
+                  </div>
+                  <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -370,14 +377,15 @@ export default function AdminProducts() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-              <CardContent className="p-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="flex justify-between">
-                  <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="h-48 bg-gray-200 rounded"></div>
+                  <div>
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -412,21 +420,22 @@ export default function AdminProducts() {
                 Add Product
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Product</DialogTitle>
-            </DialogHeader>
-            <ProductForm
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleAddProduct}
-              loading={formLoading}
-              addArrayField={addArrayField}
-              updateArrayField={updateArrayField}
-              removeArrayField={removeArrayField}
-            />
-          </DialogContent>
-        </Dialog>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Product</DialogTitle>
+              </DialogHeader>
+              <ProductForm
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleAddProduct}
+                loading={formLoading}
+                addArrayField={addArrayField}
+                updateArrayField={updateArrayField}
+                removeArrayField={removeArrayField}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Real-time Stats Cards */}
@@ -495,172 +504,95 @@ export default function AdminProducts() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex gap-2">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(category)}
-              className="capitalize"
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          {statusOptions.map((status) => (
-            <Button
-              key={status}
-              variant={selectedStatus === status ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedStatus(status)}
-              className="capitalize"
-            >
-              {status}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="men">Men's Jutti</SelectItem>
+                <SelectItem value="women">Women's Jutti</SelectItem>
+                <SelectItem value="kids">Kids' Jutti</SelectItem>
+                <SelectItem value="phulkari">Phulkari</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Products Grid */}
-      {products.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <Card key={product._id} className="overflow-hidden">
-                <div className="relative h-48 bg-gray-100">
-                  {product.images && product.images.length > 0 ? (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <Package className="h-12 w-12 text-gray-400" />
-                    </div>
-                  )}
-                  <div className="absolute top-2 right-2">
-                    <Badge variant={product.isActive ? "default" : "secondary"}>
-                      {product.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                  {product.stock <= 5 && (
-                    <div className="absolute top-2 left-2">
-                      <Badge variant="destructive" className="flex items-center space-x-1">
-                        <AlertCircle className="h-3 w-3" />
-                        <span>Low Stock</span>
-                      </Badge>
-                    </div>
-                  )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((product) => (
+          <Card key={product._id} className="overflow-hidden">
+            <div className="relative">
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute top-2 right-2">
+                <Badge variant={product.isActive ? "default" : "secondary"}>
+                  {product.isActive ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </div>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg">{product.name}</h3>
+                  <p className="text-sm text-gray-600">{product.punjabiName}</p>
+                  <p className="text-lg font-bold text-red-600">₹{product.price.toLocaleString()}</p>
                 </div>
                 
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
-                    <p className="text-sm text-gray-600 line-clamp-1">{product.punjabiName}</p>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-lg text-gray-900">₹{product.price.toLocaleString()}</span>
-                        {product.originalPrice > product.price && (
-                          <span className="text-sm text-gray-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="capitalize">
-                        {product.category}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1">
-                        <Package className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-600">Stock: {product.stock}</span>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(product.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2 mt-4">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => openEditModal(product)}
-                    >
-                      <Edit className="mr-1 h-3 w-3" />
-                      Edit
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => handleDeleteProduct(product._id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Stock: {product.stock}</span>
+                  <span className="capitalize">{product.category}</span>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => handleEdit(product)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteProduct(product._id)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <span className="flex items-center px-4">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Package className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 text-center mb-4">
-              {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all'
-                ? "Try adjusting your search or filter criteria"
-                : "Get started by adding your first product"
-              }
-            </p>
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Product
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Edit Product Modal */}
+      {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
