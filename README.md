@@ -353,4 +353,4 @@ Your Punjab Heritage platform includes:
 
 ---
 
-*For detailed guides, see the documentation files in the project root.*
+*For detailed guides, see the documentation files in the project root.*# Firebase Auth Ready
