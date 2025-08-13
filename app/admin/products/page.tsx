@@ -110,33 +110,33 @@ export default function AdminProductsPage() {
   }, [])
 
   useEffect(() => {
-    if (socket) {
+    if (socket?.socket) {
       // Join admin room for real-time notifications
-      socket.emit('join-admin')
+      socket.socket.emit('join-admin')
 
       // Listen for real-time updates
-      socket.on('product-update', (data) => {
+      socket.socket.on('product-update', (data) => {
         toast.success(`Product updated: ${data.product.name}`)
         fetchProducts()
         fetchStats()
       })
 
-      socket.on('product-added', (data) => {
+      socket.socket.on('product-added', (data) => {
         toast.success(`New product added: ${data.product.name}`)
         fetchProducts()
         fetchStats()
       })
 
-      socket.on('product-deleted', (data) => {
+      socket.socket.on('product-deleted', (data) => {
         toast.success(`Product deleted: ${data.product.name}`)
         fetchProducts()
         fetchStats()
       })
 
       return () => {
-        socket.off('product-update')
-        socket.off('product-added')
-        socket.off('product-deleted')
+        socket.socket.off('product-update')
+        socket.socket.off('product-added')
+        socket.socket.off('product-deleted')
       }
     }
   }, [socket])

@@ -47,25 +47,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Socket authentication
   useEffect(() => {
-    if (socket && user) {
+    if (socket?.socket && user) {
       // Authenticate socket with user token
       const token = localStorage.getItem('auth-token')
       if (token) {
-        socket.emit('authenticate', { token })
+        socket.socket.emit('authenticate', { token })
       }
     }
   }, [socket, user])
 
   // Listen for profile updates
   useEffect(() => {
-    if (socket) {
-      socket.on('profile-update-success', (userData) => {
+    if (socket?.socket) {
+      socket.socket.on('profile-update-success', (userData) => {
         setUser(userData)
         toast.success('Profile updated successfully')
       })
 
       return () => {
-        socket.off('profile-update-success')
+        socket.socket.off('profile-update-success')
       }
     }
   }, [socket])

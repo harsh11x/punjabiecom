@@ -72,23 +72,23 @@ export default function AdminDashboard() {
   }, [])
 
   useEffect(() => {
-    if (socket) {
+    if (socket?.socket) {
       // Join admin room for real-time notifications
-      socket.emit('join-admin')
+      socket.socket.emit('join-admin')
 
       // Listen for real-time updates
-      socket.on('order-notification', (data) => {
+      socket.socket.on('order-notification', (data) => {
         toast.success(`New order received: ${data.order.orderNumber}`)
         fetchDashboardStats() // Refresh stats
       })
 
-      socket.on('product-update', (data) => {
+      socket.socket.on('product-update', (data) => {
         fetchDashboardStats() // Refresh stats when products are updated
       })
 
       return () => {
-        socket.off('order-notification')
-        socket.off('product-update')
+        socket.socket.off('order-notification')
+        socket.socket.off('product-update')
       }
     }
   }, [socket])

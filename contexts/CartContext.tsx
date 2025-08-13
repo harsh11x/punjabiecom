@@ -156,9 +156,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Socket event listeners for authenticated users
   useEffect(() => {
-    if (socket && isAuthenticated) {
+    if (socket?.socket && isAuthenticated) {
       // Listen for cart loaded from server
-      socket.on('cart-loaded', (cartData) => {
+      socket.socket.on('cart-loaded', (cartData) => {
         const items = cartData.items.map((item: any) => ({
           id: `${item.productId}-${item.size}-${item.color}`,
           productId: item.productId,
@@ -175,7 +175,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       })
 
       // Listen for cart updates
-      socket.on('cart-updated', (cartData) => {
+      socket.socket.on('cart-updated', (cartData) => {
         const items = cartData.items.map((item: any) => ({
           id: `${item.productId}-${item.size}-${item.color}`,
           productId: item.productId,
@@ -192,27 +192,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       })
 
       // Listen for cart cleared
-      socket.on('cart-cleared', () => {
+      socket.socket.on('cart-cleared', () => {
         dispatch({ type: 'CLEAR_CART' })
         toast.success('Cart cleared')
       })
 
       // Listen for cart errors
-      socket.on('cart-error', (error) => {
+      socket.socket.on('cart-error', (error) => {
         dispatch({ type: 'CART_ERROR', payload: error.message })
       })
 
       // Listen for auth required
-      socket.on('auth-required', (data) => {
+      socket.socket.on('auth-required', (data) => {
         toast.error(data.message)
       })
 
       return () => {
-        socket.off('cart-loaded')
-        socket.off('cart-updated')
-        socket.off('cart-cleared')
-        socket.off('cart-error')
-        socket.off('auth-required')
+        socket.socket.off('cart-loaded')
+        socket.socket.off('cart-updated')
+        socket.socket.off('cart-cleared')
+        socket.socket.off('cart-error')
+        socket.socket.off('auth-required')
       }
     }
   }, [socket, isAuthenticated])
@@ -220,9 +220,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     const cartItem = { ...item, quantity: item.quantity || 1 }
 
-    if (isAuthenticated && socket) {
+    if (isAuthenticated && socket?.socket) {
       // Send to server for authenticated users
-      socket.emit('add-to-cart', {
+      socket.socket.emit('add-to-cart', {
         productId: item.productId,
         name: item.name,
         punjabiName: item.punjabiName,
@@ -242,10 +242,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const removeItem = (id: string, size: string, color: string) => {
-    if (isAuthenticated && socket) {
+    if (isAuthenticated && socket?.socket) {
       // Send to server for authenticated users
       const [productId] = id.split('-')
-      socket.emit('remove-from-cart', { productId, size, color })
+      socket.socket.emit('remove-from-cart', { productId, size, color })
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
       // Local storage for non-authenticated users
@@ -255,10 +255,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateQuantity = (id: string, size: string, color: string, quantity: number) => {
-    if (isAuthenticated && socket) {
+    if (isAuthenticated && socket?.socket) {
       // Send to server for authenticated users
       const [productId] = id.split('-')
-      socket.emit('update-cart-item', { productId, size, color, quantity })
+      socket.socket.emit('update-cart-item', { productId, size, color, quantity })
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
       // Local storage for non-authenticated users
@@ -267,9 +267,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const clearCart = () => {
-    if (isAuthenticated && socket) {
+    if (isAuthenticated && socket?.socket) {
       // Send to server for authenticated users
-      socket.emit('clear-cart')
+      socket.socket.emit('clear-cart')
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
       // Local storage for non-authenticated users
