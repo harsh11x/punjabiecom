@@ -1,39 +1,14 @@
-'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ShoppingCart } from '@/components/shopping-cart'
+import { Header } from '@/components/header'
 import { ArrowLeft, Heart, Users, Award, Truck, Star } from 'lucide-react'
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
-      {/* Header */}
-      <header className="border-b-4 border-amber-600 bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50"
-                >
-                  <ArrowLeft className="h-6 w-6" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-amber-100">ਸਾਡੇ ਬਾਰੇ</h1>
-                <p className="text-amber-200">About Us</p>
-              </div>
-            </div>
-            <ShoppingCart />
-          </div>
-        </div>
-        <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500"></div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
@@ -84,9 +59,6 @@ export default function AboutPage() {
                 alt="Traditional artisan at work"
                 fill
                 className="object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='200' y='150' text-anchor='middle' fill='%236b7280' font-size='16'%3ETraditional Artisan at Work%3C/text%3E%3C/svg%3E"
-                }}
               />
             </div>
           </div>

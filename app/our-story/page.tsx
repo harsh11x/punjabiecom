@@ -1,10 +1,9 @@
-'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Header } from '@/components/header'
 import { 
   Heart, 
   Star, 
@@ -23,6 +22,7 @@ import {
 export default function OurStoryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
+      <Header />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white">
         <div className="absolute inset-0 bg-black/20"></div>

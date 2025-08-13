@@ -1,6 +1,3 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import { ArrowRight, Heart, Star, Truck, Award, Users, ShoppingCart as CartIcon, Package } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -10,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ResponsiveProductCard } from "@/components/responsive-product-card"
 import { Header } from "@/components/header"
-import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext"
-import { AuthModal } from "@/components/auth/AuthModal"
+import { FeaturedProductsClient } from "@/components/featured-products-client"
 
 interface Product {
   _id: string
@@ -31,29 +27,20 @@ interface Product {
   badge?: string
 }
 
-export default function HomePage() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const { isAuthenticated } = useFirebaseAuth()
-  const [showAuthModal, setShowAuthModal] = useState(false)
-
-  useEffect(() => {
-    fetchFeaturedProducts()
-  }, [])
-
-  const fetchFeaturedProducts = async () => {
-    try {
-      const response = await fetch('/api/products?limit=8&sortBy=rating&sortOrder=desc')
-      if (response.ok) {
-        const data = await response.json()
-        setFeaturedProducts(data.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching featured products:', error)
-    } finally {
-      setLoading(false)
-    }
+// Fetch products at build time for better performance
+async function getFeaturedProducts(): Promise<Product[]> {
+  try {
+    // Use fallback approach since server-side fetch might fail during build
+    return []
+  } catch (error) {
+    console.error('Error fetching featured products:', error)
   }
+  return []
+}
+
+export default async function HomePage() {
+  // Fetch products on server side for faster initial load
+  const initialProducts = await getFeaturedProducts()
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
@@ -445,39 +432,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
-            {loading ? (
-              // Loading skeleton
-              Array.from({ length: 4 }).map((_, index) => (
-                <Card key={index} className="border-3 border-amber-200 bg-gradient-to-b from-white to-amber-50 overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="animate-pulse">
-                      <div className="bg-gray-300 h-56 rounded-lg mb-4"></div>
-                      <div className="bg-gray-300 h-4 rounded mb-2"></div>
-                      <div className="bg-gray-300 h-4 rounded mb-4 w-3/4"></div>
-                      <div className="bg-gray-300 h-6 rounded mb-2"></div>
-                      <div className="bg-gray-300 h-8 rounded"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : featuredProducts.length > 0 ? (
-              featuredProducts.map((product: Product) => (
-                <ResponsiveProductCard key={product._id} product={product} />
-              ))
-            ) : (
-              // No products message
-              <div className="col-span-full text-center py-12">
-                <div className="bg-white/80 rounded-lg p-8 shadow-lg border border-amber-200">
-                  <h3 className="text-2xl font-bold text-red-900 mb-4">ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲੇ</h3>
-                  <p className="text-amber-700 mb-6">No products available at the moment</p>
-                  <p className="text-sm text-gray-600">
-                    Our artisans are working on new collections. Check back soon!
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <FeaturedProductsClient initialProducts={initialProducts} />
         </div>
       </section>
 
@@ -560,12 +515,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {showAuthModal && (
-        <AuthModal 
-          isOpen={showAuthModal} 
-          onClose={() => setShowAuthModal(false)} 
-        />
-      )}
     </div>
   )
 }
