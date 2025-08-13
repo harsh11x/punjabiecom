@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MobileNav } from "@/components/mobile-nav"
 import { ShoppingCart } from "@/components/shopping-cart"
 import { AuthGuardedCart } from "@/components/AuthGuardedCart"
+import { ResponsiveProductCard } from "@/components/responsive-product-card"
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext"
 import { AuthModal } from "@/components/auth/AuthModal"
 
@@ -163,7 +164,7 @@ export default function HomePage() {
               <div className="space-y-4 lg:space-y-6">
                 <div className="flex items-center justify-center lg:justify-start space-x-2 lg:space-x-3">
                   <div className="w-8 lg:w-12 h-1 bg-gradient-to-r from-amber-500 to-red-600"></div>
-                  <Badge className="bg-gradient-to-r from-amber-100 to-orange-100 text-red-900 hover:from-amber-200 hover:to-orange-200 px-3 lg:px-4 py-1 lg:py-2 text-sm lg:text-lg font-semibold border-2 border-amber-400">
+                  <Badge variant="default" className="bg-gradient-to-r from-amber-100 to-orange-100 text-red-900 hover:from-amber-200 hover:to-orange-200 px-3 lg:px-4 py-1 lg:py-2 text-sm lg:text-lg font-semibold border-2 border-amber-400">
                     ਪੰਜਾਬੀ ਵਿਰਾਸਤ • Punjabi Heritage
                   </Badge>
                   <div className="w-8 lg:w-12 h-1 bg-gradient-to-r from-red-600 to-amber-500"></div>
@@ -415,7 +416,7 @@ export default function HomePage() {
                     <div className="absolute bottom-6 left-6 text-white">
                       <h3 className="text-2xl font-bold mb-2 drop-shadow-lg">ਮਰਦਾਂ ਦੀ ਜੁੱਤੀ</h3>
                       <h4 className="text-xl font-semibold text-amber-200 mb-4">Men's Collection</h4>
-                      <Badge className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-4 py-2">
+                      <Badge variant="default" className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-4 py-2">
                         50+ ਉਤਪਾਦ • Products
                       </Badge>
                     </div>
@@ -443,7 +444,7 @@ export default function HomePage() {
                     <div className="absolute bottom-6 left-6 text-white">
                       <h3 className="text-2xl font-bold mb-2 drop-shadow-lg">ਔਰਤਾਂ ਦੀ ਜੁੱਤੀ</h3>
                       <h4 className="text-xl font-semibold text-amber-200 mb-4">Women's Collection</h4>
-                      <Badge className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-4 py-2">
+                      <Badge variant="default" className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-4 py-2">
                         75+ ਉਤਪਾਦ • Products
                       </Badge>
                     </div>
@@ -471,7 +472,7 @@ export default function HomePage() {
                     <div className="absolute bottom-6 left-6 text-white">
                       <h3 className="text-2xl font-bold mb-2 drop-shadow-lg">ਬੱਚਿਆਂ ਦੀ ਜੁੱਤੀ</h3>
                       <h4 className="text-xl font-semibold text-amber-200 mb-4">Kids' Collection</h4>
-                      <Badge className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-4 py-2">
+                      <Badge variant="default" className="bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-4 py-2">
                         30+ ਉਤਪਾਦ • Products
                       </Badge>
                     </div>
@@ -512,113 +513,37 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
-            {[
-              {
-                name: "Royal Punjabi Jutti - Men",
-                punjabiName: "ਸ਼ਾਹੀ ਪੰਜਾਬੀ ਜੁੱਤੀ - ਮਰਦ",
-                price: "₹2,499",
-                originalPrice: "₹3,199",
-                image: "/mens-punjabi-jutti-leather-brown-traditional.png",
-                rating: 4.8,
-                reviews: 124,
-                badge: "ਸਭ ਤੋਂ ਵਧੀਆ",
-                badgeEn: "Best Seller",
-              },
-              {
-                name: "Bridal Phulkari Dupatta",
-                punjabiName: "ਦੁਲਹਨ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
-                price: "₹4,999",
-                originalPrice: "₹6,499",
-                image: "/bridal-phulkari-dupatta.png",
-                rating: 4.9,
-                reviews: 89,
-                badge: "ਨਵਾਂ",
-                badgeEn: "New",
-              },
-              {
-                name: "Kids Colorful Jutti",
-                punjabiName: "ਬੱਚਿਆਂ ਦੀ ਰੰਗੀਨ ਜੁੱਤੀ",
-                price: "₹1,299",
-                originalPrice: "₹1,699",
-                image: "/colorful-kids-jutti.png",
-                rating: 4.7,
-                reviews: 156,
-                badge: "ਪਸੰਦੀਦਾ",
-                badgeEn: "Popular",
-              },
-              {
-                name: "Traditional Bagh Phulkari",
-                punjabiName: "ਪਰੰਪਰਾਗਤ ਬਾਗ਼ ਫੁਲਕਾਰੀ",
-                price: "₹3,799",
-                originalPrice: "₹4,999",
-                image: "/traditional-bagh-phulkari-embroidery.png",
-                rating: 4.8,
-                reviews: 203,
-                badge: "ਵਿਸ਼ੇਸ਼",
-                badgeEn: "Special",
-              },
-            ].map((product, index) => (
-              <Card
-                key={index}
-                className="group cursor-pointer hover:shadow-2xl transition-all duration-500 border-3 border-amber-200 hover:border-amber-400 bg-gradient-to-b from-white to-amber-50 overflow-hidden"
-              >
-                <CardContent className="p-6">
-                  <div className="relative mb-6">
-                    <div className="absolute -inset-2 bg-gradient-to-br from-amber-300 to-red-400 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                    <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      width={350}
-                      height={350}
-                      className="relative w-full h-56 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 shadow-lg"
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute top-3 right-3 bg-white/90 hover:bg-white text-red-600 shadow-lg border border-amber-200"
-                    >
-                      <Heart className="h-5 w-5" />
-                    </Button>
-                    <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-3 py-1 shadow-lg">
-                      {product.badge}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-bold text-red-900 group-hover:text-red-700 transition-colors text-lg mb-1">
-                        {product.punjabiName}
-                      </h3>
-                      <h4 className="font-semibold text-amber-800 text-base">{product.name}</h4>
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, index) => (
+                <Card key={index} className="border-3 border-amber-200 bg-gradient-to-b from-white to-amber-50 overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="animate-pulse">
+                      <div className="bg-gray-300 h-56 rounded-lg mb-4"></div>
+                      <div className="bg-gray-300 h-4 rounded mb-2"></div>
+                      <div className="bg-gray-300 h-4 rounded mb-4 w-3/4"></div>
+                      <div className="bg-gray-300 h-6 rounded mb-2"></div>
+                      <div className="bg-gray-300 h-8 rounded"></div>
                     </div>
-
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < Math.floor(product.rating) ? "text-amber-400 fill-current" : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600 font-medium">({product.reviews})</span>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl font-bold text-red-800">{product.price}</span>
-                      <span className="text-lg text-gray-500 line-through">{product.originalPrice}</span>
-                    </div>
-
-                    <Button className="w-full bg-gradient-to-r from-red-700 to-amber-600 hover:from-red-800 hover:to-amber-700 text-white font-semibold py-3 shadow-lg border-2 border-amber-300">
-                      <span className="mr-2">🛒</span>
-                      ਕਾਰਟ ਵਿੱਚ ਪਾਓ • Add to Cart
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product: Product) => (
+                <ResponsiveProductCard key={product._id} product={product} />
+              ))
+            ) : (
+              // No products message
+              <div className="col-span-full text-center py-12">
+                <div className="bg-white/80 rounded-lg p-8 shadow-lg border border-amber-200">
+                  <h3 className="text-2xl font-bold text-red-900 mb-4">ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲੇ</h3>
+                  <p className="text-amber-700 mb-6">No products available at the moment</p>
+                  <p className="text-sm text-gray-600">
+                    Our artisans are working on new collections. Check back soon!
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
