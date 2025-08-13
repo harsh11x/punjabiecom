@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MobileNav } from '@/components/mobile-nav'
 import { ShoppingCart } from '@/components/shopping-cart'
-import { AuthGuardedCart } from '@/components/AuthGuardedCart'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { Heart, Menu, X } from 'lucide-react'
@@ -98,7 +97,7 @@ export function Header() {
               >
                 <Heart className="h-5 lg:h-6 w-5 lg:w-6" />
               </Button>
-              <AuthGuardedCart />
+              <ShoppingCart />
               
               {/* Mobile Menu Button */}
               <Button

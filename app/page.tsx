@@ -57,10 +57,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
-      {/* Deployment Test Message */}
-      <div className="fixed top-4 right-4 z-50 p-3 bg-green-100 border border-green-300 rounded-lg shadow-lg">
-        <p className="text-green-800 font-medium text-sm">✅ Vercel Ready!</p>
-      </div>
       
       {/* Header */}
       <Header />
@@ -115,20 +111,26 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center lg:justify-start">
                 <Button
+                  asChild
                   size="lg"
                   className="bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:via-red-700 hover:to-amber-700 text-white text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 shadow-xl border-2 border-amber-400"
                 >
-                  <span className="mr-2">🛍️</span>
-                  ਖਰੀਦਦਾਰੀ ਕਰੋ • Shop Collection
-                  <ArrowRight className="ml-2 lg:ml-3 h-5 lg:h-6 w-5 lg:w-6" />
+                  <Link href="/products">
+                    <span className="mr-2">🛍️</span>
+                    ਖਰੀਦਦਾਰੀ ਕਰੋ • Shop Collection
+                    <ArrowRight className="ml-2 lg:ml-3 h-5 lg:h-6 w-5 lg:w-6" />
+                  </Link>
                 </Button>
                 <Button
+                  asChild
                   variant="outline"
                   size="lg"
                   className="border-3 border-amber-600 text-red-800 hover:bg-gradient-to-r hover:from-amber-50 hover:to-red-50 bg-white text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 shadow-xl font-semibold"
                 >
-                  <span className="mr-2">📖</span>
-                  ਸਾਡੀ ਕਹਾਣੀ • Our Story
+                  <Link href="/our-story">
+                    <span className="mr-2">📖</span>
+                    ਸਾਡੀ ਕਹਾਣੀ • Our Story
+                  </Link>
                 </Button>
               </div>
 

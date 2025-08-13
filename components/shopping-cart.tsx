@@ -27,10 +27,10 @@ export function ShoppingCart() {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50 relative"
+          className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50 relative flex items-center space-x-2 px-3 py-2"
         >
           <ShoppingBag className="h-5 lg:h-6 w-5 lg:w-6" />
+          <span className="hidden sm:inline font-medium">Check Cart</span>
           {state.itemCount > 0 && (
             <Badge className="absolute -top-1 lg:-top-2 -right-1 lg:-right-2 h-5 lg:h-6 w-5 lg:w-6 rounded-full p-0 flex items-center justify-center bg-amber-500 text-red-900 font-bold text-xs">
               {state.itemCount}

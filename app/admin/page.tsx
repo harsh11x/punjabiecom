@@ -81,9 +81,13 @@ export default function AdminPage() {
       if (response.ok) {
         setIsAuthenticated(true)
         fetchDashboardData()
+      } else if (response.status === 503) {
+        // Database connection issue
+        setError('Database connection not available. Please check your MongoDB connection.')
       }
     } catch (error) {
       console.error('Auth check failed:', error)
+      setError('Failed to connect to the server. Please check if the application is running.')
     } finally {
       setIsLoading(false)
     }
