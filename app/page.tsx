@@ -176,13 +176,15 @@ export default function HomePage() {
                 <div className="absolute -inset-2 lg:-inset-4 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-2xl lg:rounded-3xl opacity-20 blur-lg"></div>
                 <div className="absolute -inset-1 lg:-inset-2 bg-gradient-to-br from-amber-300 to-red-500 rounded-xl lg:rounded-2xl"></div>
                 <div className="relative bg-white p-1 lg:p-2 rounded-xl lg:rounded-2xl shadow-2xl">
-                  <Image
-                    src="/punjabi-jutti-shoes.png"
-                    alt="Traditional Punjabi Jutti"
-                    width={600}
-                    height={700}
-                    className="rounded-lg lg:rounded-xl shadow-lg w-full"
-                  />
+                <Image
+                  src="/punjabi-jutti-shoes.png"
+                  alt="Traditional Punjabi Jutti"
+                  width={600}
+                  height={700}
+                  priority
+                  className="rounded-lg lg:rounded-xl shadow-lg w-full"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
                 </div>
               </div>
 
@@ -233,13 +235,15 @@ export default function HomePage() {
             <Card className="group cursor-pointer overflow-hidden border-4 border-amber-200 hover:border-amber-400 transition-all duration-500 shadow-2xl bg-gradient-to-br from-white to-amber-50">
               <CardContent className="p-0">
                 <div className="relative">
-                  <Image
-                    src="/colorful-punjabi-jutti.png"
-                    alt="Traditional Jutti Collection"
-                    width={700}
-                    height={500}
-                    className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
+                <Image
+                  src="/colorful-punjabi-jutti.png"
+                  alt="Traditional Jutti Collection"
+                  width={700}
+                  height={500}
+                  priority
+                  className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
                   {/* Traditional Corner Decorations */}
@@ -268,13 +272,15 @@ export default function HomePage() {
             <Card className="group cursor-pointer overflow-hidden border-4 border-amber-200 hover:border-amber-400 transition-all duration-500 shadow-2xl bg-gradient-to-br from-white to-amber-50">
               <CardContent className="p-0">
                 <div className="relative">
-                  <Image
-                    src="/punjabi-phulkari-dupatta.png"
-                    alt="Traditional Phulkari Collection"
-                    width={700}
-                    height={500}
-                    className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
+                <Image
+                  src="/punjabi-phulkari-dupatta.png"
+                  alt="Traditional Phulkari Collection"
+                  width={700}
+                  height={500}
+                  priority
+                  className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
                   {/* Traditional Corner Decorations */}
@@ -327,7 +333,9 @@ export default function HomePage() {
                       alt="Men's Jutti Collection"
                       width={400}
                       height={300}
+                      loading="lazy"
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
@@ -355,7 +363,9 @@ export default function HomePage() {
                       alt="Women's Jutti Collection"
                       width={400}
                       height={300}
+                      loading="lazy"
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
@@ -383,7 +393,9 @@ export default function HomePage() {
                       alt="Kids' Jutti Collection"
                       width={400}
                       height={300}
+                      loading="lazy"
                       className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
