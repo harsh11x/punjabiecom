@@ -1,17 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowRight, Heart, Star, Truck, Award, Users, ShoppingCart as CartIcon } from "lucide-react"
+import { ArrowRight, Heart, Star, Truck, Award, Users, ShoppingCart as CartIcon, Package } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { MobileNav } from "@/components/mobile-nav"
-import { ShoppingCart } from "@/components/shopping-cart"
-import { AuthGuardedCart } from "@/components/AuthGuardedCart"
 import { ResponsiveProductCard } from "@/components/responsive-product-card"
+import { Header } from "@/components/header"
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext"
 import { AuthModal } from "@/components/auth/AuthModal"
 
@@ -65,95 +63,16 @@ export default function HomePage() {
       </div>
       
       {/* Header */}
-      <header className="border-b-4 border-amber-600 bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4 lg:py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 lg:space-x-4">
-              <div className="relative">
-                <div className="w-12 lg:w-16 h-12 lg:h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-full flex items-center justify-center border-2 lg:border-4 border-amber-300 shadow-lg">
-                  <span className="text-white font-bold text-lg lg:text-2xl drop-shadow-lg">ਪ</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-5 lg:w-6 h-5 lg:h-6 bg-amber-400 rounded-full flex items-center justify-center">
-                  <span className="text-red-800 text-xs font-bold">✦</span>
-                </div>
-              </div>
-              <div>
-                <h1 className="text-lg lg:text-2xl font-bold text-amber-100 drop-shadow-lg">ਪੰਜਾਬ ਹੈਰਿਟੇਜ</h1>
-                <h2 className="text-base lg:text-xl font-semibold text-white">Punjab Heritage</h2>
-                <p className="text-xs lg:text-sm text-amber-200 font-medium hidden sm:block">
-                  ਅਸਲੀ ਪੰਜਾਬੀ ਕਲਾ • Authentic Punjabi Crafts
-                </p>
-              </div>
-            </div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
-              <Link
-                href="/"
-                className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors border-b-2 border-amber-400"
-              >
-                ਘਰ • Home
-              </Link>
-              <div className="relative group">
-                <Link
-                  href="/jutti"
-                  className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
-                >
-                  ਜੁੱਤੀ • Jutti
-                </Link>
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <Link href="/men" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-t-lg">
-                    ਮਰਦਾਂ ਲਈ • Men's Jutti
-                  </Link>
-                  <Link href="/women" className="block px-4 py-3 text-red-800 hover:bg-amber-50">
-                    ਔਰਤਾਂ ਲਈ • Women's Jutti
-                  </Link>
-                  <Link href="/kids" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-b-lg">
-                    ਬੱਚਿਆਂ ਲਈ • Kids' Jutti
-                  </Link>
-                </div>
-              </div>
-              <Link
-                href="/phulkari"
-                className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
-              >
-                ਫੁਲਕਾਰੀ • Phulkari
-              </Link>
-              <Link
-                href="/about"
-                className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
-              >
-                ਸਾਡੇ ਬਾਰੇ • About
-              </Link>
-            </nav>
-
-            {/* Mobile & Desktop Actions */}
-            <div className="flex items-center space-x-2 lg:space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden sm:flex text-amber-100 hover:text-amber-300 hover:bg-red-700/50"
-              >
-                <Heart className="h-5 lg:h-6 w-5 lg:w-6" />
-              </Button>
-              <ShoppingCart />
-              <MobileNav />
-            </div>
-          </div>
-        </div>
-
-        {/* Traditional Border Pattern */}
-        <div className="h-1 lg:h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500"></div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
-      <section className="relative py-12 lg:py-24 overflow-hidden">
-        {/* Traditional Pattern Background */}
-        <div className="absolute inset-0 opacity-10">
+      <section className="relative py-12 lg:py-20 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
           <div
             className="absolute inset-0 bg-repeat"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23dc2626' fillOpacity='0.4'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm0 0c0 11.046 8.954 20 20 20s20-8.954 20-20-8.954-20-20-20-20 8.954-20 20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23dc2626' fillOpacity='0.6'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm0 0c0 5.5 4.5 10 10 10s10-4.5 10-10-4.5-10-10-10-10 4.5-10 10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }}
           ></div>
         </div>
@@ -548,67 +467,78 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-20 bg-gradient-to-b from-white via-amber-50 to-red-50">
+      {/* Why Choose Us Section */}
+      <section className="py-12 lg:py-20 bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              <div className="w-16 h-1 bg-gradient-to-r from-amber-500 to-red-600"></div>
-              <h2 className="text-4xl lg:text-6xl font-bold text-red-900">ਸਾਨੂੰ ਕਿਉਂ ਚੁਣੋ?</h2>
-              <div className="w-16 h-1 bg-gradient-to-r from-red-600 to-amber-500"></div>
+          <div className="text-center mb-12 lg:mb-16">
+            <div className="flex items-center justify-center space-x-2 lg:space-x-4 mb-4 lg:mb-6">
+              <div className="w-12 lg:w-16 h-1 bg-gradient-to-r from-amber-500 to-red-600"></div>
+              <h2 className="text-3xl lg:text-4xl xl:text-6xl font-bold text-red-900">ਸਾਨੂੰ ਕਿਉਂ ਚੁਣੋ?</h2>
+              <div className="w-12 lg:w-16 h-1 bg-gradient-to-r from-red-600 to-amber-500"></div>
             </div>
-            <h3 className="text-3xl lg:text-4xl font-bold text-amber-800">Why Choose Punjab Heritage?</h3>
+            <h3 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-amber-800 mb-4 lg:mb-6">
+              Why Choose Punjab Heritage?
+            </h3>
+            <p className="text-lg lg:text-xl text-red-700 leading-relaxed">ਸਾਡੀ ਵਿਰਾਸਤ ਅਤੇ ਗੁਣਵੱਤਾ ਦੀ ਗਾਰੰਟੀ</p>
+            <p className="text-base lg:text-lg text-amber-700 italic">
+              Our heritage and quality guarantee
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-10">
-            <div className="text-center space-y-6 bg-gradient-to-b from-white to-amber-50 p-8 rounded-2xl shadow-xl border-2 border-amber-200">
-              <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                <span className="text-4xl">🏺</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* Feature 1 */}
+            <div className="text-center group">
+              <div className="relative mb-6">
+                <div className="w-20 h-20 lg:w-24 lg:h-24 mx-auto bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Package className="h-10 lg:h-12 w-10 lg:w-12 text-white" />
+                </div>
+                <div className="absolute -inset-2 bg-gradient-to-br from-amber-400 to-red-500 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"></div>
               </div>
-              <div>
-                <h3 className="text-2xl font-bold text-red-900 mb-2">ਅਸਲੀ ਕਾਰੀਗਰੀ</h3>
-                <h4 className="text-xl font-semibold text-amber-800 mb-4">Authentic Craftsmanship</h4>
-              </div>
-              <p className="text-red-700 leading-relaxed text-lg">
-                ਹਰ ਟੁਕੜਾ ਹੁਨਰਮੰਦ ਕਾਰੀਗਰਾਂ ਦੁਆਰਾ ਪਰੰਪਰਾਗਤ ਤਕਨੀਕਾਂ ਨਾਲ ਹੱਥ ਨਾਲ ਬਣਾਇਆ ਗਿਆ ਹੈ।
+              <h3 className="text-xl lg:text-2xl font-bold text-red-900 mb-4">ਹੱਥ ਨਾਲ ਬਣਾਈ ਗਈ</h3>
+              <h4 className="text-lg lg:text-xl font-semibold text-amber-800 mb-4">Handcrafted Excellence</h4>
+              <p className="text-red-700 leading-relaxed">
+                ਹਰੇਕ ਟੁਕੜਾ ਸਾਡੇ ਮਾਹਿਰ ਕਾਰੀਗਰਾਂ ਦੁਆਰਾ ਪਰੰਪਰਾਗਤ ਤਕਨੀਕਾਂ ਨਾਲ ਹੱਥ ਨਾਲ ਬਣਾਇਆ ਗਿਆ ਹੈ।
                 <br />
-                <span className="italic text-amber-700">
-                  Each piece is handcrafted by skilled artisans using traditional techniques passed down through
-                  generations.
+                <span className="text-amber-700 italic">
+                  Each piece is handcrafted by our master artisans using traditional techniques.
                 </span>
               </p>
             </div>
 
-            <div className="text-center space-y-6 bg-gradient-to-b from-white to-amber-50 p-8 rounded-2xl shadow-xl border-2 border-amber-200">
-              <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                <span className="text-4xl">🌟</span>
+            {/* Feature 2 */}
+            <div className="text-center group">
+              <div className="relative mb-6">
+                <div className="w-20 h-20 lg:w-24 lg:h-24 mx-auto bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Award className="h-10 lg:h-12 w-10 lg:w-12 text-white" />
+                </div>
+                <div className="absolute -inset-2 bg-gradient-to-br from-amber-400 to-red-500 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"></div>
               </div>
-              <div>
-                <h3 className="text-2xl font-bold text-red-900 mb-2">ਉੱਚ ਗੁਣਵੱਤਾ</h3>
-                <h4 className="text-xl font-semibold text-amber-800 mb-4">Premium Quality</h4>
-              </div>
-              <p className="text-red-700 leading-relaxed text-lg">
-                ਅਸੀਂ ਸਿਰਫ਼ ਸਭ ਤੋਂ ਵਧੀਆ ਸਮੱਗਰੀ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹਾਂ - ਜੁੱਤੀ ਲਈ ਸ਼ੁੱਧ ਚਮੜਾ ਅਤੇ ਫੁਲਕਾਰੀ ਲਈ ਪ੍ਰੀਮੀਅਮ ਕੱਪੜਾ।
+              <h3 className="text-xl lg:text-2xl font-bold text-red-900 mb-4">ਪ੍ਰੀਮੀਅਮ ਗੁਣਵੱਤਾ</h3>
+              <h4 className="text-lg lg:text-xl font-semibold text-amber-800 mb-4">Premium Quality</h4>
+              <p className="text-red-700 leading-relaxed">
+                ਸਾਡੇ ਉਤਪਾਦ ਸਭ ਤੋਂ ਵਧੀਆ ਸਮੱਗਰੀ ਅਤੇ ਗੁਣਵੱਤਾ ਦੇ ਮਾਪਦੰਡਾਂ ਦੀ ਪਾਲਣਾ ਕਰਦੇ ਹਨ।
                 <br />
-                <span className="italic text-amber-700">
-                  We use only the finest materials - pure leather for jutti and premium fabrics for phulkari embroidery.
+                <span className="text-amber-700 italic">
+                  Our products meet the highest standards of materials and craftsmanship.
                 </span>
               </p>
             </div>
 
-            <div className="text-center space-y-6 bg-gradient-to-b from-white to-amber-50 p-8 rounded-2xl shadow-xl border-2 border-amber-200">
-              <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                <span className="text-4xl">🚚</span>
+            {/* Feature 3 */}
+            <div className="text-center group">
+              <div className="relative mb-6">
+                <div className="w-20 h-20 lg:w-24 lg:h-24 mx-auto bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Users className="h-10 lg:h-12 w-10 lg:w-12 text-white" />
+                </div>
+                <div className="absolute -inset-2 bg-gradient-to-br from-amber-400 to-red-500 rounded-full opacity-20 group-hover:opacity-30 transition-opacity"></div>
               </div>
-              <div>
-                <h3 className="text-2xl font-bold text-red-900 mb-2">ਵਿਸ਼ਵਵਿਆਪੀ ਸ਼ਿਪਿੰਗ</h3>
-                <h4 className="text-xl font-semibold text-amber-800 mb-4">Worldwide Shipping</h4>
-              </div>
-              <p className="text-red-700 leading-relaxed text-lg">
-                ਅਸੀਂ ਸੁਰੱਖਿਤ ਪੈਕੇਜਿੰਗ ਨਾਲ ਦੁਨੀਆ ਭਰ ਵਿੱਚ ਕਿਤੇ ਵੀ ਅਸਲੀ ਪੰਜਾਬੀ ਵਿਰਾਸਤ ਪਹੁੰਚਾਉਂਦੇ ਹਾਂ।
+              <h3 className="text-xl lg:text-2xl font-bold text-red-900 mb-4">ਪਰੰਪਰਾ ਦੀ ਸੰਭਾਲ</h3>
+              <h4 className="text-lg lg:text-xl font-semibold text-amber-800 mb-4">Heritage Preservation</h4>
+              <p className="text-red-700 leading-relaxed">
+                ਅਸੀਂ ਸਦੀਆਂ ਪੁਰਾਣੀ ਪੰਜਾਬੀ ਵਿਰਾਸਤ ਅਤੇ ਸੱਭਿਆਚਾਰ ਨੂੰ ਜ਼ਿੰਦਾ ਰੱਖਣ ਲਈ ਕੰਮ ਕਰਦੇ ਹਾਂ।
                 <br />
-                <span className="italic text-amber-700">
-                  We deliver authentic Punjabi heritage to your doorstep anywhere in the world with secure packaging.
+                <span className="text-amber-700 italic">
+                  We work to preserve centuries-old Punjabi heritage and culture.
                 </span>
               </p>
             </div>
@@ -616,132 +546,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-b from-red-900 via-red-800 to-amber-900 text-white py-16 relative overflow-hidden">
-        {/* Traditional Pattern Background */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0 bg-repeat"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23fbbf24' fillOpacity='0.4'%3E%3Cpath d='M40 40c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm0 0c0 11.046 8.954 20 20 20s20-8.954 20-20-8.954-20-20-20-20 8.954-20 20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          ></div>
-        </div>
-
-        <div className="container mx-auto px-4 relative">
-          <div className="grid md:grid-cols-4 gap-10">
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center border-4 border-amber-300">
-                  <span className="text-white font-bold text-2xl">ਪ</span>
-                </div>
-                <div>
-                  <span className="text-2xl font-bold text-amber-200">ਪੰਜਾਬ ਹੈਰਿਟੇਜ</span>
-                  <br />
-                  <span className="text-xl font-semibold">Punjab Heritage</span>
-                </div>
-              </div>
-              <p className="text-amber-200 leading-relaxed text-lg">
-                ਪੰਜਾਬ ਦੀ ਅਮੀਰ ਸੱਭਿਆਚਾਰਕ ਵਿਰਾਸਤ ਨੂੰ ਸੰਭਾਲਣਾ ਅਤੇ ਸਾਂਝਾ ਕਰਨਾ।
-                <br />
-                <span className="italic text-amber-300">
-                  Preserving and sharing the rich cultural heritage of Punjab through authentic handcrafted products.
-                </span>
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-xl text-amber-200">ਤੇਜ਼ ਲਿੰਕ • Quick Links</h4>
-              <div className="space-y-3">
-                <Link href="/" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਘਰ • Home
-                </Link>
-                <Link href="/jutti" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਜੁੱਤੀ ਸੰਗ੍ਰਹਿ • Jutti Collection
-                </Link>
-                <Link href="/phulkari" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਫੁਲਕਾਰੀ ਸੰਗ੍ਰਹਿ • Phulkari Collection
-                </Link>
-                <Link href="/about" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਸਾਡੇ ਬਾਰੇ • About Us
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-xl text-amber-200">ਗਾਹਕ ਸੇਵਾ • Customer Care</h4>
-              <div className="space-y-3">
-                <Link href="/contact" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਸੰਪਰਕ • Contact Us
-                </Link>
-                <Link href="/shipping" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਸ਼ਿਪਿੰਗ ਜਾਣਕਾਰੀ • Shipping Info
-                </Link>
-                <Link href="/returns" className="block text-amber-100 hover:text-amber-300 transition-colors text-lg">
-                  ਵਾਪਸੀ • Returns
-                </Link>
-                <Link
-                  href="/size-guide"
-                  className="block text-amber-100 hover:text-amber-300 transition-colors text-lg"
-                >
-                  ਸਾਈਜ਼ ਗਾਈਡ • Size Guide
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-xl text-amber-200">ਸਾਡੇ ਨਾਲ ਜੁੜੋ • Connect With Us</h4>
-              <p className="text-amber-200 mb-6 text-lg leading-relaxed">
-                ਨਵੇਂ ਸੰਗ੍ਰਹਿ ਅਤੇ ਸੱਭਿਆਚਾਰਕ ਕਹਾਣੀਆਂ ਲਈ ਸਾਡਾ ਪਿੱਛਾ ਕਰੋ।
-                <br />
-                <span className="italic text-amber-300">
-                  Follow us for the latest collections and cultural stories.
-                </span>
-              </p>
-              <div className="flex space-x-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-amber-200 hover:text-amber-400 hover:bg-red-800/50 w-12 h-12 text-2xl"
-                >
-                  📘
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-amber-200 hover:text-amber-400 hover:bg-red-800/50 w-12 h-12 text-2xl"
-                >
-                  📷
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-amber-200 hover:text-amber-400 hover:bg-red-800/50 w-12 h-12 text-2xl"
-                >
-                  📱
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t-2 border-amber-600 mt-12 pt-8">
-            <div className="flex items-center justify-center space-x-4 mb-4">
-              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-lg">✦</span>
-              </div>
-              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-            </div>
-            <div className="text-center text-amber-200 text-lg">
-              <p className="mb-2">© 2024 ਪੰਜਾਬ ਹੈਰਿਟੇਜ • Punjab Heritage. ਸਾਰੇ ਅਧਿਕਾਰ ਸੁਰੱਖਿਤ • All rights reserved.</p>
-              <p className="text-amber-300">
-                ਪੰਜਾਬੀ ਸੱਭਿਆਚਾਰ ਨੂੰ ਸੰਭਾਲਣ ਲਈ ❤️ ਨਾਲ ਬਣਾਇਆ ਗਿਆ • Made with ❤️ for preserving Punjabi culture.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {showAuthModal && (
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      )}
     </div>
   )
 }
-// Test deployment Wed Aug 13 20:44:54 IST 2025
