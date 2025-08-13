@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Verify token
     const decoded = jwt.verify(token, jwtSecret) as any
     
-    if (!decoded || !decoded.adminId) {
+    if (!decoded || !decoded.id) {
       return NextResponse.json(
         { success: false, error: 'Invalid token' },
         { status: 401 }
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if admin exists and is active
-    const admin = await Admin.findById(decoded.adminId).select('-password')
+    const admin = await Admin.findById(decoded.id).select('-password')
     
     if (!admin || !admin.isActive) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import dbConnect from '@/lib/mongodb'
+import { connectDB } from '@/lib/mongodb'
 import Admin from '@/models/Admin'
 
 export async function POST(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const dbConnection = await dbConnect()
+    const dbConnection = await connectDB()
     if (!dbConnection) {
       return NextResponse.json(
         { success: false, error: 'Database connection not available' },
