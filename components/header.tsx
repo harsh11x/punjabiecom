@@ -8,6 +8,7 @@ import { MobileNav } from '@/components/mobile-nav'
 import { ShoppingCart } from '@/components/shopping-cart'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { OptimizedLink } from '@/components/performance/optimized-link'
 import { Heart, Menu, X } from 'lucide-react'
 
 export function Header() {
@@ -43,49 +44,49 @@ export function Header() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-8">
-              <Link
+              <OptimizedLink
                 href="/"
                 className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
               >
                 ਘਰ • Home
-              </Link>
+              </OptimizedLink>
               <div className="relative group">
-                <Link
+                <OptimizedLink
                   href="/jutti"
                   className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
                 >
                   ਜੁੱਤੀ • Jutti
-                </Link>
+                </OptimizedLink>
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <Link href="/men" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-t-lg">
+                  <OptimizedLink href="/men" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-t-lg">
                     ਮਰਦਾਂ ਲਈ • Men's Jutti
-                  </Link>
-                  <Link href="/women" className="block px-4 py-3 text-red-800 hover:bg-amber-50">
+                  </OptimizedLink>
+                  <OptimizedLink href="/women" className="block px-4 py-3 text-red-800 hover:bg-amber-50">
                     ਔਰਤਾਂ ਲਈ • Women's Jutti
-                  </Link>
-                  <Link href="/kids" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-b-lg">
+                  </OptimizedLink>
+                  <OptimizedLink href="/kids" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-b-lg">
                     ਬੱਚਿਆਂ ਲਈ • Kids' Jutti
-                  </Link>
+                  </OptimizedLink>
                 </div>
               </div>
-              <Link
+              <OptimizedLink
                 href="/phulkari"
                 className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
               >
                 ਫੁਲਕਾਰੀ • Phulkari
-              </Link>
-              <Link
+              </OptimizedLink>
+              <OptimizedLink
                 href="/products"
                 className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
               >
                 ਸਾਰੇ ਉਤਪਾਦ • All Products
-              </Link>
-              <Link
+              </OptimizedLink>
+              <OptimizedLink
                 href="/about"
                 className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
               >
                 ਸਾਡੇ ਬਾਰੇ • About
-              </Link>
+              </OptimizedLink>
             </nav>
 
             {/* Mobile & Desktop Actions */}
@@ -119,41 +120,41 @@ export function Header() {
           {mobileMenuOpen && (
             <div className="lg:hidden mt-4 pb-4 border-t border-amber-600">
               <nav className="flex flex-col space-y-2 pt-4">
-                <Link
+                <OptimizedLink
                   href="/"
                   className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ਘਰ • Home
-                </Link>
-                <Link
+                </OptimizedLink>
+                <OptimizedLink
                   href="/jutti"
                   className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ਜੁੱਤੀ • Jutti
-                </Link>
-                <Link
+                </OptimizedLink>
+                <OptimizedLink
                   href="/phulkari"
                   className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ਫੁਲਕਾਰੀ • Phulkari
-                </Link>
-                <Link
+                </OptimizedLink>
+                <OptimizedLink
                   href="/products"
                   className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ਸਾਰੇ ਉਤਪਾਦ • All Products
-                </Link>
-                <Link
+                </OptimizedLink>
+                <OptimizedLink
                   href="/about"
                   className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ਸਾਡੇ ਬਾਰੇ • About
-                </Link>
+                </OptimizedLink>
               </nav>
             </div>
           )}

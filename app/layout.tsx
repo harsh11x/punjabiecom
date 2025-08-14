@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { CartProvider } from '@/contexts/CartContext'
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 import { Toaster } from '@/components/ui/sonner'
+import { NavigationProgress } from '@/components/performance/navigation-progress'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ html {
         `}</style>
       </head>
       <body>
+        <NavigationProgress />
         <FirebaseAuthProvider>
           <CartProvider>
             {children}

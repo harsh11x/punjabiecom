@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
+import withBundleAnalyzer from '@next/bundle-analyzer'
+
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -20,14 +26,18 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
     // Enable app directory optimizations
     optimizeServerReact: true,
+    // Optimize CSS imports
+    optimizeCss: true,
   },
   // Enable gzip compression
   compress: true,
   // Fix prerendering issues
   trailingSlash: false,
+  // Performance optimizations for navigation
+  poweredByHeader: false,
   // Add headers for caching
   async headers() {
     return [
@@ -53,4 +63,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default bundleAnalyzer(nextConfig)
