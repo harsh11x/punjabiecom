@@ -5,6 +5,7 @@ import { CartProvider } from '@/contexts/CartContext'
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 import { Toaster } from '@/components/ui/sonner'
 import { NavigationProgress } from '@/components/performance/navigation-progress'
+import { CartDebugger } from '@/components/debug/CartDebugger'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ html {
           <CartProvider>
             {children}
             <Toaster />
+            {process.env.NODE_ENV === 'development' && <CartDebugger />}
           </CartProvider>
         </FirebaseAuthProvider>
       </body>

@@ -34,14 +34,15 @@ interface DashboardStats {
 }
 
 interface Product {
-  _id: string
+  id: string
   name: string
   punjabiName: string
   price: number
   stock: number
   category: string
   isActive: boolean
-  createdAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface Order {
@@ -93,7 +94,11 @@ export default function AdminDashboard() {
         const ordersData = await ordersRes.json()
 
         if (productsData.success) {
-          setRecentProducts(productsData.products.slice(0, 5))
+          // Sort products by creation date and take most recent
+          const sortedProducts = productsData.products
+            .sort((a: any, b: any) => new Date(b.createdAt || b.updatedAt).getTime() - new Date(a.createdAt || a.updatedAt).getTime())
+            .slice(0, 5)
+          setRecentProducts(sortedProducts)
         }
 
         if (ordersData.success) {
@@ -263,7 +268,7 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 {recentProducts.length > 0 ? (
                   recentProducts.map((product) => (
-                    <div key={product._id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-100">
+                    <div key={product.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-100">
                       <div className="flex-1">
                         <p className="font-semibold text-red-900">{product.name}</p>
                         <p className="text-sm text-amber-700">{product.punjabiName}</p>

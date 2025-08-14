@@ -24,7 +24,7 @@ import {
 import { toast } from 'sonner'
 
 interface Product {
-  _id?: string
+  id?: string
   name: string
   punjabiName: string
   description: string
@@ -32,8 +32,12 @@ interface Product {
   price: number
   originalPrice: number
   category: string
-  subcategory: string
+  subcategory?: string
   stock: number
+  rating?: number
+  reviews?: number
+  badge?: string
+  badgeEn?: string
   isActive: boolean
   createdAt?: string
   updatedAt?: string
@@ -150,7 +154,7 @@ export default function ProductsManagement() {
       const method = editingProduct ? 'PUT' : 'POST'
       
       const payload = editingProduct 
-        ? { ...formData, _id: editingProduct._id }
+        ? { ...formData, _id: editingProduct.id }
         : formData
 
       const response = await fetch(url, {
@@ -267,7 +271,7 @@ export default function ProductsManagement() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <SelectItem key={category.value} value={category.value}>
                         {category.label}
                       </SelectItem>
@@ -291,7 +295,7 @@ export default function ProductsManagement() {
             <div className="space-y-4">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
-                  <div key={product._id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-amber-100 hover:shadow-md transition-shadow">
+                  <div key={product.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-amber-100 hover:shadow-md transition-shadow">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
                         <h3 className="font-semibold text-red-900">{product.name}</h3>
@@ -318,7 +322,7 @@ export default function ProductsManagement() {
                         size="sm"
                         variant="outline"
                         className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDelete(product._id!)}
+                        onClick={() => handleDelete(product.id!)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

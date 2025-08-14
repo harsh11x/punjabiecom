@@ -42,6 +42,12 @@ const initialState: CartState = {
 }
 
 function cartReducer(state: CartState, action: CartAction): CartState {
+  // Debug logging only in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[CartReducer]', action.type, action.payload);
+    console.log('[CartReducer] Current state:', state);
+  }
+  
   switch (action.type) {
     case 'ADD_ITEM': {
       const existingItemIndex = state.items.findIndex(
@@ -130,22 +136,92 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState)
   const { isAuthenticated, user } = useFirebaseAuth()
-  const socket = useSocket()
+  
+  // Socket with cart-specific event handlers
+  const socket = useSocket({
+    onCartUpdate: (cartData) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] Socket cart update received:', cartData)
+      }
+      if (cartData?.items) {
+        const items = cartData.items.map((item: any) => ({
+          id: `${item.productId}-${item.size}-${item.color}`,
+          productId: item.productId,
+          name: item.name,
+          punjabiName: item.punjabiName,
+          price: item.price,
+          image: item.image,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          stock: item.stock
+        }))
+        dispatch({ type: 'LOAD_CART', payload: items })
+      }
+    },
+    onConnect: () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] Socket connected, user authenticated:', isAuthenticated)
+      }
+      if (isAuthenticated) {
+        // Request cart data from server when connected
+        socket?.emit('get-cart')
+      }
+    }
+  })
 
-  // Load cart from localStorage on mount (for non-authenticated users)
+  // Initialize clean cart state and load from localStorage if needed
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[CartProvider] Initializing cart, isAuthenticated:', isAuthenticated);
+    }
+    
+    // Always start with clean state
+    dispatch({ type: 'CLEAR_CART' })
+    
     if (!isAuthenticated) {
       const savedCart = localStorage.getItem('punjabi-heritage-cart')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] savedCart from localStorage:', savedCart);
+      }
+      
       if (savedCart) {
         try {
           const cartItems = JSON.parse(savedCart)
-          dispatch({ type: 'LOAD_CART', payload: cartItems })
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[CartProvider] Parsed cartItems:', cartItems);
+          }
+          
+          // Only load if there are actually items (not an empty array)
+          if (Array.isArray(cartItems) && cartItems.length > 0) {
+            dispatch({ type: 'LOAD_CART', payload: cartItems })
+          } else {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[CartProvider] Empty cart in localStorage, starting fresh');
+            }
+            localStorage.removeItem('punjabi-heritage-cart')
+          }
         } catch (error) {
           console.error('Error loading cart from localStorage:', error)
+          // Clear corrupted data
+          localStorage.removeItem('punjabi-heritage-cart')
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[CartProvider] No saved cart found in localStorage, starting fresh');
         }
       }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] User is authenticated, clearing localStorage and requesting server cart');
+      }
+      localStorage.removeItem('punjabi-heritage-cart')
+      // Request cart from server
+      if (socket?.socket?.connected) {
+        socket.socket.emit('get-cart')
+      }
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, socket?.socket?.connected])
 
   // Save cart to localStorage for non-authenticated users
   useEffect(() => {

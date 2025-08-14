@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cart Debug</title>
+</head>
+<body>
+    <h1>Cart Debug Tool</h1>
+    <button onclick="checkLocalStorage()">Check LocalStorage</button>
+    <button onclick="clearCartData()">Clear Cart Data</button>
+    <div id="output"></div>
+
+    <script>
+        function checkLocalStorage() {
+            const cartData = localStorage.getItem('punjabi-heritage-cart');
+            const output = document.getElementById('output');
+            
+            if (cartData) {
+                try {
+                    const parsed = JSON.parse(cartData);
+                    output.innerHTML = `<h3>Found Cart Data:</h3><pre>${JSON.stringify(parsed, null, 2)}</pre>`;
+                } catch (e) {
+                    output.innerHTML = `<h3>Found Cart Data (invalid JSON):</h3><pre>${cartData}</pre>`;
+                }
+            } else {
+                output.innerHTML = `<h3>No cart data found in localStorage</h3>`;
+            }
+        }
+
+        function clearCartData() {
+            localStorage.removeItem('punjabi-heritage-cart');
+            document.getElementById('output').innerHTML = `<h3>Cart data cleared!</h3>`;
+        }
+
+        // Auto-check on load
+        window.onload = checkLocalStorage;
+    </script>
+</body>
+</html>

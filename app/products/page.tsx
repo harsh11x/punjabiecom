@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 
 interface Product {
-  _id: string
+  id: string
   name: string
   punjabiName: string
   description: string
@@ -76,7 +76,7 @@ function ProductsPageContent() {
         ...(priceRange !== 'all' && { priceRange })
       })
 
-      const response = await fetch(`/api/products?${params}`)
+      const response = await fetch(`/api/products/local?${params}`)
       if (response.ok) {
         const data = await response.json()
         setProducts(data.data || [])
@@ -102,14 +102,14 @@ function ProductsPageContent() {
 
   const ProductCard = ({ product }: { product: Product }) => {
     const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    const isWishlisted = wishlist.includes(product._id)
+    const isWishlisted = wishlist.includes(product.id)
 
     if (viewMode === 'list') {
       return (
         <Card className="overflow-hidden hover:shadow-lg transition-shadow">
           <div className="flex">
             <div className="relative w-48 h-48 flex-shrink-0">
-              <Link href={`/products/${product._id}`}>
+              <Link href={`/products/${product.id}`}>
                 <Image
                   src={product.images[0] || '/placeholder.jpg'}
                   alt={product.name}
@@ -131,7 +131,7 @@ function ProductsPageContent() {
             <CardContent className="flex-1 p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <Link href={`/products/${product._id}`}>
+                  <Link href={`/products/${product.id}`}>
                     <h3 className="text-xl font-semibold text-gray-900 hover:text-red-600 cursor-pointer mb-1">
                       {product.name}
                     </h3>
@@ -172,7 +172,7 @@ function ProductsPageContent() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => toggleWishlist(product._id)}
+                  onClick={() => toggleWishlist(product.id)}
                   className="ml-4"
                 >
                   <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current text-red-500' : 'text-gray-400'}`} />
@@ -200,7 +200,7 @@ function ProductsPageContent() {
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
         <div className="relative aspect-square">
-          <Link href={`/products/${product._id}`}>
+          <Link href={`/products/${product.id}`}>
             <Image
               src={product.images[0] || '/placeholder.jpg'}
               alt={product.name}
@@ -221,7 +221,7 @@ function ProductsPageContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => toggleWishlist(product._id)}
+            onClick={() => toggleWishlist(product.id)}
             className="absolute bottom-2 right-2 bg-white/80 hover:bg-white"
           >
             <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current text-red-500' : 'text-gray-600'}`} />
@@ -229,7 +229,7 @@ function ProductsPageContent() {
         </div>
         
         <CardContent className="p-4">
-          <Link href={`/products/${product._id}`}>
+          <Link href={`/products/${product.id}`}>
             <h3 className="font-semibold text-lg text-gray-900 hover:text-red-600 cursor-pointer mb-1 line-clamp-1">
               {product.name}
             </h3>
@@ -392,7 +392,7 @@ function ProductsPageContent() {
               : "space-y-6"
           }>
             {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (

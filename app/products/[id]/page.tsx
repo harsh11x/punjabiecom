@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 
 interface Product {
-  _id: string
+  id: string
   name: string
   punjabiName: string
   description: string
@@ -54,7 +54,7 @@ export default function ProductDetailPage() {
 
   const socket = useSocket({
     onProductUpdate: (data) => {
-      if (data.productId === product?._id) {
+      if (data.productId === product?.id) {
         // Update product stock in real-time
         setProduct(prev => prev ? { ...prev, stock: data.stock } : null)
         toast.info('Product stock updated')
@@ -70,7 +70,7 @@ export default function ProductDetailPage() {
 
   const fetchProduct = async (id: string) => {
     try {
-      const response = await fetch(`/api/products/${id}`)
+      const response = await fetch(`/api/products/local/${id}`)
       if (response.ok) {
         const data = await response.json()
         setProduct(data.data)

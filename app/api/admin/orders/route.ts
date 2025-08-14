@@ -25,76 +25,9 @@ if (!fs.existsSync(DATA_DIR)) {
 
 function getOrders() {
   if (!fs.existsSync(ORDERS_FILE)) {
-    // Create initial demo orders
-    const demoOrders = [
-      {
-        _id: 'order_001',
-        orderNumber: 'PH-2024-001',
-        customerInfo: {
-          name: 'Simran Kaur',
-          email: 'simran@example.com',
-          phone: '+91-98765-43210',
-          address: {
-            street: '123 Punjab Street',
-            city: 'Chandigarh',
-            state: 'Punjab',
-            pincode: '160001'
-          }
-        },
-        items: [
-          {
-            productId: 'prod_001',
-            name: 'Traditional Punjabi Jutti',
-            price: 1500,
-            quantity: 2,
-            size: 'UK 7',
-            color: 'Red'
-          }
-        ],
-        total: 3000,
-        status: 'pending',
-        paymentMethod: 'COD',
-        paymentStatus: 'pending',
-        trackingNumber: '',
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        _id: 'order_002',
-        orderNumber: 'PH-2024-002',
-        customerInfo: {
-          name: 'Rajveer Singh',
-          email: 'rajveer@example.com',
-          phone: '+91-87654-32109',
-          address: {
-            street: '456 Heritage Lane',
-            city: 'Amritsar',
-            state: 'Punjab',
-            pincode: '143001'
-          }
-        },
-        items: [
-          {
-            productId: 'prod_002',
-            name: 'Phulkari Dupatta',
-            price: 2500,
-            quantity: 1,
-            size: 'One Size',
-            color: 'Pink'
-          }
-        ],
-        total: 2500,
-        status: 'processing',
-        paymentMethod: 'online',
-        paymentStatus: 'paid',
-        trackingNumber: 'TN123456789',
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-    
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify(demoOrders, null, 2), 'utf8')
-    return demoOrders
+    // Create empty orders file for real transactions only
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2), 'utf8')
+    return []
   }
   
   try {

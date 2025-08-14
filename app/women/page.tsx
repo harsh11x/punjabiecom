@@ -15,7 +15,7 @@ import { useSocket } from "@/hooks/useSocket"
 import { toast } from 'sonner'
 
 interface Product {
-  _id: string
+  id: string
   name: string
   punjabiName: string
   description: string
@@ -67,7 +67,7 @@ export default function WomenPage() {
         ...(priceRange !== 'all' && { priceRange })
       })
 
-      const response = await fetch(`/api/products?${params}`)
+      const response = await fetch(`/api/products/local?${params}`)
       if (response.ok) {
         const data = await response.json()
         setProducts(data.data || [])
@@ -93,12 +93,12 @@ export default function WomenPage() {
 
   const ProductCard = ({ product }: { product: Product }) => {
     const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    const isWishlisted = wishlist.includes(product._id)
+    const isWishlisted = wishlist.includes(product.id)
 
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
         <div className="relative aspect-square">
-          <Link href={`/products/${product._id}`}>
+          <Link href={`/products/${product.id}`}>
             <Image
               src={product.images[0] || '/placeholder.jpg'}
               alt={product.name}
@@ -119,7 +119,7 @@ export default function WomenPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => toggleWishlist(product._id)}
+            onClick={() => toggleWishlist(product.id)}
             className="absolute bottom-2 right-2 bg-white/80 hover:bg-white"
           >
             <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current text-red-500' : 'text-gray-600'}`} />
@@ -127,7 +127,7 @@ export default function WomenPage() {
         </div>
         
         <CardContent className="p-4">
-          <Link href={`/products/${product._id}`}>
+          <Link href={`/products/${product.id}`}>
             <h3 className="font-semibold text-lg text-gray-900 hover:text-pink-600 cursor-pointer mb-1 line-clamp-1">
               {product.name}
             </h3>
@@ -290,7 +290,7 @@ export default function WomenPage() {
         {products.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (

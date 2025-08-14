@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const products = getProducts()
     
     const newProduct = {
-      _id: Date.now().toString(),
+      id: Date.now().toString(),
       name: productData.name,
       punjabiName: productData.punjabiName || '',
       description: productData.description || '',
@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest) {
     }
     
     const products = getProducts()
-    const productIndex = products.findIndex((p: any) => p._id === _id)
+    const productIndex = products.findIndex((p: any) => p.id === _id)
     
     if (productIndex === -1) {
       return NextResponse.json(
@@ -183,7 +183,7 @@ export async function DELETE(request: NextRequest) {
     }
     
     const products = getProducts()
-    const filteredProducts = products.filter((p: any) => p._id !== productId)
+    const filteredProducts = products.filter((p: any) => p.id !== productId)
     
     if (filteredProducts.length === products.length) {
       return NextResponse.json(

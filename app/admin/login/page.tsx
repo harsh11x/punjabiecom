@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="admin@punjabstore.com"
+                    placeholder="harshdevsingh2004@gmail.com"
                     className="pl-10 border-2 border-amber-200 focus:border-red-400 bg-white/80"
                     value={formData.email}
                     onChange={handleInputChange}
@@ -159,12 +159,11 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">Demo Credentials:</h3>
-          <p className="text-sm text-blue-800">
-            <strong>Email:</strong> admin@punjabstore.com<br/>
-            <strong>Password:</strong> admin123
+        {/* Admin Access */}
+        <div className="mt-6 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+          <h3 className="text-sm font-semibold text-green-900 mb-2">Admin Access:</h3>
+          <p className="text-sm text-green-800">
+            Use your admin credentials to access the management panel.
           </p>
         </div>
 
