@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MobileNav } from '@/components/mobile-nav'
-import { ShoppingCart } from '@/components/shopping-cart'
+import { CartIcon } from '@/components/cart/CartIcon'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { OptimizedLink } from '@/components/performance/optimized-link'
@@ -70,10 +70,10 @@ export function Header() {
                 </div>
               </div>
               <OptimizedLink
-                href="/phulkari"
+                href="/fulkari"
                 className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
               >
-                ਫੁਲਕਾਰੀ • Phulkari
+                ਫੁਲਕਾਰੀ • Fulkari
               </OptimizedLink>
               <OptimizedLink
                 href="/products"
@@ -134,7 +134,7 @@ export function Header() {
               >
                 <Heart className="h-5 lg:h-6 w-5 lg:w-6" />
               </Button>
-              <ShoppingCart />
+              <CartIcon className="text-amber-100 hover:text-amber-300" />
               
               {/* Mobile Menu Button */}
               <Button
@@ -171,11 +171,11 @@ export function Header() {
                   ਜੁੱਤੀ • Jutti
                 </OptimizedLink>
                 <OptimizedLink
-                  href="/phulkari"
+                  href="/fulkari"
                   className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  ਫੁਲਕਾਰੀ • Phulkari
+                  ਫੁਲਕਾਰੀ • Fulkari
                 </OptimizedLink>
                 <OptimizedLink
                   href="/products"

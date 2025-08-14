@@ -56,10 +56,10 @@ export function CartSidebar({ children }: CartSidebarProps) {
 
   return (
     <>
+      <div onClick={() => setIsOpen(true)}>
+        {children}
+      </div>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          {children}
-        </SheetTrigger>
         <SheetContent className="w-full sm:max-w-lg">
           <SheetHeader>
             <SheetTitle className="flex items-center space-x-2">

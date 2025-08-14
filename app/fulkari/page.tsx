@@ -33,7 +33,7 @@ interface Product {
   badge?: string
 }
 
-export default function PhulkariPage() {
+export default function FulkariPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -60,7 +60,7 @@ export default function PhulkariPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
-        category: 'phulkari', // Only fetch phulkari products
+        category: 'fulkari', // Only fetch fulkari products
         ...(searchTerm && { search: searchTerm }),
         ...(subcategoryFilter !== 'all' && { subcategory: subcategoryFilter }),
         ...(sortBy && { sort: sortBy }),
@@ -73,11 +73,11 @@ export default function PhulkariPage() {
         setProducts(data.data || [])
         setTotalPages(data.pagination?.pages || 1)
       } else {
-        toast.error('Failed to fetch phulkari products')
+        toast.error('Failed to fetch fulkari products')
       }
     } catch (error) {
-      console.error('Error fetching phulkari products:', error)
-      toast.error('Error loading phulkari products')
+      console.error('Error fetching fulkari products:', error)
+      toast.error('Error loading fulkari products')
     } finally {
       setLoading(false)
     }
@@ -159,7 +159,7 @@ export default function PhulkariPage() {
             <Badge variant={product.stock > 0 ? "default" : "destructive"} className="text-xs">
               {product.stock > 0 ? `${product.stock} left` : 'Out of stock'}
             </Badge>
-            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700">Phulkari</Badge>
+            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700">Fulkari</Badge>
           </div>
 
           <div className="space-y-2">
@@ -209,7 +209,7 @@ export default function PhulkariPage() {
             <div className="flex items-center space-x-3">
               <Sparkles className="h-8 w-8 text-purple-300" />
               <div>
-                <h1 className="text-2xl font-bold text-purple-100">Phulkari Collection</h1>
+                <h1 className="text-2xl font-bold text-purple-100">Fulkari Collection</h1>
                 <p className="text-purple-200">ਫੁਲਕਾਰੀ ਸੰਗ੍ਰਹਿ • Traditional embroidered artistry</p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function PhulkariPage() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search phulkari products..."
+                placeholder="Search fulkari products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -296,7 +296,7 @@ export default function PhulkariPage() {
         ) : (
           <div className="text-center py-12">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No phulkari products found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No fulkari products found</h3>
             <p className="text-gray-600">Try adjusting your search or filters</p>
           </div>
         )}

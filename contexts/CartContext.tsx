@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react'
 import { useFirebaseAuth } from './FirebaseAuthContext'
 import { useSocket } from '@/hooks/useSocket'
 import { toast } from 'sonner'
@@ -137,7 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState)
   const { isAuthenticated, user } = useFirebaseAuth()
   
-  // Socket with cart-specific event handlers
+  // Socket with cart-specific event handlers - only enable if we have a backend server
   const socket = useSocket({
     onCartUpdate: (cartData) => {
       if (process.env.NODE_ENV === 'development') {
@@ -163,72 +163,66 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (process.env.NODE_ENV === 'development') {
         console.log('[CartProvider] Socket connected, user authenticated:', isAuthenticated)
       }
-      if (isAuthenticated) {
+      if (isAuthenticated && socket?.socket?.connected) {
         // Request cart data from server when connected
-        socket?.emit('get-cart')
+        socket?.socket.emit('get-cart')
       }
+    },
+    onError: (error) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] Socket connection failed, using localStorage only:', error.message)
+      }
+      // Gracefully handle socket errors - just use localStorage
     }
   })
 
-  // Initialize clean cart state and load from localStorage if needed
+  // Track if cart has been initialized to prevent immediate localStorage save
+  const [cartInitialized, setCartInitialized] = useState(false)
+
+  // Initialize with completely clean state on every load
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[CartProvider] Initializing cart, isAuthenticated:', isAuthenticated);
+      console.log('[CartProvider] Initializing cart - forcing clean state');
     }
     
-    // Always start with clean state
+    // Always clear localStorage first to ensure clean state
+    try {
+      localStorage.removeItem('punjabi-heritage-cart')
+      // Also clear any other cart-related storage keys that might exist
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('cart') || key.includes('Cart')) {
+          localStorage.removeItem(key)
+        }
+      })
+    } catch (error) {
+      console.error('Error clearing localStorage:', error)
+    }
+    
+    // Force dispatch clear cart to reset state
     dispatch({ type: 'CLEAR_CART' })
     
-    if (!isAuthenticated) {
-      const savedCart = localStorage.getItem('punjabi-heritage-cart')
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[CartProvider] savedCart from localStorage:', savedCart);
-      }
-      
-      if (savedCart) {
-        try {
-          const cartItems = JSON.parse(savedCart)
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[CartProvider] Parsed cartItems:', cartItems);
-          }
-          
-          // Only load if there are actually items (not an empty array)
-          if (Array.isArray(cartItems) && cartItems.length > 0) {
-            dispatch({ type: 'LOAD_CART', payload: cartItems })
-          } else {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('[CartProvider] Empty cart in localStorage, starting fresh');
-            }
-            localStorage.removeItem('punjabi-heritage-cart')
-          }
-        } catch (error) {
-          console.error('Error loading cart from localStorage:', error)
-          // Clear corrupted data
-          localStorage.removeItem('punjabi-heritage-cart')
-        }
-      } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[CartProvider] No saved cart found in localStorage, starting fresh');
-        }
-      }
-    } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[CartProvider] User is authenticated, clearing localStorage and requesting server cart');
-      }
-      localStorage.removeItem('punjabi-heritage-cart')
-      // Request cart from server
-      if (socket?.socket?.connected) {
-        socket.socket.emit('get-cart')
-      }
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[CartProvider] Cart state reset to:', { items: [], total: 0, itemCount: 0 });
     }
-  }, [isAuthenticated, socket?.socket?.connected])
+    
+    // Mark cart as initialized
+    setCartInitialized(true)
+    
+    // Only try to load server cart if authenticated
+    if (isAuthenticated && socket?.socket?.connected) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] Requesting cart from server for authenticated user');
+      }
+      socket.socket.emit('get-cart')
+    }
+  }, [])
 
-  // Save cart to localStorage for non-authenticated users
+  // Save cart to localStorage for non-authenticated users (only after initialization)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && cartInitialized) {
       localStorage.setItem('punjabi-heritage-cart', JSON.stringify(state.items))
     }
-  }, [state.items, isAuthenticated])
+  }, [state.items, isAuthenticated, cartInitialized])
 
   // Socket event listeners for authenticated users
   useEffect(() => {
@@ -296,8 +290,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     const cartItem = { ...item, quantity: item.quantity || 1 }
 
-    if (isAuthenticated && socket?.socket) {
-      // Send to server for authenticated users
+    if (isAuthenticated && socket?.socket?.connected) {
+      // Send to server for authenticated users (only if socket is connected)
       socket.socket.emit('add-to-cart', {
         productId: item.productId,
         name: item.name,
@@ -311,44 +305,48 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       })
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
-      // Local storage for non-authenticated users
+      // Local storage for all other cases (non-authenticated users or no socket connection)
       dispatch({ type: 'ADD_ITEM', payload: cartItem })
       toast.success('Item added to cart')
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[CartProvider] Item added to local cart:', cartItem)
+      }
     }
   }
 
   const removeItem = (id: string, size: string, color: string) => {
-    if (isAuthenticated && socket?.socket) {
-      // Send to server for authenticated users
+    if (isAuthenticated && socket?.socket?.connected) {
+      // Send to server for authenticated users (only if socket is connected)
       const [productId] = id.split('-')
       socket.socket.emit('remove-from-cart', { productId, size, color })
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
-      // Local storage for non-authenticated users
+      // Local storage for all other cases
       dispatch({ type: 'REMOVE_ITEM', payload: `${id}-${size}-${color}` })
       toast.success('Item removed from cart')
     }
   }
 
   const updateQuantity = (id: string, size: string, color: string, quantity: number) => {
-    if (isAuthenticated && socket?.socket) {
-      // Send to server for authenticated users
+    if (isAuthenticated && socket?.socket?.connected) {
+      // Send to server for authenticated users (only if socket is connected)
       const [productId] = id.split('-')
       socket.socket.emit('update-cart-item', { productId, size, color, quantity })
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
-      // Local storage for non-authenticated users
+      // Local storage for all other cases
       dispatch({ type: 'UPDATE_QUANTITY', payload: { id: `${id}-${size}-${color}`, quantity } })
     }
   }
 
   const clearCart = () => {
-    if (isAuthenticated && socket?.socket) {
-      // Send to server for authenticated users
+    if (isAuthenticated && socket?.socket?.connected) {
+      // Send to server for authenticated users (only if socket is connected)
       socket.socket.emit('clear-cart')
       dispatch({ type: 'SET_LOADING', payload: true })
     } else {
-      // Local storage for non-authenticated users
+      // Local storage for all other cases
       dispatch({ type: 'CLEAR_CART' })
       toast.success('Cart cleared')
     }

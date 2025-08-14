@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { CartIcon } from "@/components/cart/CartIcon"
 import { useState } from "react"
 
 export default function JuttiPage() {
@@ -126,10 +127,10 @@ export default function JuttiPage() {
                 </div>
               </div>
               <Link
-                href="/phulkari"
+                href="/fulkari"
                 className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
               >
-                ਫੁਲਕਾਰੀ • Phulkari
+                ਫੁਲਕਾਰੀ • Fulkari
               </Link>
               <Link
                 href="/about"
@@ -143,16 +144,7 @@ export default function JuttiPage() {
               <Button variant="ghost" size="icon" className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50">
                 <Heart className="h-6 w-6" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50 relative"
-              >
-                <ShoppingBag className="h-6 w-6" />
-                <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center bg-amber-500 text-red-900 font-bold">
-                  2
-                </Badge>
-              </Button>
+              <CartIcon className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50" />
               <Sheet>
                 <SheetTrigger asChild>
                   <Button
@@ -179,10 +171,10 @@ export default function JuttiPage() {
                       ਜੁੱਤੀ • Jutti
                     </Link>
                     <Link
-                      href="/phulkari"
+                      href="/fulkari"
                       className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
                     >
-                      ਫੁਲਕਾਰੀ • Phulkari
+                      ਫੁਲਕਾਰੀ • Fulkari
                     </Link>
                     <Link
                       href="/about"
