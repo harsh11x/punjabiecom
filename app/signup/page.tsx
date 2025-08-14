@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react'
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -20,7 +21,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { signup, loginWithGoogle } = useFirebaseAuth()
+  const { signup, loginWithGoogle, error, clearError } = useFirebaseAuth()
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,6 +83,23 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {error}
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto ml-2 text-destructive hover:text-destructive/80"
+                    onClick={clearError}
+                  >
+                    Dismiss
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Google Sign Up */}
             <Button
               type="button"

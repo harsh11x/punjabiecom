@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { useRouter } from 'next/navigation'
+import { Header } from '@/components/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,15 +54,15 @@ export default function ProfilePage() {
 
     if (user) {
       setFormData({
-        name: user.name || '',
+        name: user.displayName || '',
         email: user.email || '',
-        phone: user.phone || '',
-        gender: user.gender || '',
+        phone: user.phoneNumber || '',
+        gender: '',
         address: {
-          street: user.address?.street || '',
-          city: user.address?.city || '',
-          state: user.address?.state || '',
-          pincode: user.address?.pincode || ''
+          street: '',
+          city: '',
+          state: '',
+          pincode: ''
         }
       })
     }
@@ -88,7 +89,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setLoading(true)
     try {
-      await updateProfile(formData)
+      await updateUserProfile({ displayName: formData.name })
       setIsEditing(false)
       toast.success('Profile updated successfully')
     } catch (error: any) {
@@ -100,15 +101,15 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setFormData({
-      name: user?.name || '',
+      name: user?.displayName || '',
       email: user?.email || '',
-      phone: user?.phone || '',
-      gender: user?.gender || '',
+      phone: user?.phoneNumber || '',
+      gender: '',
       address: {
-        street: user?.address?.street || '',
-        city: user?.address?.city || '',
-        state: user?.address?.state || '',
-        pincode: user?.address?.pincode || ''
+        street: '',
+        city: '',
+        state: '',
+        pincode: ''
       }
     })
     setIsEditing(false)
@@ -119,13 +120,20 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600">Manage your account information and preferences</p>
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
+      <Header />
+      
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-amber-100 mb-2">ਮੇਰੀ ਪ੍ਰੋਫਾਈਲ • My Profile</h1>
+            <p className="text-amber-200">Manage your account information and preferences</p>
+          </div>
         </div>
+      </div>
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sidebar */}
@@ -141,11 +149,11 @@ export default function ProfilePage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-lg">
-                      {user?.name?.charAt(0).toUpperCase()}
+                      {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{user?.name}</p>
+                    <p className="font-medium text-gray-900">{user?.displayName || 'User'}</p>
                     <p className="text-sm text-gray-500">{user?.email}</p>
                   </div>
                 </div>
@@ -155,11 +163,11 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Shield className="h-4 w-4" />
-                    <span>Member since {new Date(user?.createdAt || '').toLocaleDateString()}</span>
+                    <span>Member since Invalid Date</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Badge variant={user?.isVerified ? "default" : "secondary"}>
-                      {user?.isVerified ? "Verified" : "Unverified"}
+                    <Badge variant="secondary">
+                      Unverified
                     </Badge>
                   </div>
                 </div>
@@ -364,14 +372,12 @@ export default function ProfilePage() {
                   <div>
                     <p className="font-medium">Account Verification</p>
                     <p className="text-sm text-gray-500">
-                      {user?.isVerified ? "Your account is verified" : "Verify your account"}
+                      Verify your account
                     </p>
                   </div>
-                  {!user?.isVerified && (
-                    <Button variant="outline" size="sm">
-                      Verify
-                    </Button>
-                  )}
+                  <Button variant="outline" size="sm">
+                    Verify
+                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,7 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { login, loginWithGoogle } = useFirebaseAuth()
+  const { login, loginWithGoogle, error, clearError } = useFirebaseAuth()
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,11 +38,15 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
+    console.log('handleGoogleLogin called')
     setIsLoading(true)
     try {
+      console.log('Calling loginWithGoogle...')
       await loginWithGoogle()
+      console.log('loginWithGoogle completed, redirecting to /')
       router.push('/')
     } catch (error) {
+      console.error('Error in handleGoogleLogin:', error)
       // Error is handled in the context
     } finally {
       setIsLoading(false)
@@ -69,6 +74,23 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {error}
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto ml-2 text-destructive hover:text-destructive/80"
+                    onClick={clearError}
+                  >
+                    Dismiss
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Google Sign In */}
             <Button
               type="button"

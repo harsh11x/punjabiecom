@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AuthGuardedCart } from '@/components/AuthGuardedCart'
+import { Header } from '@/components/header'
 import { useSocket } from '@/hooks/useSocket'
 import { toast } from 'sonner'
 import { 
@@ -303,13 +304,15 @@ function ProductsPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
-      {/* Header */}
-      <header className="border-b-4 border-amber-600 bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
+      <Header />
+      
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white py-8">
+        <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-amber-100">Our Products</h1>
-              <p className="text-amber-200">Discover authentic Punjabi heritage</p>
+              <h1 className="text-3xl font-bold text-amber-100 mb-2">ਸਾਰੇ ਉਤਪਾਦ • Our Products</h1>
+              <p className="text-amber-200">Discover authentic Punjabi heritage crafts</p>
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -323,8 +326,7 @@ function ProductsPageContent() {
             </div>
           </div>
         </div>
-        <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500"></div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters */}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Auth Test</title>
+</head>
+<body>
+    <h1>Firebase Auth Test</h1>
+    <button id="google-login">Test Google Login</button>
+    <div id="result"></div>
+
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA96W2Y6321lit2B2HuPOPIdY-MS9dytl4",
+            authDomain: "punjabiecom-dc8ea.firebaseapp.com",
+            projectId: "punjabiecom-dc8ea",
+            storageBucket: "punjabiecom-dc8ea.firebasestorage.app",
+            messagingSenderId: "248407809084",
+            appId: "1:248407809084:web:769700a9c267ac2a5e3739",
+            measurementId: "G-VNY53M2Q6L"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        document.getElementById('google-login').addEventListener('click', async () => {
+            console.log('Google login button clicked');
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Attempting Google login...';
+            
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                console.log('Login successful:', result.user);
+                resultDiv.innerHTML = `Success! Logged in as: ${result.user.email}`;
+            } catch (error) {
+                console.error('Login error:', error);
+                resultDiv.innerHTML = `Error: ${error.code} - ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

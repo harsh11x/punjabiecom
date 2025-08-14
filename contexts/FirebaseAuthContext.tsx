@@ -1,6 +1,16 @@
 'use client'
 
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  User
+} from 'firebase/auth'
+import { auth, googleProvider } from '@/lib/firebase'
 
 interface FirebaseUser {
   uid: string
@@ -13,33 +23,155 @@ interface FirebaseUser {
 interface FirebaseAuthContextType {
   user: FirebaseUser | null
   loading: boolean
+  error: string | null
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string, name: string) => Promise<void>
   loginWithGoogle: () => Promise<void>
   logout: () => Promise<void>
   updateUserProfile: (data: { displayName?: string; photoURL?: string }) => Promise<void>
   isAuthenticated: boolean
+  clearError: () => void
 }
 
 const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(undefined)
 
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user] = useState<FirebaseUser | null>(null)
-  const [loading] = useState(false) // Never loading in performance mode
+  const [user, setUser] = useState<FirebaseUser | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const noop = async () => {}
+  // Convert Firebase User to our FirebaseUser interface
+  const convertUser = (firebaseUser: User): FirebaseUser => ({
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    displayName: firebaseUser.displayName,
+    photoURL: firebaseUser.photoURL,
+    phoneNumber: firebaseUser.phoneNumber
+  })
+
+  // Listen for authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(convertUser(firebaseUser))
+      } else {
+        setUser(null)
+      }
+      setLoading(false)
+    })
+
+    return unsubscribe
+  }, [])
+
+  const clearError = () => setError(null)
+
+  const login = async (email: string, password: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await signInWithEmailAndPassword(auth, email, password)
+      setUser(convertUser(result.user))
+    } catch (error: any) {
+      setError(error.message || 'Failed to log in')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signup = async (email: string, password: string, name: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await createUserWithEmailAndPassword(auth, email, password)
+      
+      // Update the user's display name
+      await updateProfile(result.user, {
+        displayName: name
+      })
+      
+      setUser(convertUser(result.user))
+    } catch (error: any) {
+      setError(error.message || 'Failed to create account')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loginWithGoogle = async () => {
+    console.log('Google login clicked')
+    try {
+      setLoading(true)
+      setError(null)
+      console.log('About to call signInWithPopup')
+      const result = await signInWithPopup(auth, googleProvider)
+      console.log('Google login successful:', result.user.email)
+      setUser(convertUser(result.user))
+    } catch (error: any) {
+      console.error('Google login error:', error)
+      setError(error.message || 'Failed to sign in with Google')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const logout = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      await signOut(auth)
+      setUser(null)
+    } catch (error: any) {
+      setError(error.message || 'Failed to log out')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateUserProfile = async (data: { displayName?: string; photoURL?: string }) => {
+    if (!auth.currentUser) {
+      throw new Error('No authenticated user')
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+      await updateProfile(auth.currentUser, data)
+      
+      // Update local user state
+      if (user) {
+        setUser({
+          ...user,
+          displayName: data.displayName || user.displayName,
+          photoURL: data.photoURL || user.photoURL
+        })
+      }
+    } catch (error: any) {
+      setError(error.message || 'Failed to update profile')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const value = {
+    user,
+    loading,
+    error,
+    login,
+    signup,
+    loginWithGoogle,
+    logout,
+    updateUserProfile,
+    isAuthenticated: !!user,
+    clearError
+  }
 
   return (
-    <FirebaseAuthContext.Provider value={{
-      user,
-      loading,
-      login: noop,
-      signup: noop,
-      loginWithGoogle: noop,
-      logout: noop,
-      updateUserProfile: noop,
-      isAuthenticated: false
-    }}>
+    <FirebaseAuthContext.Provider value={value}>
       {children}
     </FirebaseAuthContext.Provider>
   )
