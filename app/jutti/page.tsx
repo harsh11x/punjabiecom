@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { CartIcon } from "@/components/cart/CartIcon"
+import { AuthGuardedCart } from "@/components/AuthGuardedCart"
 import { useState } from "react"
 
 export default function JuttiPage() {
@@ -326,7 +327,15 @@ export default function JuttiPage() {
                       <span className="text-sm text-gray-500 line-through">{product.originalPrice}</span>
                     </div>
 
-                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white">Add to Cart</Button>
+                    <AuthGuardedCart
+                      productId={product.id.toString()}
+                      productName={product.name}
+                      productPrice={parseFloat(product.price.replace('₹', '').replace(',', ''))}
+                      productImage={product.image}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Add to Cart
+                    </AuthGuardedCart>
                   </div>
                 </CardContent>
               </Card>

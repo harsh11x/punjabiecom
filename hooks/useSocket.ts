@@ -52,10 +52,11 @@ export function useSocket(options: UseSocketOptions = {}) {
         })
 
         socket.on('connect_error', (error) => {
-          console.error('Socket connection error:', error)
+          console.warn('Socket connection failed (this is optional):', error.message)
           setIsConnected(false)
           setIsConnecting(false)
-          options.onError?.(error)
+          // Don't call onError callback for connection failures
+          // as sockets are optional for basic app functionality
         })
 
         // Business events
@@ -85,9 +86,10 @@ export function useSocket(options: UseSocketOptions = {}) {
         })
 
       } catch (error) {
-        console.error('Socket initialization error:', error)
+        console.warn('Socket initialization failed (sockets are optional):', error)
         setIsConnecting(false)
-        options.onError?.(error as Error)
+        // Don't call onError callback for initialization failures
+        // as sockets are optional for basic app functionality
       }
     }
 
