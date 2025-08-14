@@ -29,20 +29,8 @@ interface Product {
   badge?: string
 }
 
-// Fetch products at build time for better performance
-async function getFeaturedProducts(): Promise<Product[]> {
-  try {
-    // Use fallback approach since server-side fetch might fail during build
-    return []
-  } catch (error) {
-    console.error('Error fetching featured products:', error)
-  }
-  return []
-}
-
-export default async function HomePage() {
-  // Fetch products on server side for faster initial load
-  const initialProducts = await getFeaturedProducts()
+export default function HomePage() {
+  // Don't fetch products server-side to prevent blocking page load
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
@@ -434,7 +422,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <FeaturedProductsClient initialProducts={initialProducts} />
+          <FeaturedProductsClient initialProducts={[]} />
         </div>
       </section>
 

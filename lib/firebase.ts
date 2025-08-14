@@ -15,10 +15,16 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 
-// Initialize Firebase Analytics (only in browser)
+// Initialize Firebase Analytics (lazy loaded)
 let analytics = null
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app)
+const getFirebaseAnalytics = () => {
+  if (typeof window !== 'undefined' && !analytics) {
+    // Lazy load analytics to prevent blocking initial page load
+    import('firebase/analytics').then(({ getAnalytics }) => {
+      analytics = getAnalytics(app)
+    })
+  }
+  return analytics
 }
 
 // Initialize Firebase Authentication and get a reference to the service

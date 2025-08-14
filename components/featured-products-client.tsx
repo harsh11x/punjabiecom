@@ -28,27 +28,49 @@ interface FeaturedProductsClientProps {
 
 export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
-  const [loading, setLoading] = useState(initialProducts.length === 0)
+  const [loading, setLoading] = useState(false)
+  const [shouldLoadProducts, setShouldLoadProducts] = useState(false)
 
   useEffect(() => {
-    if (initialProducts.length === 0) {
+    // Only load products after component is visible (lazy loading)
+    const timer = setTimeout(() => {
+      setShouldLoadProducts(true)
+    }, 100) // Small delay to ensure page loads fast
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (shouldLoadProducts && initialProducts.length === 0) {
+      setLoading(true)
       // Fetch products on client side if not available from server
       const fetchProducts = async () => {
         try {
-          const response = await fetch('/api/products?limit=8&sortBy=rating&sortOrder=desc')
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+          
+          const response = await fetch('/api/products?limit=8&sortBy=rating&sortOrder=desc', {
+            signal: controller.signal
+          })
+          
+          clearTimeout(timeoutId)
+          
           if (response.ok) {
             const data = await response.json()
             setProducts(data.data || [])
           }
         } catch (error) {
-          console.error('Error fetching products:', error)
+          if (error.name !== 'AbortError') {
+            console.error('Error fetching products:', error)
+          }
+          // Don't show error to user, just skip showing products
         } finally {
           setLoading(false)
         }
       }
       fetchProducts()
     }
-  }, [initialProducts])
+  }, [initialProducts, shouldLoadProducts])
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">

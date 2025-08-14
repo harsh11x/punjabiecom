@@ -1,4 +1,27 @@
-'use client'
+#!/usr/bin/env node
+
+/**
+ * Emergency Performance Mode
+ * 
+ * This script temporarily disables slow features to dramatically improve page load speed
+ * Use this when you need instant navigation while fixing underlying performance issues
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+console.log('🚀 Enabling Emergency Performance Mode...');
+
+// 1. Create a simplified version of NavigationProgress that does nothing
+const fastNavigationProgress = `'use client'
+
+export function NavigationProgress() {
+  // Disabled for performance - instant loading
+  return null
+}`;
+
+// 2. Create a minimal FirebaseAuthContext that doesn't block
+const fastFirebaseAuth = `'use client'
 
 import React, { createContext, useContext, useState } from 'react'
 
@@ -51,4 +74,24 @@ export function useFirebaseAuth() {
     throw new Error('useFirebaseAuth must be used within a FirebaseAuthProvider')
   }
   return context
-}
+}`;
+
+// Write the performance optimized files
+fs.writeFileSync(
+  path.join(__dirname, 'components/performance/navigation-progress.tsx'),
+  fastNavigationProgress
+);
+
+fs.writeFileSync(
+  path.join(__dirname, 'contexts/FirebaseAuthContext.tsx'),
+  fastFirebaseAuth
+);
+
+console.log('✅ Performance mode enabled!');
+console.log('📝 Features temporarily disabled:');
+console.log('   - Firebase Authentication (auth features will not work)');
+console.log('   - Navigation progress bars');
+console.log('   - Database calls on page load');
+console.log('');
+console.log('🔄 Run "npm run build && npm start" to test the lightning-fast navigation!');
+console.log('⚠️  Remember to restore features when done testing with: git checkout .');
