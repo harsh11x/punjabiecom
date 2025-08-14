@@ -91,6 +91,42 @@ export function Header() {
 
             {/* Mobile & Desktop Actions */}
             <div className="flex items-center space-x-2 lg:space-x-4">
+              {/* Login/Signup Buttons for Desktop */}
+              {!isAuthenticated && (
+                <div className="hidden md:flex items-center space-x-2">
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-2 border-amber-300 text-amber-100 hover:bg-amber-300 hover:text-red-900 font-semibold px-3 py-1.5 transition-all duration-200"
+                    >
+                      ਲਾਗਿਨ • Login
+                    </Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-amber-400 to-red-500 hover:from-amber-500 hover:to-red-600 text-white font-semibold px-3 py-1.5 shadow-lg border-2 border-amber-300 transition-all duration-200"
+                    >
+                      ਸਾਈਨ ਅਪ • Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              
+              {/* User Profile Button for logged in users */}
+              {isAuthenticated && (
+                <Link href="/profile">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:flex text-amber-100 hover:text-amber-300 hover:bg-red-700/50 font-semibold"
+                  >
+                    ਪ੍ਰੋਫਾਈਲ • Profile
+                  </Button>
+                </Link>
+              )}
+              
               <Button
                 variant="ghost"
                 size="icon"
@@ -155,6 +191,44 @@ export function Header() {
                 >
                   ਸਾਡੇ ਬਾਰੇ • About
                 </OptimizedLink>
+                
+                {/* Mobile Login/Signup Buttons */}
+                {!isAuthenticated && (
+                  <div className="flex flex-col space-y-2 pt-4 border-t border-amber-600 mt-4">
+                    <OptimizedLink href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-2 border-amber-300 text-amber-100 hover:bg-amber-300 hover:text-red-900 font-semibold px-3 py-1.5 transition-all duration-200"
+                      >
+                        ਲਾਗਿਨ • Login
+                      </Button>
+                    </OptimizedLink>
+                    <OptimizedLink href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-amber-400 to-red-500 hover:from-amber-500 hover:to-red-600 text-white font-semibold px-3 py-1.5 shadow-lg border-2 border-amber-300 transition-all duration-200"
+                      >
+                        ਸਾਈਨ ਅਪ • Sign Up
+                      </Button>
+                    </OptimizedLink>
+                  </div>
+                )}
+                
+                {/* Mobile Profile Button for logged in users */}
+                {isAuthenticated && (
+                  <div className="pt-4 border-t border-amber-600 mt-4">
+                    <OptimizedLink href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-amber-100 hover:text-amber-300 hover:bg-red-700/50 font-semibold"
+                      >
+                        ਪ੍ਰੋਫਾਈਲ • Profile
+                      </Button>
+                    </OptimizedLink>
+                  </div>
+                )}
               </nav>
             </div>
           )}

@@ -103,8 +103,7 @@ UserSchema.methods.comparePassword = async function(candidatePassword: string): 
   return bcrypt.compare(candidatePassword, this.password)
 }
 
-// Create indexes
-UserSchema.index({ email: 1 })
+// Create indexes (email already has unique: true, so skip it)
 UserSchema.index({ role: 1 })
 UserSchema.index({ phone: 1 })
 

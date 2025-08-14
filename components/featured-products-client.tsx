@@ -49,7 +49,7 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
           const controller = new AbortController()
           const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
           
-          const response = await fetch('/api/products?limit=8&sortBy=rating&sortOrder=desc', {
+          const response = await fetch('/api/products/featured?limit=8', {
             signal: controller.signal
           })
           
@@ -71,6 +71,24 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
       fetchProducts()
     }
   }, [initialProducts, shouldLoadProducts])
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="bg-white/80 rounded-lg border border-amber-200 overflow-hidden animate-pulse">
+            <div className="h-64 bg-gradient-to-r from-amber-100 to-red-100"></div>
+            <div className="p-4 space-y-3">
+              <div className="h-4 bg-amber-200 rounded"></div>
+              <div className="h-3 bg-red-200 rounded w-3/4"></div>
+              <div className="h-5 bg-amber-300 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">

@@ -77,9 +77,7 @@ AdminSchema.methods.toJSON = function() {
   return adminObject
 }
 
-// Create indexes
-AdminSchema.index({ email: 1 })
-AdminSchema.index({ username: 1 })
+// Create indexes (email and username already have unique: true, so skip them)
 AdminSchema.index({ isActive: 1 })
 
 export default mongoose.models.Admin || mongoose.model<IAdmin>('Admin', AdminSchema)

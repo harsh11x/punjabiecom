@@ -200,8 +200,7 @@ OrderSchema.pre('save', async function(next) {
   next()
 })
 
-// Create indexes for better query performance
-OrderSchema.index({ orderNumber: 1 })
+// Create indexes for better query performance (orderNumber already has unique: true, so skip it)
 OrderSchema.index({ 'customer.email': 1 })
 OrderSchema.index({ 'customer.phone': 1 })
 OrderSchema.index({ orderStatus: 1 })

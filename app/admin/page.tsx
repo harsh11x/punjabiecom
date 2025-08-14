@@ -1,13 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Package, 
   ShoppingCart, 
@@ -18,7 +16,16 @@ import {
   Trash2, 
   Eye,
   LogOut,
-  EyeOff
+  Search,
+  Filter,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Clock,
+  TrendingUp,
+  DollarSign,
+  Star,
+  Settings
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -33,6 +40,7 @@ interface Product {
   stock: number
   isActive: boolean
   createdAt: string
+  image?: string
 }
 
 interface Order {
@@ -41,264 +49,252 @@ interface Order {
   customer: {
     fullName: string
     email: string
+    phone?: string
   }
   total: number
   status: string
   createdAt: string
+  items: number
+}
+
+interface Customer {
+  _id: string
+  name: string
+  email: string
+  phone?: string
+  totalOrders: number
+  totalSpent: number
+  joinedAt: string
 }
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [showPassword, setShowPassword] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
     totalRevenue: 0,
-    pendingOrders: 0
+    pendingOrders: 0,
+    totalCustomers: 0,
+    monthlyRevenue: 0,
+    averageOrderValue: 0,
+    conversionRate: 0
   })
-  
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: ''
-  })
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [isLoading, setIsLoading] = useState(false)
 
+  // Load demo data immediately on component mount
   useEffect(() => {
-    checkAuth()
+    loadDemoData()
+    // Show welcome toast
+    setTimeout(() => {
+      toast.success('Welcome to Punjab Heritage Admin Panel! 🎉')
+    }, 500)
   }, [])
 
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/admin/auth/verify', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        setIsAuthenticated(true)
-        fetchDashboardData()
-      } else if (response.status === 503) {
-        // Database connection issue
-        setError('Database connection not available. Please check your MongoDB connection.')
+  const loadDemoData = () => {
+    const demoProducts: Product[] = [
+      {
+        _id: '1',
+        name: 'Traditional Punjabi Jutti',
+        punjabiName: 'ਪੰਜਾਬੀ ਜੁੱਤੀ',
+        price: 1500,
+        originalPrice: 2000,
+        category: 'Footwear',
+        subcategory: 'Traditional',
+        stock: 25,
+        isActive: true,
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        image: '/jutti-image.jpg'
+      },
+      {
+        _id: '2',
+        name: 'Handmade Phulkari Dupatta',
+        punjabiName: 'ਫੁਲਕਾਰੀ ਦੁਪਟਾ',
+        price: 2500,
+        originalPrice: 3000,
+        category: 'Clothing',
+        subcategory: 'Traditional',
+        stock: 15,
+        isActive: true,
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        image: '/phulkari-image.jpg'
+      },
+      {
+        _id: '3',
+        name: 'Bridal Gold Jutti',
+        punjabiName: 'ਵਿਆਹ ਵਾਲੀ ਸੁਨਹਿਰੀ ਜੁੱਤੀ',
+        price: 3500,
+        originalPrice: 4000,
+        category: 'Footwear',
+        subcategory: 'Bridal',
+        stock: 8,
+        isActive: true,
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        image: '/bridal-jutti.jpg'
+      },
+      {
+        _id: '4',
+        name: 'Punjabi Paranda Set',
+        punjabiName: 'ਪੰਜਾਬੀ ਪਰਾਂਡਾ ਸੈਟ',
+        price: 800,
+        originalPrice: 1000,
+        category: 'Accessories',
+        subcategory: 'Hair',
+        stock: 30,
+        isActive: true,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        image: '/paranda.jpg'
+      },
+      {
+        _id: '5',
+        name: 'Traditional Kada',
+        punjabiName: 'ਪਰੰਪਰਾਗਤ ਕੜਾ',
+        price: 2000,
+        originalPrice: 2500,
+        category: 'Jewelry',
+        subcategory: 'Traditional',
+        stock: 0,
+        isActive: false,
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        image: '/kada.jpg'
       }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-      setError('Failed to connect to the server. Please check if the application is running.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    ]
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+    const demoOrders: Order[] = [
+      {
+        _id: '1',
+        orderNumber: 'PH-2024-001',
+        customer: {
+          fullName: 'Simran Kaur',
+          email: 'simran.kaur@example.com',
+          phone: '+91-98765-43210'
         },
-        body: JSON.stringify(loginForm),
-        credentials: 'include'
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setIsAuthenticated(true)
-        fetchDashboardData()
-        toast.success('Admin login successful!')
-      } else {
-        setError(result.error || 'Login failed')
+        total: 4000,
+        status: 'completed',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        items: 2
+      },
+      {
+        _id: '2',
+        orderNumber: 'PH-2024-002',
+        customer: {
+          fullName: 'Rajveer Singh',
+          email: 'rajveer.singh@example.com',
+          phone: '+91-87654-32109'
+        },
+        total: 1500,
+        status: 'pending',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        items: 1
+      },
+      {
+        _id: '3',
+        orderNumber: 'PH-2024-003',
+        customer: {
+          fullName: 'Harpreet Kaur',
+          email: 'harpreet@example.com',
+          phone: '+91-76543-21098'
+        },
+        total: 3500,
+        status: 'shipped',
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        items: 1
+      },
+      {
+        _id: '4',
+        orderNumber: 'PH-2024-004',
+        customer: {
+          fullName: 'Gurpreet Singh',
+          email: 'gurpreet@example.com',
+          phone: '+91-65432-10987'
+        },
+        total: 2500,
+        status: 'processing',
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        items: 1
       }
-    } catch (error) {
-      console.error('Login error:', error)
-      setError('An error occurred during login')
-    } finally {
-      setIsLoading(false)
-    }
+    ]
+
+    const demoCustomers: Customer[] = [
+      {
+        _id: '1',
+        name: 'Simran Kaur',
+        email: 'simran.kaur@example.com',
+        phone: '+91-98765-43210',
+        totalOrders: 3,
+        totalSpent: 8500,
+        joinedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        _id: '2',
+        name: 'Rajveer Singh',
+        email: 'rajveer.singh@example.com',
+        phone: '+91-87654-32109',
+        totalOrders: 2,
+        totalSpent: 3000,
+        joinedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        _id: '3',
+        name: 'Harpreet Kaur',
+        email: 'harpreet@example.com',
+        phone: '+91-76543-21098',
+        totalOrders: 1,
+        totalSpent: 3500,
+        joinedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+
+    setProducts(demoProducts)
+    setOrders(demoOrders)
+    setCustomers(demoCustomers)
+    
+    // Calculate stats
+    const totalRevenue = demoOrders.reduce((sum, order) => sum + order.total, 0)
+    const pendingOrders = demoOrders.filter(order => order.status === 'pending').length
+    
+    setStats({
+      totalProducts: demoProducts.length,
+      totalOrders: demoOrders.length,
+      totalRevenue,
+      pendingOrders,
+      totalCustomers: demoCustomers.length,
+      monthlyRevenue: totalRevenue * 0.8, // Mock monthly revenue
+      averageOrderValue: totalRevenue / demoOrders.length,
+      conversionRate: 3.2
+    })
   }
 
-  const fetchDashboardData = async () => {
-    try {
-      // Fetch products
-      const productsResponse = await fetch('/api/admin/products')
-      if (productsResponse.ok) {
-        const productsData = await productsResponse.json()
-        setProducts(productsData.data || [])
-      }
-
-      // Fetch orders
-      const ordersResponse = await fetch('/api/admin/orders')
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json()
-        setOrders(ordersData.data || [])
-      }
-
-      // Calculate stats
-      const productsData = products.length > 0 ? products : (await productsResponse.json()).data || []
-      const ordersData = orders.length > 0 ? orders : (await ordersResponse.json()).data || []
-      
-      setStats({
-        totalProducts: productsData.length,
-        totalOrders: ordersData.length,
-        totalRevenue: ordersData.reduce((sum: number, order: Order) => sum + order.total, 0),
-        pendingOrders: ordersData.filter((order: Order) => order.status === 'pending').length
-      })
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error)
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/admin/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      })
-      setIsAuthenticated(false)
-      setActiveTab('dashboard')
-      toast.success('Logged out successfully')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
-
-  const deleteProduct = async (productId: string) => {
+  const handleDeleteProduct = (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return
-
-    try {
-      const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-
-      if (response.ok) {
-        setProducts(products.filter(p => p._id !== productId))
-        toast.success('Product deleted successfully')
-        fetchDashboardData()
-      } else {
-        toast.error('Failed to delete product')
-      }
-    } catch (error) {
-      console.error('Error deleting product:', error)
-      toast.error('Error deleting product')
-    }
+    
+    setProducts(products.filter(p => p._id !== productId))
+    toast.success('Product deleted successfully!')
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
-      </div>
-    )
+  const handleStatusChange = (orderId: string, newStatus: string) => {
+    setOrders(orders.map(order => 
+      order._id === orderId ? { ...order, status: newStatus } : order
+    ))
+    toast.success(`Order status updated to ${newStatus}!`)
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-full flex items-center justify-center border-4 border-amber-300 shadow-lg">
-                <span className="text-white font-bold text-2xl drop-shadow-lg">ਪ</span>
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-red-900 mb-2">Admin Panel</h1>
-            <p className="text-amber-700">Punjab Heritage Admin Access</p>
-          </div>
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.punjabiName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
-          <Card className="shadow-xl border-2 border-amber-200">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center text-red-900">Sign In</CardTitle>
-              <CardDescription className="text-center text-amber-700">
-                Enter your credentials to access the admin panel
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                {error && (
-                  <Alert className="border-red-200 bg-red-50">
-                    <AlertDescription className="text-red-800">
-                      {error}
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-red-900 font-medium">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@example.com"
-                    className="border-2 border-amber-200 focus:border-red-400"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-red-900 font-medium">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
-                      className="pr-10 border-2 border-amber-200 focus:border-red-400"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-amber-600" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-amber-600" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:via-red-700 hover:to-amber-700 text-white font-semibold py-2 px-4 shadow-lg border-2 border-amber-400"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Signing in...</span>
-                    </div>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          <div className="text-center mt-6">
-            <p className="text-sm text-amber-700">
-              Need access? Contact the system administrator
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
@@ -316,14 +312,19 @@ export default function AdminPage() {
               </div>
             </div>
             
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="text-amber-100 hover:bg-red-700/50 hover:text-white"
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Logout
-            </Button>
+<div className="flex items-center space-x-4">
+              <Badge className="bg-green-500 text-white">
+                Demo Mode
+              </Badge>
+              <Button
+                onClick={() => toast.info('Logout functionality coming soon!')}
+                variant="ghost"
+                className="text-amber-100 hover:bg-red-700/50 hover:text-white"
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -507,7 +508,7 @@ export default function AdminPage() {
                           size="sm" 
                           variant="outline" 
                           className="text-red-600 hover:text-red-700"
-                          onClick={() => deleteProduct(product._id)}
+                          onClick={() => handleDeleteProduct(product._id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
