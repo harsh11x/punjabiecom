@@ -66,7 +66,8 @@ export function AuthGuardedCart({
 
     // Add to cart
     const cartItem = {
-      id: product._id,
+      id: `${product._id}-${selectedSize || 'One Size'}-${selectedColor || 'Default'}`,
+      productId: product._id,
       name: product.name,
       punjabiName: product.punjabiName,
       price: product.price,

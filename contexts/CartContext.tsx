@@ -179,36 +179,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Track if cart has been initialized to prevent immediate localStorage save
   const [cartInitialized, setCartInitialized] = useState(false)
 
-  // Initialize with completely clean state on every load
+  // Initialize cart from localStorage or server
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[CartProvider] Initializing cart - forcing clean state');
+      console.log('[CartProvider] Initializing cart state');
     }
     
-    // Always clear localStorage first to ensure clean state
+    // Try to load cart from localStorage first
     try {
-      localStorage.removeItem('punjabi-heritage-cart')
-      // Also clear any other cart-related storage keys that might exist
-      Object.keys(localStorage).forEach(key => {
-        if (key.includes('cart') || key.includes('Cart')) {
-          localStorage.removeItem(key)
+      const savedCart = localStorage.getItem('punjabi-heritage-cart')
+      if (savedCart) {
+        const cartItems = JSON.parse(savedCart)
+        if (Array.isArray(cartItems) && cartItems.length > 0) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[CartProvider] Loading cart from localStorage:', cartItems);
+          }
+          dispatch({ type: 'LOAD_CART', payload: cartItems })
         }
-      })
+      }
     } catch (error) {
-      console.error('Error clearing localStorage:', error)
-    }
-    
-    // Force dispatch clear cart to reset state
-    dispatch({ type: 'CLEAR_CART' })
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[CartProvider] Cart state reset to:', { items: [], total: 0, itemCount: 0 });
+      console.error('Error loading cart from localStorage:', error)
+      // Clear corrupted data
+      localStorage.removeItem('punjabi-heritage-cart')
     }
     
     // Mark cart as initialized
     setCartInitialized(true)
     
-    // Only try to load server cart if authenticated
+    // Only try to load server cart if authenticated and socket is connected
     if (isAuthenticated && socket?.socket?.connected) {
       if (process.env.NODE_ENV === 'development') {
         console.log('[CartProvider] Requesting cart from server for authenticated user');
@@ -217,12 +215,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Save cart to localStorage for non-authenticated users (only after initialization)
+  // Save cart to localStorage (only after initialization)
   useEffect(() => {
-    if (!isAuthenticated && cartInitialized) {
-      localStorage.setItem('punjabi-heritage-cart', JSON.stringify(state.items))
+    if (cartInitialized) {
+      try {
+        localStorage.setItem('punjabi-heritage-cart', JSON.stringify(state.items))
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[CartProvider] Cart saved to localStorage:', state.items.length, 'items');
+        }
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error)
+      }
     }
-  }, [state.items, isAuthenticated, cartInitialized])
+  }, [state.items, cartInitialized])
 
   // Socket event listeners for authenticated users
   useEffect(() => {
