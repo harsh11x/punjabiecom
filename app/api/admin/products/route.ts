@@ -74,24 +74,29 @@ export async function POST(request: NextRequest) {
     const productData = await request.json()
     const products = getProducts()
     
+    // Validate required fields
+    if (!productData.name || !productData.description || !productData.price || 
+        !productData.category || !productData.productType || !productData.sizes || 
+        productData.sizes.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields: name, description, price, category, productType, and sizes are required' },
+        { status: 400 }
+      )
+    }
+
     const newProduct = {
       id: Date.now().toString(),
       name: productData.name,
       punjabiName: productData.punjabiName || '',
-      description: productData.description || '',
+      description: productData.description,
       punjabiDescription: productData.punjabiDescription || '',
       price: parseFloat(productData.price),
-      originalPrice: parseFloat(productData.originalPrice || productData.price),
-      category: productData.category,
-      subcategory: productData.subcategory || '',
+      originalPrice: parseFloat(productData.originalPrice || 0),
+      category: productData.category, // men, women, kids
+      productType: productData.productType, // jutti or fulkari
       images: productData.images || [],
-      colors: productData.colors || [],
       sizes: productData.sizes || [],
       stock: parseInt(productData.stock) || 0,
-      rating: parseFloat(productData.rating) || 0,
-      reviews: parseInt(productData.reviews) || 0,
-      badge: productData.badge || '',
-      badgeEn: productData.badgeEn || '',
       isActive: productData.isActive !== false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

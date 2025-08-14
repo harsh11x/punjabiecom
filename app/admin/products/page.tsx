@@ -22,28 +22,24 @@ import {
   X
 } from 'lucide-react'
 import { toast } from 'sonner'
+import ImageUpload from '@/components/admin/ImageUpload'
 
 interface Product {
-  id?: string
-  name: string
-  punjabiName: string
-  description: string
-  punjabiDescription: string
-  price: number
-  originalPrice: number
-  category: string
-  subcategory?: string
-  stock: number
-  rating?: number
-  reviews?: number
-  badge?: string
-  badgeEn?: string
-  isActive: boolean
-  createdAt?: string
-  updatedAt?: string
-  images: string[]
-  colors: string[]
-  sizes: string[]
+  id?: string;
+  name: string;
+  punjabiName: string;
+  description: string;
+  punjabiDescription: string;
+  price: number;
+  originalPrice: number;
+  category: 'men' | 'women' | 'kids' | 'fulkari' | 'jutti';
+  productType: 'jutti' | 'fulkari';
+  stock: number;
+  isActive: boolean;
+  images: string[];
+  sizes: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const defaultProduct: Product = {
@@ -53,12 +49,11 @@ const defaultProduct: Product = {
   punjabiDescription: '',
   price: 0,
   originalPrice: 0,
-  category: '',
-  subcategory: '',
+  category: 'men',
+  productType: 'jutti',
   stock: 0,
   isActive: true,
   images: [],
-  colors: [],
   sizes: []
 }
 
@@ -135,7 +130,6 @@ export default function ProductsManagement() {
     setEditingProduct(product)
     setFormData({
       ...product,
-      colors: product.colors || [],
       sizes: product.sizes || [],
       images: product.images || []
     })
@@ -348,142 +342,176 @@ export default function ProductsManagement() {
               </DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Product Name *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Traditional Punjabi Jutti"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="punjabiName">Punjabi Name</Label>
+                    <Input
+                      id="punjabiName"
+                      name="punjabiName"
+                      value={formData.punjabiName}
+                      onChange={handleInputChange}
+                      placeholder="ਪੰਜਾਬੀ ਜੁੱਤੀ"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="name">Product Name *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
                     onChange={handleInputChange}
-                    placeholder="Traditional Punjabi Jutti"
+                    placeholder="Detailed product description..."
+                    rows={3}
                     required
                   />
                 </div>
+
                 <div>
-                  <Label htmlFor="punjabiName">Punjabi Name</Label>
-                  <Input
-                    id="punjabiName"
-                    name="punjabiName"
-                    value={formData.punjabiName}
+                  <Label htmlFor="punjabiDescription">Punjabi Description</Label>
+                  <Textarea
+                    id="punjabiDescription"
+                    name="punjabiDescription"
+                    value={formData.punjabiDescription}
                     onChange={handleInputChange}
-                    placeholder="ਪੰਜਾਬੀ ਜੁੱਤੀ"
+                    placeholder="ਪੰਜਾਬੀ ਵਿੱਚ ਵਰਣਨ..."
+                    rows={2}
                   />
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Product description..."
-                  rows={3}
+              {/* Product Classification */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Product Classification</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="productType">Product Type *</Label>
+                    <Select value={formData.productType} onValueChange={(value) => handleSelectChange('productType', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select product type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="jutti">Jutti</SelectItem>
+                        <SelectItem value="fulkari">Fulkari</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="category">For Whom *</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select target audience" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="men">Men</SelectItem>
+                        <SelectItem value="women">Women</SelectItem>
+                        <SelectItem value="kids">Kids</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing & Stock */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Pricing & Stock</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="price">Selling Price (₹) *</Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      placeholder="1500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="originalPrice">Original Price (₹)</Label>
+                    <Input
+                      id="originalPrice"
+                      name="originalPrice"
+                      type="number"
+                      value={formData.originalPrice}
+                      onChange={handleInputChange}
+                      placeholder="2000"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave empty if no discount</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="stock">Stock Quantity *</Label>
+                    <Input
+                      id="stock"
+                      name="stock"
+                      type="number"
+                      value={formData.stock}
+                      onChange={handleInputChange}
+                      placeholder="25"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Images */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Product Images</h3>
+                <ImageUpload
+                  images={formData.images}
+                  onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+                  maxImages={5}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Product Variants */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Product Variants</h3>
                 <div>
-                  <Label htmlFor="price">Price (₹) *</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="number"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    placeholder="1500"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="originalPrice">Original Price (₹)</Label>
-                  <Input
-                    id="originalPrice"
-                    name="originalPrice"
-                    type="number"
-                    value={formData.originalPrice}
-                    onChange={handleInputChange}
-                    placeholder="2000"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="stock">Stock *</Label>
-                  <Input
-                    id="stock"
-                    name="stock"
-                    type="number"
-                    value={formData.stock}
-                    onChange={handleInputChange}
-                    placeholder="25"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="men">Men's Jutti</SelectItem>
-                      <SelectItem value="women">Women's Jutti</SelectItem>
-                      <SelectItem value="kids">Kids' Jutti</SelectItem>
-                      <SelectItem value="phulkari">Phulkari</SelectItem>
-                      <SelectItem value="accessories">Accessories</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="subcategory">Subcategory</Label>
-                  <Input
-                    id="subcategory"
-                    name="subcategory"
-                    value={formData.subcategory}
-                    onChange={handleInputChange}
-                    placeholder="Traditional"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="colors">Available Colors (comma-separated)</Label>
-                  <Input
-                    id="colors"
-                    name="colors"
-                    value={formData.colors.join(', ')}
-                    onChange={(e) => handleArrayChange('colors', e.target.value)}
-                    placeholder="Red, Blue, Green"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sizes">Available Sizes (comma-separated)</Label>
+                  <Label htmlFor="sizes">Available Sizes *</Label>
                   <Input
                     id="sizes"
                     name="sizes"
                     value={formData.sizes.join(', ')}
                     onChange={(e) => handleArrayChange('sizes', e.target.value)}
-                    placeholder="UK 6, UK 7, UK 8"
+                    placeholder="UK 6, UK 7, UK 8, UK 9, UK 10"
+                    required
                   />
+                  <p className="text-xs text-gray-500 mt-1">Enter sizes separated by commas</p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleInputChange}
-                  className="rounded"
-                />
-                <Label htmlFor="isActive">Product is active</Label>
+              {/* Status */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Status</h3>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    name="isActive"
+                    checked={formData.isActive}
+                    onChange={handleInputChange}
+                    className="rounded"
+                  />
+                  <Label htmlFor="isActive">Product is active and visible to customers</Label>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
