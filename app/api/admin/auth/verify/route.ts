@@ -1,30 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Admin from '@/models/Admin'
 import jwt from 'jsonwebtoken'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if JWT secret is available
-    const jwtSecret = process.env.JWT_SECRET
-    if (!jwtSecret) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication configuration not available' },
-        { status: 503 }
-      )
-    }
-    
-    const dbConnection = await connectDB()
-    if (!dbConnection) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 503 }
-      )
-    }
-    
-    // Get token from cookies
     const token = request.cookies.get('admin-token')?.value
-    
+
     if (!token) {
       return NextResponse.json(
         { success: false, error: 'No token provided' },
@@ -32,8 +12,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, jwtSecret) as any
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'punjab-admin-secret-key') as any
     
     if (!decoded || !decoded.id) {
       return NextResponse.json(
@@ -42,26 +22,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if admin exists and is active
-    const admin = await Admin.findById(decoded.id).select('-password')
-    
-    if (!admin || !admin.isActive) {
-      return NextResponse.json(
-        { success: false, error: 'Admin not found or inactive' },
-        { status: 401 }
-      )
-    }
-
     return NextResponse.json({
       success: true,
       admin: {
-        id: admin._id,
-        username: admin.username,
-        email: admin.email,
-        role: admin.role
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Admin auth verify error:', error)
     return NextResponse.json(
       { success: false, error: 'Authentication failed' },

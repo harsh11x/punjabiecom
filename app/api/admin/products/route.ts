@@ -1,122 +1,208 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Product from '@/models/Product'
-import { requireAdmin } from '@/lib/auth-middleware'
+import jwt from 'jsonwebtoken'
+import fs from 'fs'
+import path from 'path'
 
+// Auth middleware
+function verifyAdminToken(request: NextRequest) {
+  const token = request.cookies.get('admin-token')?.value
+  if (!token) {
+    throw new Error('No token provided')
+  }
+  
+  const decoded = jwt.verify(token, process.env.JWT_SECRET || 'punjab-admin-secret-key')
+  return decoded
+}
+
+// Data file paths
+const DATA_DIR = path.resolve(process.cwd(), 'data')
+const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+}
+
+function getProducts() {
+  if (!fs.existsSync(PRODUCTS_FILE)) {
+    return []
+  }
+  try {
+    const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Error reading products:', error)
+    return []
+  }
+}
+
+function saveProducts(products: any[]) {
+  try {
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8')
+  } catch (error) {
+    console.error('Error saving products:', error)
+    throw error
+  }
+}
+
+// GET - Fetch all products for admin
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request)
+    verifyAdminToken(request)
     
-    const dbConnection = await connectDB()
-    if (!dbConnection) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 503 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const category = searchParams.get('category')
-    const search = searchParams.get('search')
-
-    const query: any = {}
+    const products = getProducts()
     
-    if (category) {
-      query.category = category
-    }
-    
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { punjabiName: { $regex: search, $options: 'i' } }
-      ]
-    }
-
-    const skip = (page - 1) * limit
-
-    const [products, total] = await Promise.all([
-      Product.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Product.countDocuments(query)
-    ])
-
     return NextResponse.json({
       success: true,
-      data: products,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
+      products: products,
+      total: products.length
     })
   } catch (error: any) {
     console.error('Error fetching products:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch products' },
-      { status: 500 }
+      { status: error.message === 'No token provided' ? 401 : 500 }
     )
   }
 }
 
+// POST - Create new product
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin(request)
-    await connectDB()
+    verifyAdminToken(request)
     
-    const body = await request.json()
+    const productData = await request.json()
+    const products = getProducts()
     
-    // Validate required fields
-    const requiredFields = ['name', 'punjabiName', 'description', 'punjabiDescription', 'price', 'originalPrice', 'category', 'images', 'colors', 'sizes']
-    for (const field of requiredFields) {
-      if (!body[field] || (Array.isArray(body[field]) && body[field].length === 0)) {
-        return NextResponse.json(
-          { success: false, error: `${field} is required` },
-          { status: 400 }
-        )
-      }
+    const newProduct = {
+      _id: Date.now().toString(),
+      name: productData.name,
+      punjabiName: productData.punjabiName || '',
+      description: productData.description || '',
+      punjabiDescription: productData.punjabiDescription || '',
+      price: parseFloat(productData.price),
+      originalPrice: parseFloat(productData.originalPrice || productData.price),
+      category: productData.category,
+      subcategory: productData.subcategory || '',
+      images: productData.images || [],
+      colors: productData.colors || [],
+      sizes: productData.sizes || [],
+      stock: parseInt(productData.stock) || 0,
+      rating: parseFloat(productData.rating) || 0,
+      reviews: parseInt(productData.reviews) || 0,
+      badge: productData.badge || '',
+      badgeEn: productData.badgeEn || '',
+      isActive: productData.isActive !== false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
     
-    // Set default values
-    body.stock = body.stock || 0
-    body.rating = body.rating || 0
-    body.reviews = body.reviews || 0
-    body.isActive = body.isActive !== undefined ? body.isActive : true
-    
-    const product = new Product(body)
-    await product.save()
+    products.push(newProduct)
+    saveProducts(products)
     
     return NextResponse.json({
       success: true,
-      data: product,
-      message: 'Product created successfully'
-    }, { status: 201 })
+      message: 'Product created successfully',
+      product: newProduct
+    })
   } catch (error: any) {
     console.error('Error creating product:', error)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to create product' },
+      { status: error.message === 'No token provided' ? 401 : 500 }
+    )
+  }
+}
+
+// PUT - Update product
+export async function PUT(request: NextRequest) {
+  try {
+    verifyAdminToken(request)
     
-    if (error.message === 'Admin access required' || error.message === 'Authentication required') {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 401 }
-      )
-    }
+    const updateData = await request.json()
+    const { _id, ...productData } = updateData
     
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err: any) => err.message)
+    if (!_id) {
       return NextResponse.json(
-        { success: false, error: messages.join(', ') },
+        { success: false, error: 'Product ID is required' },
         { status: 400 }
       )
     }
     
+    const products = getProducts()
+    const productIndex = products.findIndex((p: any) => p._id === _id)
+    
+    if (productIndex === -1) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found' },
+        { status: 404 }
+      )
+    }
+    
+    const updatedProduct = {
+      ...products[productIndex],
+      ...productData,
+      price: parseFloat(productData.price),
+      originalPrice: parseFloat(productData.originalPrice || productData.price),
+      stock: parseInt(productData.stock) || 0,
+      rating: parseFloat(productData.rating) || products[productIndex].rating,
+      reviews: parseInt(productData.reviews) || products[productIndex].reviews,
+      updatedAt: new Date().toISOString()
+    }
+    
+    products[productIndex] = updatedProduct
+    saveProducts(products)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Product updated successfully',
+      product: updatedProduct
+    })
+  } catch (error: any) {
+    console.error('Error updating product:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to create product' },
-      { status: 500 }
+      { success: false, error: error.message || 'Failed to update product' },
+      { status: error.message === 'No token provided' ? 401 : 500 }
+    )
+  }
+}
+
+// DELETE - Delete product
+export async function DELETE(request: NextRequest) {
+  try {
+    verifyAdminToken(request)
+    
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get('id')
+    
+    if (!productId) {
+      return NextResponse.json(
+        { success: false, error: 'Product ID is required' },
+        { status: 400 }
+      )
+    }
+    
+    const products = getProducts()
+    const filteredProducts = products.filter((p: any) => p._id !== productId)
+    
+    if (filteredProducts.length === products.length) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found' },
+        { status: 404 }
+      )
+    }
+    
+    saveProducts(filteredProducts)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Product deleted successfully'
+    })
+  } catch (error: any) {
+    console.error('Error deleting product:', error)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to delete product' },
+      { status: error.message === 'No token provided' ? 401 : 500 }
     )
   }
 }

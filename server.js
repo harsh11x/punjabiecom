@@ -11,7 +11,7 @@ const hostname = dev ? 'localhost' : '0.0.0.0'
 const port = process.env.SOCKET_PORT || 3003
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/punjabi-heritage'
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:password123@localhost:27017/punjabi-heritage?authSource=admin'
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 
 // Connect to MongoDB

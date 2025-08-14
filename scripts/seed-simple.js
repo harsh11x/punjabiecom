@@ -1,54 +1,13 @@
-const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
+const fs = require('fs')
+const path = require('path')
 
-// MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:password123@localhost:27017/punjabi-heritage?authSource=admin'
+const DATA_DIR = path.resolve(process.cwd(), 'data')
+const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
 
-// Admin Schema
-const AdminSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['super_admin', 'admin', 'manager'], default: 'admin' },
-  isActive: { type: Boolean, default: true },
-  lastLogin: Date
-}, { timestamps: true })
-
-AdminSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next()
-  const salt = await bcrypt.genSalt(12)
-  this.password = await bcrypt.hash(this.password, salt)
-  next()
-})
-
-// Product Schema
-const ProductSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  punjabiName: { type: String, required: true },
-  description: { type: String, required: true },
-  punjabiDescription: { type: String, required: true },
-  price: { type: Number, required: true },
-  originalPrice: { type: Number, required: true },
-  category: { type: String, enum: ['men', 'women', 'kids', 'phulkari'], required: true },
-  subcategory: String,
-  images: [{ type: String, required: true }],
-  colors: [{ type: String, required: true }],
-  sizes: [{ type: String, required: true }],
-  stock: { type: Number, default: 0 },
-  rating: { type: Number, default: 0 },
-  reviews: { type: Number, default: 0 },
-  badge: String,
-  badgeEn: String,
-  isActive: { type: Boolean, default: true }
-}, { timestamps: true })
-
-const Admin = mongoose.models.Admin || mongoose.model('Admin', AdminSchema)
-const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema)
-
-// Sample data
+// Sample products data
 const sampleProducts = [
-  // Women's Products
   {
+    id: "1",
     name: "Bridal Gold Jutti",
     punjabiName: "ਦੁਲਹਨ ਸੋਨੇ ਦੀ ਜੁੱਤੀ",
     description: "Exquisite handcrafted bridal jutti with intricate gold embroidery and traditional Punjabi designs. Perfect for weddings and special occasions.",
@@ -63,9 +22,13 @@ const sampleProducts = [
     rating: 4.9,
     reviews: 89,
     badge: "ਦੁਲਹਨ ਸਪੈਸ਼ਲ",
-    badgeEn: "Bridal Special"
+    badgeEn: "Bridal Special",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: "2",
     name: "Embroidered Jutti",
     punjabiName: "ਕਢਾਈ ਵਾਲੀ ਜੁੱਤੀ",
     description: "Beautiful embroidered jutti with traditional Punjabi motifs. Comfortable and stylish for daily wear.",
@@ -80,10 +43,13 @@ const sampleProducts = [
     rating: 4.8,
     reviews: 167,
     badge: "ਸਭ ਤੋਂ ਵਧੀਆ",
-    badgeEn: "Best Seller"
+    badgeEn: "Best Seller",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
-  // Men's Products
   {
+    id: "3",
     name: "Traditional Leather Jutti",
     punjabiName: "ਪਰੰਪਰਾਗਤ ਚਮੜੇ ਦੀ ਜੁੱਤੀ",
     description: "Handcrafted leather jutti for men with traditional Punjabi styling. Durable and comfortable for all occasions.",
@@ -98,9 +64,13 @@ const sampleProducts = [
     rating: 4.7,
     reviews: 134,
     badge: "ਪਰੰਪਰਾਗਤ",
-    badgeEn: "Traditional"
+    badgeEn: "Traditional",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: "4",
     name: "Traditional Khussa",
     punjabiName: "ਪਰੰਪਰਾਗਤ ਖੁੱਸਾ",
     description: "Classic Punjabi khussa with pointed toe design. Perfect for traditional wear and cultural events.",
@@ -115,10 +85,13 @@ const sampleProducts = [
     rating: 4.6,
     reviews: 98,
     badge: "ਨਵਾਂ",
-    badgeEn: "New"
+    badgeEn: "New",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
-  // Kids Products
   {
+    id: "5",
     name: "Colorful Kids Jutti",
     punjabiName: "ਰੰਗ-ਬਿਰੰਗੀ ਬੱਚਿਆਂ ਦੀ ਜੁੱਤੀ",
     description: "Vibrant and comfortable jutti designed specially for kids. Soft sole and colorful designs.",
@@ -133,10 +106,13 @@ const sampleProducts = [
     rating: 4.8,
     reviews: 76,
     badge: "ਬੱਚਿਆਂ ਦੀ ਪਸੰਦ",
-    badgeEn: "Kids Favorite"
+    badgeEn: "Kids Favorite",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
-  // Phulkari Products
   {
+    id: "6",
     name: "Traditional Phulkari Dupatta",
     punjabiName: "ਪਰੰਪਰਾਗਤ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
     description: "Authentic handwoven phulkari dupatta with traditional embroidery. A masterpiece of Punjabi craftsmanship.",
@@ -151,9 +127,13 @@ const sampleProducts = [
     rating: 4.9,
     reviews: 45,
     badge: "ਹੱਥ ਨਾਲ ਬਣਿਆ",
-    badgeEn: "Handmade"
+    badgeEn: "Handmade",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
+    id: "7",
     name: "Bridal Phulkari Dupatta",
     punjabiName: "ਦੁਲਹਨ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
     description: "Exquisite bridal phulkari dupatta with intricate golden thread work. Perfect for wedding ceremonies.",
@@ -168,55 +148,33 @@ const sampleProducts = [
     rating: 5.0,
     reviews: 23,
     badge: "ਦੁਲਹਨ ਸਪੈਸ਼ਲ",
-    badgeEn: "Bridal Special"
+    badgeEn: "Bridal Special",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ]
 
-const sampleAdmin = {
-  username: 'admin',
-  email: 'admin@punjabheritage.com',
-  password: 'admin123', // This will be hashed automatically
-  role: 'super_admin'
-}
-
-async function seedDatabase() {
+function seedProducts() {
   try {
-    console.log('Connecting to MongoDB...')
-    await mongoose.connect(MONGODB_URI)
-    console.log('Connected to MongoDB')
-
-    // Clear existing data
-    console.log('Clearing existing data...')
-    await Admin.deleteMany({})
-    await Product.deleteMany({})
-
-    // Create admin user
-    console.log('Creating admin user...')
-    const admin = new Admin(sampleAdmin)
-    await admin.save()
-    console.log('Admin user created:', admin.email)
-
-    // Create products
-    console.log('Creating sample products...')
-    for (const productData of sampleProducts) {
-      const product = new Product(productData)
-      await product.save()
-      console.log('Product created:', product.name)
+    // Ensure data directory exists
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true })
     }
 
-    console.log('Database seeded successfully!')
-    console.log('\nAdmin Login Credentials:')
-    console.log('Email: admin@punjabheritage.com')
-    console.log('Password: admin123')
-    console.log('\nTotal Products Created:', sampleProducts.length)
+    // Write products to file
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(sampleProducts, null, 2), 'utf8')
+
+    console.log('✅ Database seeded successfully!')
+    console.log('📦 Sample products created:', sampleProducts.length)
+    console.log('🏪 Categories: Women, Men, Kids, Phulkari')
+    console.log('\nYour products are ready! Start your server and access:')
+    console.log('- Website: http://localhost:3000')
+    console.log('- Admin Panel: http://localhost:3000/admin')
 
   } catch (error) {
-    console.error('Error seeding database:', error)
-  } finally {
-    await mongoose.disconnect()
-    console.log('Disconnected from MongoDB')
+    console.error('❌ Error seeding database:', error)
   }
 }
 
-// Run the seed function
-seedDatabase()
+seedProducts()

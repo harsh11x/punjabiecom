@@ -10,8 +10,8 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node scripts/seed-database.js",
-    "create-admin": "node scripts/create-admin.js",
+    "seed": "node scripts/seed-simple.js",
+    "create-admin": "node scripts/create-admin-simple.js",
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true npm run build"
   },

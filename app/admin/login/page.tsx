@@ -2,38 +2,33 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
-
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters long')
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
+import { Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
   const router = useRouter()
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
-  })
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
 
-  const onSubmit = async (data: LoginFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setError('')
 
@@ -43,48 +38,51 @@ export default function AdminLoginPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
         credentials: 'include'
       })
 
       const result = await response.json()
 
       if (result.success) {
+        toast.success('Login successful! Welcome to Admin Panel')
         router.push('/admin')
       } else {
         setError(result.error || 'Login failed')
+        toast.error(result.error || 'Login failed')
       }
     } catch (error) {
       console.error('Login error:', error)
       setError('An error occurred during login')
+      toast.error('An error occurred during login')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-full flex items-center justify-center border-4 border-amber-300 shadow-lg">
-              <span className="text-white font-bold text-2xl drop-shadow-lg">ਪ</span>
+            <div className="w-16 h-16 bg-gradient-to-br from-red-600 via-red-500 to-amber-500 rounded-full flex items-center justify-center border-4 border-amber-300 shadow-lg">
+              <Shield className="text-white h-8 w-8" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-red-900 mb-2">Admin Login</h1>
-          <p className="text-amber-700">Punjab Heritage Admin Panel</p>
+          <h1 className="text-3xl font-bold text-red-900 mb-2">Admin Panel</h1>
+          <p className="text-amber-700 font-medium">Punjab Heritage Store Management</p>
         </div>
 
-        <Card className="shadow-xl border-2 border-amber-200">
+        <Card className="shadow-xl border-2 border-amber-200 bg-white/90 backdrop-blur-sm">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center text-red-900">Sign In</CardTitle>
             <CardDescription className="text-center text-amber-700">
-              Enter your credentials to access the admin panel
+              Access the admin dashboard to manage your store
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <Alert className="border-red-200 bg-red-50">
                   <AlertDescription className="text-red-800">
@@ -99,15 +97,15 @@ export default function AdminLoginPage() {
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-amber-600" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
-                    placeholder="admin@example.com"
-                    className="pl-10 border-2 border-amber-200 focus:border-red-400"
-                    {...register('email')}
+                    placeholder="admin@punjabstore.com"
+                    className="pl-10 border-2 border-amber-200 focus:border-red-400 bg-white/80"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
                   />
                 </div>
-                {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -116,10 +114,13 @@ export default function AdminLoginPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-amber-600" />
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
-                    className="pl-10 pr-10 border-2 border-amber-200 focus:border-red-400"
-                    {...register('password')}
+                    className="pl-10 pr-10 border-2 border-amber-200 focus:border-red-400 bg-white/80"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
                   />
                   <Button
                     type="button"
@@ -135,14 +136,11 @@ export default function AdminLoginPage() {
                     )}
                   </Button>
                 </div>
-                {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password.message}</p>
-                )}
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:via-red-700 hover:to-amber-700 text-white font-semibold py-2 px-4 shadow-lg border-2 border-amber-400"
+                className="w-full bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:via-red-700 hover:to-amber-700 text-white font-semibold py-3 shadow-lg border-2 border-amber-400"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -151,16 +149,28 @@ export default function AdminLoginPage() {
                     <span>Signing in...</span>
                   </div>
                 ) : (
-                  'Sign In'
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4" />
+                    <span>Sign In</span>
+                  </div>
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
+        {/* Demo Credentials */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">Demo Credentials:</h3>
+          <p className="text-sm text-blue-800">
+            <strong>Email:</strong> admin@punjabstore.com<br/>
+            <strong>Password:</strong> admin123
+          </p>
+        </div>
+
         <div className="text-center mt-6">
           <p className="text-sm text-amber-700">
-            Need access? Contact the system administrator
+            Secure admin access for Punjab Heritage Store
           </p>
         </div>
       </div>

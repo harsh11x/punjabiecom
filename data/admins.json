@@ -1,0 +1,12 @@
+[
+  {
+    "id": "admin_1755171630869",
+    "username": "admin",
+    "email": "admin@punjabiecom.com",
+    "password": "$2a$12$jq6uM6H6LILvwEGMe.WmNuwWAai06DvFGsQe6VcrQkMyxZQ1ibwFa",
+    "role": "super_admin",
+    "isActive": true,
+    "createdAt": "2025-08-14T11:40:30.869Z",
+    "updatedAt": "2025-08-14T11:40:30.869Z"
+  }
+]
