@@ -12,11 +12,28 @@ export async function POST(request: NextRequest) {
       razorpay_order_id, 
       razorpay_payment_id, 
       razorpay_signature,
-      orderId 
+      orderId,
+      paymentId,
+      signature,
+      paymentMethod
     } = body
 
+    // Handle both parameter formats for backward compatibility
+    const orderIdToUse = orderId
+    const paymentIdToUse = razorpay_payment_id || paymentId
+    const signatureToUse = razorpay_signature || signature
+    const orderIdFromRazorpay = razorpay_order_id
+
+    console.log('Payment verification request:', {
+      orderIdToUse,
+      paymentIdToUse,
+      signatureToUse,
+      orderIdFromRazorpay,
+      paymentMethod
+    })
+
     // Validate required fields
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+    if (!orderIdFromRazorpay || !paymentIdToUse || !signatureToUse || !orderIdToUse) {
       return NextResponse.json(
         { success: false, error: 'Missing required payment parameters' },
         { status: 400 }
@@ -24,15 +41,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify signature
-    const sign = razorpay_order_id + '|' + razorpay_payment_id
+    const sign = orderIdFromRazorpay + '|' + paymentIdToUse
     const expectedSign = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
       .update(sign.toString())
       .digest('hex')
 
-    if (razorpay_signature !== expectedSign) {
+    console.log('Signature verification:', {
+      received: signatureToUse,
+      expected: expectedSign,
+      isValid: signatureToUse === expectedSign
+    })
+
+    if (signatureToUse !== expectedSign) {
       // Update order as failed
-      await Order.findByIdAndUpdate(orderId, {
+      await Order.findByIdAndUpdate(orderIdToUse, {
         paymentStatus: 'failed',
         status: 'cancelled'
       })
@@ -45,13 +68,13 @@ export async function POST(request: NextRequest) {
 
     // Payment is verified, update order
     const order = await Order.findByIdAndUpdate(
-      orderId,
+      orderIdToUse,
       {
         paymentStatus: 'paid',
         status: 'confirmed',
-        razorpayPaymentId: razorpay_payment_id,
-        razorpaySignature: razorpay_signature,
-        paymentId: razorpay_payment_id
+        razorpayPaymentId: paymentIdToUse,
+        razorpaySignature: signatureToUse,
+        paymentId: paymentIdToUse
       },
       { new: true }
     ).lean()
@@ -62,6 +85,8 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    console.log('Payment verified successfully for order:', orderIdToUse)
 
     // TODO: Send confirmation email to customer
     // TODO: Update inventory

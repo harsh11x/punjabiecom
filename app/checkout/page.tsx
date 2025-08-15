@@ -66,6 +66,12 @@ export default function CheckoutPage() {
     pincode: ''
   })
 
+  // Calculate order totals
+  const subtotal = cartState.total
+  const shippingCost = subtotal >= 1000 ? 0 : 99 // Free shipping above ₹1000
+  const tax = Math.round(subtotal * 0.18) // 18% GST
+  const orderTotal = subtotal + shippingCost + tax
+
   useEffect(() => {
     // Wait for auth to finish loading
     if (authLoading) return
@@ -150,20 +156,40 @@ export default function CheckoutPage() {
   const createOrder = async () => {
     try {
       const orderData = {
-        userId: user?.uid,
+        customerEmail: shippingAddress.email,
         items: cartState.items.map(item => ({
-          id: item.id,
+          productId: item.id,
           name: item.name,
+          punjabiName: item.punjabiName || item.name,
           price: item.price,
           quantity: item.quantity,
           size: item.size,
           color: item.color,
           image: item.image
         })),
-        shippingAddress,
-        paymentMethod,
-        notes: `Order placed via checkout. Payment method: ${paymentMethod}`
+        shippingAddress: {
+          fullName: shippingAddress.fullName,
+          addressLine1: shippingAddress.address,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          pincode: shippingAddress.pincode,
+          phone: shippingAddress.phone
+        },
+        billingAddress: {
+          fullName: shippingAddress.fullName,
+          addressLine1: shippingAddress.address,
+          city: shippingAddress.city,
+          state: shippingAddress.state,
+          pincode: shippingAddress.pincode,
+          phone: shippingAddress.phone
+        },
+        subtotal,
+        shippingCost,
+        tax,
+        paymentMethod
       }
+
+      console.log('Creating order with data:', orderData)
 
       const response = await fetch('/api/payment/create-order', {
         method: 'POST',
@@ -175,11 +201,33 @@ export default function CheckoutPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('Order creation failed:', errorData)
         throw new Error(errorData.error || 'Failed to create order')
       }
 
       const result = await response.json()
-      return result.order
+      console.log('Order creation result:', result)
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create order')
+      }
+
+      // Return the order data with the correct structure for Razorpay
+      return {
+        id: result.data.orderId,
+        orderNumber: result.data.orderNumber,
+        razorpayOrderId: result.data.razorpayOrderId,
+        amount: result.data.amount,
+        currency: result.data.currency,
+        razorpayKey: result.data.key,
+        name: 'Punjab Heritage Store',
+        description: `Order #${result.data.orderNumber}`,
+        prefill: {
+          name: shippingAddress.fullName,
+          email: shippingAddress.email,
+          contact: shippingAddress.phone
+        }
+      }
     } catch (error: any) {
       console.error('Order creation error:', error)
       throw error
@@ -251,6 +299,8 @@ export default function CheckoutPage() {
         },
         handler: async (response: any) => {
           try {
+            console.log('UPI payment response:', response)
+            
             // Verify payment
             const verifyResponse = await fetch('/api/payment/verify', {
               method: 'POST',
@@ -259,14 +309,18 @@ export default function CheckoutPage() {
               },
               body: JSON.stringify({
                 orderId: order.id,
-                paymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
+                razorpay_order_id: order.razorpayOrderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
                 paymentMethod: 'upi'
               })
             })
 
-            if (!verifyResponse.ok) {
-              throw new Error('Payment verification failed')
+            const verifyResult = await verifyResponse.json()
+            console.log('Payment verification result:', verifyResult)
+
+            if (!verifyResponse.ok || !verifyResult.success) {
+              throw new Error(verifyResult.error || 'Payment verification failed')
             }
 
             toast.success('UPI Payment successful! Order confirmed.')
@@ -320,6 +374,8 @@ export default function CheckoutPage() {
         },
         handler: async (response: any) => {
           try {
+            console.log('Razorpay payment response:', response)
+            
             // Verify payment
             const verifyResponse = await fetch('/api/payment/verify', {
               method: 'POST',
@@ -328,14 +384,18 @@ export default function CheckoutPage() {
               },
               body: JSON.stringify({
                 orderId: order.id,
-                paymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
+                razorpay_order_id: order.razorpayOrderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
                 paymentMethod: 'razorpay'
               })
             })
 
-            if (!verifyResponse.ok) {
-              throw new Error('Payment verification failed')
+            const verifyResult = await verifyResponse.json()
+            console.log('Payment verification result:', verifyResult)
+
+            if (!verifyResponse.ok || !verifyResult.success) {
+              throw new Error(verifyResult.error || 'Payment verification failed')
             }
 
             toast.success('Payment successful! Order confirmed.')
@@ -744,7 +804,7 @@ Please transfer the exact amount and enter your transaction ID below.`
                         <Package className="h-5 w-5 text-yellow-600 mt-0.5" />
                         <div>
                           <p className="font-medium text-yellow-800">Cash on Delivery</p>
-                          <p className="text-sm text-yellow-700">Pay ₹{cartState.total.toLocaleString()} when your order is delivered to your doorstep.</p>
+                          <p className="text-sm text-yellow-700">Pay ₹{orderTotal.toLocaleString()} when your order is delivered to your doorstep.</p>
                         </div>
                       </div>
                     </div>
@@ -780,7 +840,7 @@ Please transfer the exact amount and enter your transaction ID below.`
                         <IndianRupee className="h-5 w-5 text-green-600 mt-0.5" />
                         <div>
                           <p className="font-medium text-green-800">Bank Transfer</p>
-                          <p className="text-sm text-green-700">Transfer ₹{cartState.total.toLocaleString()} directly to our bank account.</p>
+                          <p className="text-sm text-green-700">Transfer ₹{orderTotal.toLocaleString()} directly to our bank account.</p>
                         </div>
                       </div>
                     </div>
@@ -840,22 +900,24 @@ Please transfer the exact amount and enter your transaction ID below.`
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">₹{cartState.total.toLocaleString()}</span>
+                      <span className="font-medium">₹{subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Shipping</span>
-                      <span className="font-medium text-green-600">Free</span>
+                      <span className={`font-medium ${shippingCost === 0 ? 'text-green-600' : ''}`}>
+                        {shippingCost === 0 ? 'Free' : `₹${shippingCost}`}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tax</span>
-                      <span className="font-medium">₹0</span>
+                      <span className="text-gray-600">Tax (GST 18%)</span>
+                      <span className="font-medium">₹{tax.toLocaleString()}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span className="flex items-center text-red-600">
                         <IndianRupee className="h-4 w-4 mr-1" />
-                        {cartState.total.toLocaleString()}
+                        {orderTotal.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -894,7 +956,7 @@ Please transfer the exact amount and enter your transaction ID below.`
                     ) : (
                       <>
                         <CheckCircle className="h-5 w-5 mr-3" />
-                        Place Order • ₹{cartState.total.toLocaleString()}
+                        Place Order • ₹{orderTotal.toLocaleString()}
                       </>
                     )}
                   </Button>
