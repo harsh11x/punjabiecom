@@ -21,10 +21,11 @@ function getProducts() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
-    const { id } = params
+    const { id } = resolvedParams
     
     if (!id) {
       return NextResponse.json(

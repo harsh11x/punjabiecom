@@ -346,7 +346,7 @@ export default function ProductDetailPage() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <AuthGuardedCart
-                  product={product}
+                  product={{...product, _id: product.id}}
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
                   quantity={quantity}
@@ -354,7 +354,7 @@ export default function ProductDetailPage() {
                   className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
                 />
                 <AuthGuardedCart
-                  product={product}
+                  product={{...product, _id: product.id}}
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
                   quantity={quantity}

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
-import { ShoppingBag, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react'
+import { ShoppingBag, Plus, Minus, Trash2, ShoppingCart as ShoppingCartIcon } from 'lucide-react'
 
 export function ShoppingCart() {
   const { state, updateQuantity, removeItem } = useCart()
@@ -41,7 +41,7 @@ export function ShoppingCart() {
       <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center space-x-2">
-            <ShoppingCart className="h-5 w-5" />
+            <ShoppingCartIcon className="h-5 w-5" />
             <span>Shopping Cart ({state.itemCount})</span>
           </SheetTitle>
           <SheetDescription>

@@ -24,22 +24,22 @@ export async function POST(request: NextRequest) {
     }
 
     let verificationResult = false
-    let paymentStatus = PAYMENT_STATUS.FAILED
+    let paymentStatus: typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS] = PAYMENT_STATUS.FAILED
     let orderStatus = order.orderStatus
 
     // Handle different payment methods
     switch (paymentMethod || order.paymentMethod) {
       case 'razorpay':
         verificationResult = await verifyRazorpayPayment(
-          order.razorpayOrderId,
+          order.razorpayOrderId || '',
           paymentId,
           signature
         )
         if (verificationResult) {
           paymentStatus = PAYMENT_STATUS.COMPLETED
           orderStatus = ORDER_STATUS.CONFIRMED
-          order.razorpayPaymentId = paymentId
-          order.razorpaySignature = signature
+          ;(order as any).razorpayPaymentId = paymentId
+          ;(order as any).razorpaySignature = signature
         }
         break
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
           // For UPI via Razorpay, we get payment ID and signature
           if (paymentId && signature) {
             verificationResult = await verifyRazorpayPayment(
-              order.razorpayOrderId,
+              order.razorpayOrderId || '',
               paymentId,
               signature
             )
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
             paymentStatus = PAYMENT_STATUS.COMPLETED
             orderStatus = ORDER_STATUS.CONFIRMED
             order.paymentId = paymentId || upiDetails?.transactionId
-            order.upiTransactionId = upiDetails?.transactionId
+            ;(order as any).upiTransactionId = upiDetails?.transactionId
             order.notes = `UPI Payment: ${upiDetails?.transactionId || paymentId}`
           }
         }
@@ -141,12 +141,11 @@ async function verifyRazorpayPayment(
   razorpaySignature: string
 ): Promise<boolean> {
   try {
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || PAYMENT_CONFIG.razorpay.keySecret
+    const keySecret = process.env.RAZORPAY_KEY_SECRET
     
-    if (keySecret.includes('test') || keySecret === 'your_secret_key') {
-      // Mock verification for demo/testing
-      console.log('Mock Razorpay verification - assuming success')
-      return true
+    if (!keySecret) {
+      console.error('Razorpay key secret not configured')
+      return false
     }
     
     // Real Razorpay signature verification
@@ -156,7 +155,17 @@ async function verifyRazorpayPayment(
       .update(body.toString())
       .digest('hex')
     
-    return expectedSignature === razorpaySignature
+    const isValid = expectedSignature === razorpaySignature
+    
+    console.log('Payment verification:', {
+      orderId: razorpayOrderId,
+      paymentId: razorpayPaymentId,
+      providedSignature: razorpaySignature,
+      expectedSignature,
+      isValid
+    })
+    
+    return isValid
   } catch (error) {
     console.error('Razorpay verification error:', error)
     return false

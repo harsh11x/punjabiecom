@@ -59,6 +59,7 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
     }
 
     addItem({
+      id: product._id, // Add the missing id property
       productId: product._id,
       name: product.name,
       punjabiName: product.punjabiName || product.name,

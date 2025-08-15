@@ -62,13 +62,12 @@ pm2 startup
 Update these values for your production setup:
 
 ```env
-# Database (MongoDB Atlas)
-MONGODB_URI=mongodb+srv://your-username:your-password@cluster.mongodb.net/punjabi-heritage
+# File Storage (Production Ready)
+USE_FILE_STORAGE=true
 
-# Razorpay Live Keys
-RAZORPAY_KEY_ID=rzp_live_your_actual_key
-RAZORPAY_KEY_SECRET=your_actual_secret
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_your_actual_key
+# Razorpay Live Keys (CONFIGURED)
+RAZORPAY_KEY_SECRET=iY6iexEtWn8fO6RfFU06DBld
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_R5YvT9frcbHI4Z
 
 # Email Configuration
 EMAIL_USER=orders@punjabijuttiandfulkari.com

@@ -328,14 +328,19 @@ export default function JuttiPage() {
                     </div>
 
                     <AuthGuardedCart
-                      productId={product.id.toString()}
-                      productName={product.name}
-                      productPrice={parseFloat(product.price.replace('₹', '').replace(',', ''))}
-                      productImage={product.image}
+                      product={{
+                        _id: product.id.toString(),
+                        name: product.name,
+                        punjabiName: product.name, // Add punjabi name
+                        price: parseFloat(product.price.replace('₹', '').replace(',', '')),
+                        images: [product.image || '/placeholder.jpg'],
+                        stock: 10, // Default stock
+                        sizes: ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10'], // Default sizes
+                        colors: product.colors || ['Default']
+                      }}
+                      variant="add-to-cart"
                       className="w-full bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      Add to Cart
-                    </AuthGuardedCart>
+                    />
                   </div>
                 </CardContent>
               </Card>

@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       return () => {
-        socket.socket.off('profile-update-success')
+        socket.socket?.off('profile-update-success')
       }
     }
   }, [socket])
@@ -171,8 +171,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       
       // Disconnect socket
-      if (socket) {
-        socket.disconnect()
+      if (socket?.socket) {
+        socket.socket.disconnect()
       }
       
       toast.success('Logged out successfully')

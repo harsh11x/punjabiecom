@@ -100,9 +100,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Add payment-specific data
+    const responseOrder = response.order as any
+    
     if (orderData.paymentMethod === 'razorpay') {
-      response.order = {
-        ...response.order,
+      Object.assign(responseOrder, {
         razorpayKey: PAYMENT_CONFIG.razorpay.keyId,
         amount: order.total * 100, // Razorpay expects amount in paise
         currency: order.currency,
@@ -113,10 +114,9 @@ export async function POST(request: NextRequest) {
           email: order.shippingAddress.email,
           contact: order.shippingAddress.phone
         }
-      }
+      })
     } else if (orderData.paymentMethod === 'upi') {
-      response.order = {
-        ...response.order,
+      Object.assign(responseOrder, {
         razorpayKey: PAYMENT_CONFIG.razorpay.keyId,
         amount: order.total * 100, // Razorpay expects amount in paise
         currency: order.currency,
@@ -132,12 +132,11 @@ export async function POST(request: NextRequest) {
           merchantVpa: PAYMENT_CONFIG.upi.merchantVpa,
           qrCodeEnabled: PAYMENT_CONFIG.upi.qrCodeEnabled
         }
-      }
+      })
     } else if (orderData.paymentMethod === 'bank_transfer') {
-      response.order = {
-        ...response.order,
+      Object.assign(responseOrder, {
         bankDetails: PAYMENT_CONFIG.bankTransfer
-      }
+      })
     }
 
     return NextResponse.json(response, { status: 201 })
@@ -153,47 +152,39 @@ export async function POST(request: NextRequest) {
 
 // Create Razorpay order
 async function createRazorpayOrder(order: Order, options?: { method?: string }) {
-  // Check if we have Razorpay credentials
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || PAYMENT_CONFIG.razorpay.keyId
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || PAYMENT_CONFIG.razorpay.keySecret
+  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+  const keySecret = process.env.RAZORPAY_KEY_SECRET
   
-  if (keyId.includes('test') || keySecret.includes('test')) {
-    // Mock Razorpay order for demo/testing
-    return {
-      id: `rzp_order_${Date.now()}`,
-      amount: order.total * 100,
-      currency: order.currency,
-      receipt: order.orderNumber,
-      status: 'created'
-    }
+  if (!keyId || !keySecret) {
+    throw new Error('Razorpay credentials not configured')
   }
   
-  // In production with real Razorpay credentials:
-  // const Razorpay = require('razorpay')
-  // const rzp = new Razorpay({
-  //   key_id: keyId,
-  //   key_secret: keySecret
-  // })
-  
-  // const options = {
-  //   amount: order.total * 100,
-  //   currency: order.currency,
-  //   receipt: order.orderNumber,
-  //   notes: {
-  //     orderId: order.id,
-  //     customerEmail: order.customerEmail
-  //   }
-  // }
-  
-  // return await rzp.orders.create(options)
-  
-  // For now, return mock order
-  return {
-    id: `rzp_order_${Date.now()}`,
-    amount: order.total * 100,
-    currency: order.currency,
-    receipt: order.orderNumber,
-    status: 'created'
+  try {
+    const Razorpay = require('razorpay')
+    const rzp = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret
+    })
+    
+    const orderOptions = {
+      amount: Math.round(order.total * 100), // Amount in paise (smallest currency unit)
+      currency: order.currency || 'INR',
+      receipt: order.orderNumber,
+      notes: {
+        orderId: order.id,
+        customerEmail: order.customerEmail,
+        customerName: order.shippingAddress.fullName
+      }
+    }
+    
+    console.log('Creating Razorpay order with options:', orderOptions)
+    const razorpayOrder = await rzp.orders.create(orderOptions)
+    console.log('Razorpay order created:', razorpayOrder)
+    
+    return razorpayOrder
+  } catch (error: any) {
+    console.error('Razorpay order creation error:', error)
+    throw new Error(`Razorpay order creation failed: ${error.message}`)
   }
 }
 

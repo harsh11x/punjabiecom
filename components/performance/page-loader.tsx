@@ -33,9 +33,12 @@ export function PageLoader({ children }: PageLoaderProps) {
 
     // Add navigation loading indicator
     const originalPush = router.push
-    router.push = (...args) => {
+    router.push = (href: any, options?: any) => {
       setLoading(true)
-      return originalPush(...args).finally(() => setLoading(false))
+      const result = originalPush(href, options)
+      // Since router.push is void, we'll use a timeout to hide loader
+      setTimeout(() => setLoading(false), 500)
+      return result
     }
 
     return () => {

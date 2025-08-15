@@ -44,7 +44,7 @@ const initialState: CartState = {
 function cartReducer(state: CartState, action: CartAction): CartState {
   // Debug logging only in development
   if (process.env.NODE_ENV === 'development') {
-    console.log('[CartReducer]', action.type, action.payload);
+    console.log('[CartReducer]', action.type, 'payload' in action ? action.payload : 'no payload');
     console.log('[CartReducer] Current state:', state);
   }
   
@@ -283,11 +283,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       })
 
       return () => {
-        socket.socket.off('cart-loaded')
-        socket.socket.off('cart-updated')
-        socket.socket.off('cart-cleared')
-        socket.socket.off('cart-error')
-        socket.socket.off('auth-required')
+        socket.socket?.off('cart-loaded')
+        socket.socket?.off('cart-updated')
+        socket.socket?.off('cart-cleared')
+        socket.socket?.off('cart-error')
+        socket.socket?.off('auth-required')
       }
     }
   }, [socket, isAuthenticated])

@@ -12,10 +12,23 @@ if (!MONGODB_URI && typeof window === 'undefined' && process.env.NODE_ENV !== 'p
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-let cached = global.mongoose
+interface CachedConnection {
+  conn: typeof mongoose | null
+  promise: Promise<typeof mongoose> | null
+}
+
+interface GlobalWithMongoose {
+  mongoose: CachedConnection | undefined
+}
+
+declare global {
+  var mongoose: CachedConnection | undefined
+}
+
+let cached: CachedConnection = (global as GlobalWithMongoose).mongoose || { conn: null, promise: null }
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null }
+  cached = (global as GlobalWithMongoose).mongoose = { conn: null, promise: null }
 }
 
 async function dbConnect() {
@@ -38,16 +51,14 @@ async function dbConnect() {
       connectTimeoutMS: 10000, // 10 seconds
       maxIdleTimeMS: 30000, // 30 seconds
       // Use compression
-      compressors: 'zlib',
+      compressors: ['zlib' as const],
       // Optimize for faster reads
-      readPreference: 'primaryPreferred',
+      readPreference: 'primaryPreferred' as const,
       retryWrites: true,
       retryReads: true,
     }
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose
-    })
+    cached.promise = mongoose.connect(MONGODB_URI, opts)
   }
 
   try {

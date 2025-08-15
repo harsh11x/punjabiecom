@@ -181,12 +181,12 @@ function ProductsPageContent() {
 
               <div className="flex space-x-2">
                 <AuthGuardedCart
-                  product={product}
+                  product={{...product, _id: product.id}}
                   variant="add-to-cart"
                   className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
                 />
                 <AuthGuardedCart
-                  product={product}
+                  product={{...product, _id: product.id}}
                   variant="buy-now"
                   className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
                 />
@@ -266,12 +266,12 @@ function ProductsPageContent() {
 
           <div className="space-y-2">
             <AuthGuardedCart
-              product={product}
+              product={{...product, _id: product.id}}
               variant="add-to-cart"
               className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-sm"
             />
             <AuthGuardedCart
-              product={product}
+              product={{...product, _id: product.id}}
               variant="buy-now"
               className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm"
             />

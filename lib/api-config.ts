@@ -102,10 +102,15 @@ export const validateEnvironment = () => {
 // Server Status Check
 export const checkServerStatus = async () => {
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    
     const response = await fetch(`${SOCKET_CONFIG.url}/health`, {
       method: 'GET',
-      timeout: 5000
+      signal: controller.signal
     })
+    
+    clearTimeout(timeoutId)
     return response.ok
   } catch (error) {
     console.error('Server status check failed:', error)

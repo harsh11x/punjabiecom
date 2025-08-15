@@ -59,7 +59,7 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
             const data = await response.json()
             setProducts(data.data || [])
           }
-        } catch (error) {
+        } catch (error: any) {
           if (error.name !== 'AbortError') {
             console.error('Error fetching products:', error)
           }

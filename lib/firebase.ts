@@ -16,7 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 // Initialize Firebase Analytics (lazy loaded)
-let analytics = null
+let analytics: any = null
 const getFirebaseAnalytics = () => {
   if (typeof window !== 'undefined' && !analytics) {
     // Lazy load analytics to prevent blocking initial page load

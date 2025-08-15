@@ -126,7 +126,7 @@ class FileStorage {
       id: Date.now().toString(),
       createdAt: now,
       updatedAt: now
-    } as T
+    } as unknown as T
 
     data.push(newItem)
     this.writeData(collection, data)

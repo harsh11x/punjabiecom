@@ -164,12 +164,12 @@ export default function KidsPage() {
 
           <div className="space-y-2">
             <AuthGuardedCart
-              product={product}
+              product={{...product, _id: product.id}}
               variant="add-to-cart"
               className="w-full bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700 text-white text-sm"
             />
             <AuthGuardedCart
-              product={product}
+              product={{...product, _id: product.id}}
               variant="buy-now"
               className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white text-sm"
             />

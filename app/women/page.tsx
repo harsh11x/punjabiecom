@@ -164,12 +164,12 @@ export default function WomenPage() {
 
           <div className="space-y-2">
             <AuthGuardedCart
-              product={product}
+              product={{...product, _id: product.id}}
               variant="add-to-cart"
               className="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white text-sm"
             />
             <AuthGuardedCart
-              product={product}
+              product={{...product, _id: product.id}}
               variant="buy-now"
               className="w-full bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-700 hover:to-pink-800 text-white text-sm"
             />
