@@ -23,7 +23,12 @@ export function useSocket(options: UseSocketOptions = {}) {
     // Initialize socket connection
     const initSocket = () => {
       // Skip Socket.IO initialization if URL is null (production)
-      if (!SOCKET_CONFIG.url || socketRef.current?.connected) return
+      if (!SOCKET_CONFIG.url || socketRef.current?.connected) {
+        console.log('[useSocket] Socket.IO disabled or already connected')
+        setIsConnecting(false)
+        setIsConnected(false)
+        return
+      }
 
       setIsConnecting(true)
       

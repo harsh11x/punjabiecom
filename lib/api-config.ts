@@ -8,19 +8,16 @@ const AWS_SERVER_PORT = '3003'
 // Local Development Configuration
 const LOCAL_SERVER_PORT = '3003'
 
-// Socket.IO Configuration
+// Socket.IO Configuration - Disabled for simple file-based deployment
 export const SOCKET_CONFIG = {
-  // Production: Disabled for now to avoid mixed content issues
-  // Development: Connect to local server
-  url: isProduction 
-    ? null // Temporarily disabled in production
-    : `http://localhost:${LOCAL_SERVER_PORT}`,
+  // Completely disabled for file-based storage deployment
+  url: null,
   
   options: {
     transports: ['websocket', 'polling'],
-    autoConnect: !isProduction, // Disable auto-connect in production
-    reconnection: !isProduction,
-    reconnectionAttempts: isProduction ? 0 : 5,
+    autoConnect: false, // Always disabled for this deployment
+    reconnection: false,
+    reconnectionAttempts: 0,
     reconnectionDelay: 1000,
     timeout: 20000,
     forceNew: true

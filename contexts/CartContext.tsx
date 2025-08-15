@@ -229,9 +229,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.items, cartInitialized])
 
-  // Socket event listeners for authenticated users
+  // Socket event listeners for authenticated users (only if socket is available)
   useEffect(() => {
-    if (socket?.socket && isAuthenticated) {
+    if (socket?.socket?.connected && isAuthenticated) {
       // Listen for cart loaded from server
       socket.socket.on('cart-loaded', (cartData) => {
         const items = cartData.items.map((item: any) => ({
