@@ -5,35 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/CartContext'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 
-interface RazorpayOptions {
-  key: string
-  amount: number
-  currency: string
-  name: string
-  description: string
-  order_id: string
-  handler: (response: any) => void
-  prefill: {
-    name: string
-    email: string
-    contact: string
-  }
-  notes: {
-    address: string
-  }
-  theme: {
-    color: string
-  }
-}
-
-declare global {
-  interface Window {
-    Razorpay: new (options: RazorpayOptions) => {
-      open: () => void;
-      on: (event: string, callback: (response: any) => void) => void;
-    }
-  }
-}
+// Razorpay types are defined in types/global.d.ts
 
 interface ShippingAddress {
   fullName: string
@@ -53,8 +25,13 @@ interface RazorpayCheckoutProps {
 
 export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: RazorpayCheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const { items, getTotalPrice, clearCart } = useCart()
+  const { state, clearCart } = useCart()
   const { user } = useFirebaseAuth()
+
+  // Helper function to get total price
+  const getTotalPrice = () => {
+    return state.items.reduce((total, item) => total + (item.price * item.quantity), 0)
+  }
 
   const handlePayment = async () => {
     if (!user?.email) {
@@ -62,7 +39,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
       return
     }
 
-    if (items.length === 0) {
+    if (state.items.length === 0) {
       onError('Your cart is empty')
       return
     }
@@ -83,7 +60,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: items.map(item => ({
+          items: state.items.map(item => ({
             productId: item.id,
             name: item.name,
             punjabiName: item.punjabiName || item.name,
@@ -120,15 +97,15 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
       }
 
       // Configure Razorpay options
-      const options = {
+      const options: RazorpayOptions = {
         key: orderData.data.key,
         amount: orderData.data.amount,
         currency: orderData.data.currency,
         name: 'Punjab Heritage',
         description: 'Authentic Punjabi Crafts',
-        image: '/logo.png',
         order_id: orderData.data.razorpayOrderId,
-        handler: async function (response: any) {
+        image: '/logo.png',
+        handler: async function (response: RazorpayResponse) {
           try {
             // Verify payment
             const verifyResponse = await fetch('/api/payment/verify', {
@@ -204,7 +181,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
         <h3 className="font-semibold mb-3">Order Summary</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Subtotal ({items.length} items)</span>
+            <span>Subtotal ({state.items.length} items)</span>
             <span>₹{subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
@@ -225,7 +202,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
       {/* Payment Button */}
       <Button
         onClick={handlePayment}
-        disabled={isProcessing || items.length === 0}
+        disabled={isProcessing || state.items.length === 0}
         className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white py-3 text-lg"
         size="lg"
       >

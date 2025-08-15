@@ -40,8 +40,12 @@ declare global {
       color: string
     }
     handler: (response: RazorpayResponse) => void
-    modal: {
-      ondismiss: () => void
+    modal?: {
+      ondismiss?: () => void
+    }
+    image?: string
+    notes?: {
+      address: string
     }
   }
 
@@ -54,6 +58,7 @@ declare global {
   interface RazorpayInstance {
     open(): void
     close(): void
+    on(event: string, callback: (response: any) => void): void
   }
 
   interface Window {
