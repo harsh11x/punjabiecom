@@ -1,92 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Settings, 
-  LogOut,
-  Menu,
-  X,
-  Bell,
-  BarChart3,
-  Shield
-} from 'lucide-react'
-import { toast } from 'sonner'
+import { LogOut, Settings, Package, ShoppingCart, BarChart3, Home } from 'lucide-react'
+import Link from 'next/link'
 
-interface AdminLayoutProps {
-  children: React.ReactNode
-}
-
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [admin, setAdmin] = useState<any>(null)
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+  const { user, isAuthenticated, isLoading, logout } = useAdminAuth()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    // Don't check auth on login page
-    if (pathname === '/admin/login') {
-      setLoading(false)
-      return
-    }
-    
-    checkAuth()
-  }, [pathname])
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/admin/auth/verify', {
-        credentials: 'include'
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setIsAuthenticated(true)
-          setAdmin(data.admin)
-        } else {
-          router.push('/admin/login')
-        }
-      } else {
-        router.push('/admin/login')
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error)
+    if (!isLoading && !isAuthenticated && pathname !== '/admin/login') {
       router.push('/admin/login')
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [isAuthenticated, isLoading, pathname, router])
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/admin/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      })
-      setIsAuthenticated(false)
-      setAdmin(null)
-      toast.success('Logged out successfully')
-      router.push('/admin/login')
-    } catch (error) {
-      console.error('Logout failed:', error)
-      toast.error('Logout failed')
-    }
-  }
-
-  // Show loading spinner
-  if (loading) {
+  // Show loading spinner while checking authentication
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mb-4"></div>
           <p className="text-red-900 font-semibold">Loading...</p>
@@ -95,125 +30,115 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
-  // Show login page content without layout
-  if (pathname === '/admin/login') {
-    return children
-  }
-
   // Show login page if not authenticated
-  if (!isAuthenticated) {
-    return children
+  if (!isAuthenticated && pathname !== '/admin/login') {
+    return null // Will redirect to login
   }
 
-  const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-  ]
+  // Show login page without layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
 
-  const Sidebar = ({ mobile = false }) => (
-    <div className={`${mobile ? 'w-full' : 'w-64'} bg-gradient-to-b from-red-900 via-red-800 to-amber-800 text-white h-full flex flex-col`}>
-      {/* Header */}
-      <div className="p-6 border-b border-red-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-red-500 rounded-full flex items-center justify-center">
-            <Shield className="text-white h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-amber-100">Admin Panel</h1>
-            <p className="text-sm text-amber-200">Punjab Heritage</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive 
-                  ? 'bg-red-700 text-white' 
-                  : 'text-amber-100 hover:bg-red-700/50 hover:text-white'
-              }`}
-              onClick={() => mobile && setSidebarOpen(false)}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.name}</span>
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* Admin Info & Logout */}
-      <div className="p-4 border-t border-red-700 space-y-3">
-        {admin && (
-          <div className="text-center">
-            <p className="text-sm text-amber-200">Welcome back</p>
-            <p className="text-sm font-semibold text-amber-100">{admin.email}</p>
-            <Badge className="mt-1 bg-amber-600 text-white text-xs">
-              {admin.role}
-            </Badge>
-          </div>
-        )}
-        
-        <Button
-          onClick={handleLogout}
-          variant="ghost"
-          className="w-full justify-start text-amber-100 hover:bg-red-700/50 hover:text-white"
-        >
-          <LogOut className="h-5 w-5 mr-3" />
-          Logout
-        </Button>
-      </div>
-    </div>
-  )
-
+  // Show admin layout for authenticated users
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block fixed inset-y-0 left-0 z-50">
-        <Sidebar />
-      </div>
-
-      {/* Mobile Sidebar */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-64">
-            <Sidebar mobile />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-64">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white shadow-sm border-b px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+      {/* Admin Header */}
+      <header className="bg-white/90 backdrop-blur-sm border-b-2 border-amber-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <Link href="/admin" className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-amber-500 rounded-full flex items-center justify-center">
+                  <Home className="text-white h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-red-900">Admin Panel</h1>
+                  <p className="text-sm text-amber-700">Punjab Heritage</p>
+                </div>
+              </Link>
+
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center space-x-4">
+                <Link 
+                  href="/admin" 
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    pathname === '/admin' 
+                      ? 'bg-red-100 text-red-900' 
+                      : 'text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  <BarChart3 className="h-4 w-4 inline mr-2" />
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/admin/products" 
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    pathname.startsWith('/admin/products') 
+                      ? 'bg-red-100 text-red-900' 
+                      : 'text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  <Package className="h-4 w-4 inline mr-2" />
+                  Products
+                </Link>
+                <Link 
+                  href="/admin/orders" 
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    pathname.startsWith('/admin/orders') 
+                      ? 'bg-red-100 text-red-900' 
+                      : 'text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  <ShoppingCart className="h-4 w-4 inline mr-2" />
+                  Orders
+                </Link>
+                <Link 
+                  href="/admin/settings" 
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    pathname === '/admin/settings' 
+                      ? 'bg-red-100 text-red-900' 
+                      : 'text-amber-700 hover:bg-amber-100'
+                  }`}
+                >
+                  <Settings className="h-4 w-4 inline mr-2" />
+                  Settings
+                </Link>
+              </nav>
+            </div>
+
+            {/* User Info & Logout */}
             <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-red-900">{user?.email}</p>
+                <p className="text-xs text-amber-700 capitalize">{user?.role?.replace('_', ' ')}</p>
+              </div>
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen(true)}
+                variant="outline"
+                size="sm"
+                onClick={logout}
+                className="border-red-300 text-red-700 hover:bg-red-50"
               >
-                <Menu className="h-6 w-6" />
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
               </Button>
-              <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Page Content */}
-        <main className="w-full">
-          {children}
-        </main>
-      </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-6">
+        {children}
+      </main>
     </div>
+  )
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminAuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AdminAuthProvider>
   )
 }

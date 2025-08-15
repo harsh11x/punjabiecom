@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const response = NextResponse.json({
       success: true,
-      message: 'Logout successful'
+      message: 'Logged out successfully'
     })
 
     // Clear the admin token cookie
     response.cookies.set('admin-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0 // Immediately expire the cookie
+      sameSite: 'lax',
+      maxAge: 0, // Expire immediately
+      path: '/'
     })
 
     return response

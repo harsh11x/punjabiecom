@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
 
       const token = generateAdminToken(adminUser)
 
-      return NextResponse.json({
+      // Create response with success message
+      const response = NextResponse.json({
         success: true,
         data: {
           user: adminUser,
@@ -35,6 +36,17 @@ export async function POST(request: NextRequest) {
         },
         message: 'Login successful'
       })
+
+      // Set HTTP-only cookie for authentication
+      response.cookies.set('admin-token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60, // 24 hours
+        path: '/'
+      })
+
+      return response
     }
 
     return NextResponse.json(

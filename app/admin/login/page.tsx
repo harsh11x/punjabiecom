@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react'
-import { toast } from 'sonner'
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -19,6 +19,7 @@ export default function AdminLoginPage() {
     password: ''
   })
   const router = useRouter()
+  const { login } = useAdminAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -33,28 +34,16 @@ export default function AdminLoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include'
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        toast.success('Login successful! Welcome to Admin Panel')
+      const success = await login(formData.email, formData.password)
+      
+      if (success) {
         router.push('/admin')
       } else {
-        setError(result.error || 'Login failed')
-        toast.error(result.error || 'Login failed')
+        setError('Invalid credentials')
       }
     } catch (error) {
       console.error('Login error:', error)
       setError('An error occurred during login')
-      toast.error('An error occurred during login')
     } finally {
       setIsLoading(false)
     }
@@ -99,7 +88,7 @@ export default function AdminLoginPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="harshdevsingh2004@gmail.com"
+                    placeholder="admin@gmail.com"
                     className="pl-10 border-2 border-amber-200 focus:border-red-400 bg-white/80"
                     value={formData.email}
                     onChange={handleInputChange}

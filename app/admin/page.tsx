@@ -147,26 +147,25 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mb-4"></div>
-          <p className="text-red-900 font-semibold">Loading Admin Dashboard...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mb-4 mx-auto"></div>
+          <p className="text-red-900 font-semibold">Loading Dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-red-900 mb-2">Admin Dashboard</h1>
-          <p className="text-amber-700">Welcome to Punjab Heritage Store Management</p>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-red-900 mb-2">Dashboard</h1>
+        <p className="text-amber-700">Welcome to Punjab Heritage Store Management</p>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="border-2 border-amber-200 bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
@@ -224,10 +223,10 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-red-900 mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-4">
+      {/* Quick Actions */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-red-900 mb-4">Quick Actions</h2>
+        <div className="flex flex-wrap gap-4">
             <Button 
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
               onClick={() => window.location.href = '/admin/products/new'}
@@ -254,8 +253,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Data */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Recent Data */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Products */}
           <Card className="border-2 border-amber-200 bg-white/80 backdrop-blur-sm">
             <CardHeader>
@@ -335,6 +334,5 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }

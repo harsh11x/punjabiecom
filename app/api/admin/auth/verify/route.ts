@@ -1,40 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('admin-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'No token provided' },
-        { status: 401 }
-      )
-    }
-
-    // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'punjab-admin-secret-key') as any
+    const authResult = await verifyAdminAuth(request)
     
-    if (!decoded || !decoded.id) {
+    if (authResult.success) {
+      return NextResponse.json({
+        success: true,
+        user: authResult.user
+      })
+    } else {
       return NextResponse.json(
-        { success: false, error: 'Invalid token' },
+        { success: false, error: authResult.error },
         { status: 401 }
       )
     }
-
-    return NextResponse.json({
-      success: true,
-      admin: {
-        id: decoded.id,
-        email: decoded.email,
-        role: decoded.role
-      }
-    })
   } catch (error) {
-    console.error('Admin auth verify error:', error)
+    console.error('Admin auth verification error:', error)
     return NextResponse.json(
-      { success: false, error: 'Authentication failed' },
-      { status: 401 }
+      { success: false, error: 'Authentication verification failed' },
+      { status: 500 }
     )
   }
 }

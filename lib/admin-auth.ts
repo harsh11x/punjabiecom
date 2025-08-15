@@ -17,13 +17,20 @@ export interface AuthResult {
 
 export async function verifyAdminAuth(request: NextRequest): Promise<AuthResult> {
   try {
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { success: false, error: 'No authorization token provided' }
+    // First try to get token from cookies
+    let token = request.cookies.get('admin-token')?.value
+
+    // If no cookie, try Authorization header
+    if (!token) {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7) // Remove 'Bearer ' prefix
+      }
     }
 
-    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+    if (!token) {
+      return { success: false, error: 'No authorization token provided' }
+    }
 
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
