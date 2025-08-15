@@ -17,22 +17,22 @@ export async function GET(request: NextRequest) {
       .lean()
     
     // Transform MongoDB documents to match frontend interface
-    const transformedProducts = products.map(product => ({
-      _id: product._id.toString(),
-      name: product.name,
-      punjabiName: product.punjabiName,
-      description: product.description,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      category: product.category,
+    const transformedProducts = products.map((product: any) => ({
+      _id: product._id?.toString() || product.id?.toString() || '',
+      name: product.name || '',
+      punjabiName: product.punjabiName || product.name || '',
+      description: product.description || '',
+      price: product.price || 0,
+      originalPrice: product.originalPrice || product.price || 0,
+      category: product.category || '',
       images: product.images || [],
       colors: product.colors || [],
       sizes: product.sizes || [],
-      stock: product.stock,
-      rating: product.rating,
-      reviews: product.reviews,
-      isActive: product.isActive,
-      badge: product.badge
+      stock: product.stock || 0,
+      rating: product.rating || 4.5,
+      reviews: product.reviews || 0,
+      isActive: product.isActive !== false,
+      badge: product.badge || ''
     }))
     
     // Set cache headers for better performance (reduced cache time for real-time updates)
