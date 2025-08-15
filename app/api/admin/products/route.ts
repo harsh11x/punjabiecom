@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import fs from 'fs'
-import path from 'path'
+import { getProducts, saveProducts } from '@/lib/storage'
 
 // Auth middleware
 function verifyAdminToken(request: NextRequest) {
@@ -14,43 +13,13 @@ function verifyAdminToken(request: NextRequest) {
   return decoded
 }
 
-// Data file paths
-const DATA_DIR = path.resolve(process.cwd(), 'data')
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true })
-}
-
-function getProducts() {
-  if (!fs.existsSync(PRODUCTS_FILE)) {
-    return []
-  }
-  try {
-    const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error reading products:', error)
-    return []
-  }
-}
-
-function saveProducts(products: any[]) {
-  try {
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8')
-  } catch (error) {
-    console.error('Error saving products:', error)
-    throw error
-  }
-}
 
 // GET - Fetch all products for admin
 export async function GET(request: NextRequest) {
   try {
     verifyAdminToken(request)
     
-    const products = getProducts()
+    const products = await getProducts()
     
     return NextResponse.json({
       success: true,
@@ -72,7 +41,7 @@ export async function POST(request: NextRequest) {
     verifyAdminToken(request)
     
     const productData = await request.json()
-    const products = getProducts()
+    const products = await getProducts()
     
     // Validate required fields
     if (!productData.name || !productData.description || !productData.price || 
@@ -103,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
     
     products.push(newProduct)
-    saveProducts(products)
+    await saveProducts(products)
     
     return NextResponse.json({
       success: true,
@@ -134,7 +103,7 @@ export async function PUT(request: NextRequest) {
       )
     }
     
-    const products = getProducts()
+    const products = await getProducts()
     const productIndex = products.findIndex((p: any) => p.id === _id)
     
     if (productIndex === -1) {
@@ -156,7 +125,7 @@ export async function PUT(request: NextRequest) {
     }
     
     products[productIndex] = updatedProduct
-    saveProducts(products)
+    await saveProducts(products)
     
     return NextResponse.json({
       success: true,
@@ -187,7 +156,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
     
-    const products = getProducts()
+    const products = await getProducts()
     const filteredProducts = products.filter((p: any) => p.id !== productId)
     
     if (filteredProducts.length === products.length) {
@@ -197,7 +166,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
     
-    saveProducts(filteredProducts)
+    await saveProducts(filteredProducts)
     
     return NextResponse.json({
       success: true,
