@@ -9,6 +9,7 @@ import { useCart } from "@/contexts/CartContext"
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext"
 import { useState } from "react"
 import { AuthModal } from "@/components/auth/AuthModal"
+import { getProductImage, getProductSize, getProductColor, createCartItem, isValidProduct } from "@/lib/product-utils"
 
 interface Product {
   _id: string
@@ -32,11 +33,17 @@ interface ResponsiveProductCardProps {
 }
 
 export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
+  // Validate product data first
+  if (!isValidProduct(product)) {
+    console.warn('Invalid product data:', product)
+    return null
+  }
+
   const { addItem } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0] || '')
-  const [selectedColor, setSelectedColor] = useState(product.colors[0] || '')
+  const [selectedSize, setSelectedSize] = useState(getProductSize(product))
+  const [selectedColor, setSelectedColor] = useState(getProductColor(product))
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -44,31 +51,16 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
       return
     }
 
-    if (!selectedSize || !selectedColor) {
-      // Auto-select first available options if none selected
-      const size = selectedSize || product.sizes[0]
-      const color = selectedColor || product.colors[0]
-      
-      if (!size || !color) {
-        alert('Please select size and color')
-        return
-      }
-      
-      setSelectedSize(size)
-      setSelectedColor(color)
+    try {
+      const cartItem = createCartItem(product, selectedSize, selectedColor)
+      addItem({
+        id: product._id, // Add the missing id property
+        ...cartItem
+      })
+    } catch (error) {
+      console.error('Error adding item to cart:', error)
+      alert('Unable to add item to cart. Please try again.')
     }
-
-    addItem({
-      id: product._id, // Add the missing id property
-      productId: product._id,
-      name: product.name,
-      punjabiName: product.punjabiName || product.name,
-      price: product.price,
-      image: product.images[0] || "/placeholder.svg",
-      size: selectedSize || product.sizes[0],
-      color: selectedColor || product.colors[0],
-      stock: product.stock
-    })
   }
 
   return (
@@ -78,7 +70,7 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
           <div className="relative mb-4 lg:mb-6">
             <div className="absolute -inset-1 lg:-inset-2 bg-gradient-to-br from-amber-300 to-red-400 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
             <Image
-              src={product.images[0] || "/placeholder.svg"}
+              src={getProductImage(product)}
               alt={product.name}
               width={350}
               height={350}

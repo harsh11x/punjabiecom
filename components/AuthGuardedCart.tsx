@@ -71,7 +71,7 @@ export function AuthGuardedCart({
       name: product.name,
       punjabiName: product.punjabiName,
       price: product.price,
-      image: product.images[0] || '/placeholder.jpg',
+      image: product.images?.[0] || '/placeholder.jpg',
       size: selectedSize || 'One Size',
       color: selectedColor || 'Default',
       quantity,

@@ -101,7 +101,7 @@ export default function MenPage() {
         <div className="relative aspect-square">
           <Link href={`/products/${product.id}`}>
             <Image
-              src={product.images[0] || '/placeholder.jpg'}
+              src={product.images?.[0] || '/placeholder.jpg'}
               alt={product.name}
               fill
               className="object-cover cursor-pointer group-hover:scale-105 transition-transform"

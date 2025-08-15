@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ResponsiveProductCard } from '@/components/responsive-product-card'
+import { ProductErrorBoundary } from '@/components/product-error-boundary'
+import { isValidProduct } from '@/lib/product-utils'
 
 interface Product {
   _id: string
@@ -93,9 +95,13 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
       {products.length > 0 ? (
-        products.map((product: Product) => (
-          <ResponsiveProductCard key={product._id} product={product} />
-        ))
+        products
+          .filter(isValidProduct)
+          .map((product: Product) => (
+            <ProductErrorBoundary key={product._id}>
+              <ResponsiveProductCard product={product} />
+            </ProductErrorBoundary>
+          ))
       ) : (
         // No products message
         <div className="col-span-full text-center py-12">

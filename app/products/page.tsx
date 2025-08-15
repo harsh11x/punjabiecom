@@ -111,7 +111,7 @@ function ProductsPageContent() {
             <div className="relative w-48 h-48 flex-shrink-0">
               <Link href={`/products/${product.id}`}>
                 <Image
-                  src={product.images[0] || '/placeholder.jpg'}
+                  src={product.images?.[0] || '/placeholder.jpg'}
                   alt={product.name}
                   fill
                   className="object-cover cursor-pointer hover:scale-105 transition-transform"
