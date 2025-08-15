@@ -185,22 +185,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.log('[CartProvider] Initializing cart state');
     }
     
-    // Try to load cart from localStorage first
-    try {
-      const savedCart = localStorage.getItem('punjabi-heritage-cart')
-      if (savedCart) {
-        const cartItems = JSON.parse(savedCart)
-        if (Array.isArray(cartItems) && cartItems.length > 0) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[CartProvider] Loading cart from localStorage:', cartItems);
+    // Only try localStorage on client side
+    if (typeof window !== 'undefined') {
+      try {
+        const savedCart = localStorage.getItem('punjabi-heritage-cart')
+        if (savedCart) {
+          const cartItems = JSON.parse(savedCart)
+          if (Array.isArray(cartItems) && cartItems.length > 0) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[CartProvider] Loading cart from localStorage:', cartItems);
+            }
+            dispatch({ type: 'LOAD_CART', payload: cartItems })
           }
-          dispatch({ type: 'LOAD_CART', payload: cartItems })
+        }
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error)
+        // Clear corrupted data
+        try {
+          localStorage.removeItem('punjabi-heritage-cart')
+        } catch (clearError) {
+          console.error('Error clearing corrupted cart data:', clearError)
         }
       }
-    } catch (error) {
-      console.error('Error loading cart from localStorage:', error)
-      // Clear corrupted data
-      localStorage.removeItem('punjabi-heritage-cart')
     }
     
     // Mark cart as initialized
@@ -211,13 +217,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (process.env.NODE_ENV === 'development') {
         console.log('[CartProvider] Requesting cart from server for authenticated user');
       }
-      socket.socket.emit('get-cart')
+      try {
+        socket.socket.emit('get-cart')
+      } catch (error) {
+        console.error('Error requesting cart from server:', error)
+      }
     }
   }, [])
 
-  // Save cart to localStorage (only after initialization)
+  // Save cart to localStorage (only after initialization and on client side)
   useEffect(() => {
-    if (cartInitialized) {
+    if (cartInitialized && typeof window !== 'undefined') {
       try {
         localStorage.setItem('punjabi-heritage-cart', JSON.stringify(state.items))
         if (process.env.NODE_ENV === 'development') {

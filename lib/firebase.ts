@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import { getAnalytics } from 'firebase/analytics'
 
 const firebaseConfig = {
   apiKey: "AIzaSyA96W2Y6321lit2B2HuPOPIdY-MS9dytl4",
@@ -15,13 +14,21 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 
-// Initialize Firebase Analytics (lazy loaded)
+// Initialize Firebase Analytics (only in browser and after hydration)
 let analytics: any = null
-const getFirebaseAnalytics = () => {
+export const getFirebaseAnalytics = () => {
   if (typeof window !== 'undefined' && !analytics) {
-    // Lazy load analytics to prevent blocking initial page load
-    import('firebase/analytics').then(({ getAnalytics }) => {
-      analytics = getAnalytics(app)
+    // Only load analytics after the component has mounted to prevent hydration issues
+    import('firebase/analytics').then(({ getAnalytics, isSupported }) => {
+      isSupported().then((supported) => {
+        if (supported) {
+          analytics = getAnalytics(app)
+        }
+      }).catch((error) => {
+        console.warn('Firebase Analytics not supported:', error)
+      })
+    }).catch((error) => {
+      console.warn('Failed to load Firebase Analytics:', error)
     })
   }
   return analytics

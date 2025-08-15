@@ -22,9 +22,11 @@ export function useSocket(options: UseSocketOptions = {}) {
   useEffect(() => {
     // Initialize socket connection
     const initSocket = () => {
-      // Skip Socket.IO initialization if URL is null (production)
-      if (!SOCKET_CONFIG.url || socketRef.current?.connected) {
-        console.log('[useSocket] Socket.IO disabled or already connected')
+      // Skip Socket.IO initialization if URL is null (production) or if we're on server
+      if (!SOCKET_CONFIG.url || typeof window === 'undefined' || socketRef.current?.connected) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[useSocket] Socket.IO disabled or already connected')
+        }
         setIsConnecting(false)
         setIsConnected(false)
         return
@@ -36,7 +38,7 @@ export function useSocket(options: UseSocketOptions = {}) {
         socketRef.current = io(SOCKET_CONFIG.url, {
           ...SOCKET_CONFIG.options,
           auth: {
-            token: typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
+            token: localStorage.getItem('auth-token')
           }
         })
 
@@ -44,69 +46,110 @@ export function useSocket(options: UseSocketOptions = {}) {
 
         // Connection events
         socket.on('connect', () => {
-          console.log('Socket connected:', socket.id)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Socket connected:', socket.id)
+          }
           setIsConnected(true)
           setIsConnecting(false)
           options.onConnect?.()
         })
 
         socket.on('disconnect', (reason) => {
-          console.log('Socket disconnected:', reason)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Socket disconnected:', reason)
+          }
           setIsConnected(false)
           setIsConnecting(false)
           options.onDisconnect?.()
         })
 
         socket.on('connect_error', (error) => {
-          console.warn('Socket connection failed (this is optional):', error.message)
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Socket connection failed (this is optional):', error.message)
+          }
           setIsConnected(false)
           setIsConnecting(false)
           // Don't call onError callback for connection failures
           // as sockets are optional for basic app functionality
         })
 
-        // Business events
+        // Business events with error handling
         socket.on('order-notification', (data) => {
-          console.log('Order notification received:', data)
-          options.onOrderNotification?.(data)
+          try {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Order notification received:', data)
+            }
+            options.onOrderNotification?.(data)
+          } catch (error) {
+            console.error('Error handling order notification:', error)
+          }
         })
 
         socket.on('product-update', (data) => {
-          console.log('Product update received:', data)
-          options.onProductUpdate?.(data)
+          try {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Product update received:', data)
+            }
+            options.onProductUpdate?.(data)
+          } catch (error) {
+            console.error('Error handling product update:', error)
+          }
         })
 
         socket.on('cart-updated', (data) => {
-          console.log('Cart update received:', data)
-          options.onCartUpdate?.(data)
+          try {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Cart update received:', data)
+            }
+            options.onCartUpdate?.(data)
+          } catch (error) {
+            console.error('Error handling cart update:', error)
+          }
         })
 
         socket.on('auth-required', (data) => {
-          console.log('Auth required:', data)
-          options.onAuthRequired?.(data)
+          try {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Auth required:', data)
+            }
+            options.onAuthRequired?.(data)
+          } catch (error) {
+            console.error('Error handling auth required:', error)
+          }
         })
 
         // Admin specific events
         socket.on('join-admin', () => {
-          console.log('Joined admin room')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Joined admin room')
+          }
         })
 
       } catch (error) {
-        console.warn('Socket initialization failed (sockets are optional):', error)
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Socket initialization failed (sockets are optional):', error)
+        }
         setIsConnecting(false)
+        setIsConnected(false)
         // Don't call onError callback for initialization failures
         // as sockets are optional for basic app functionality
       }
     }
 
-    // Initialize socket
-    initSocket()
+    // Only initialize socket on client side
+    if (typeof window !== 'undefined') {
+      initSocket()
+    }
 
     // Cleanup on unmount
     return () => {
       if (socketRef.current) {
-        socketRef.current.disconnect()
-        socketRef.current = null
+        try {
+          socketRef.current.disconnect()
+          socketRef.current = null
+        } catch (error) {
+          console.error('Error cleaning up socket:', error)
+        }
       }
     }
   }, [options])

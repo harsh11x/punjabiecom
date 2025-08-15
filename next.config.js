@@ -5,6 +5,12 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 
+  // React strict mode for better error detection
+  reactStrictMode: true,
+
+  // Disable x-powered-by header
+  poweredByHeader: false,
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -42,7 +48,6 @@ const nextConfig = {
 
   // Compression and optimization
   compress: true,
-  poweredByHeader: false,
 
   // Security headers
   async headers() {

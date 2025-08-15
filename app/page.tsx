@@ -10,6 +10,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { FeaturedProductsClient } from "@/components/featured-products-client"
 import { OptimizedLink } from "@/components/performance/optimized-link"
+import ClientWrapper from "@/components/client-wrapper"
 
 interface Product {
   _id: string
@@ -422,7 +423,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          <FeaturedProductsClient initialProducts={[]} />
+          <ClientWrapper>
+            <FeaturedProductsClient initialProducts={[]} />
+          </ClientWrapper>
         </div>
       </section>
 

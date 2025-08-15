@@ -51,16 +51,42 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
 
   // Listen for authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(convertUser(firebaseUser))
-      } else {
-        setUser(null)
-      }
+    let unsubscribe: (() => void) | null = null
+    
+    try {
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        try {
+          if (firebaseUser) {
+            setUser(convertUser(firebaseUser))
+          } else {
+            setUser(null)
+          }
+          setLoading(false)
+        } catch (error) {
+          console.error('Error processing auth state change:', error)
+          setError('Authentication error occurred')
+          setLoading(false)
+        }
+      }, (error) => {
+        console.error('Firebase auth state change error:', error)
+        setError('Authentication service error')
+        setLoading(false)
+      })
+    } catch (error) {
+      console.error('Error setting up auth listener:', error)
+      setError('Failed to initialize authentication')
       setLoading(false)
-    })
+    }
 
-    return unsubscribe
+    return () => {
+      if (unsubscribe) {
+        try {
+          unsubscribe()
+        } catch (error) {
+          console.error('Error cleaning up auth listener:', error)
+        }
+      }
+    }
   }, [])
 
   const clearError = () => setError(null)
