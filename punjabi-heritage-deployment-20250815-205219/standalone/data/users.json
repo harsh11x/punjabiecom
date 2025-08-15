@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "users": [
+    {
+      "id": "admin_1755096449480",
+      "name": "Admin",
+      "email": "admin@punjabiecom.com",
+      "passwordHash": "$2a$12$TbbK9gEAj6CdHnwPmLb6rOFVCedwGO0SE6N.HeveaoA8NUXw.jSGK",
+      "phone": "+91 98765 43210",
+      "role": "admin",
+      "isVerified": true,
+      "createdAt": "2025-08-13T14:47:29.475Z",
+      "updatedAt": "2025-08-13T14:47:29.475Z"
+    }
+  ]
+}
