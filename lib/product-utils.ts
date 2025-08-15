@@ -125,8 +125,8 @@ export function getProductReviews(product: Product): number {
  * Checks if product has variants (sizes and colors)
  */
 export function hasProductVariants(product: Product): boolean {
-  const hasSizes = product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0
-  const hasColors = product.colors && Array.isArray(product.colors) && product.colors.length > 0
+  const hasSizes = !!(product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0)
+  const hasColors = !!(product.colors && Array.isArray(product.colors) && product.colors.length > 0)
   return hasSizes || hasColors
 }
 
