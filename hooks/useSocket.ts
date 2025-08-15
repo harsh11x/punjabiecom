@@ -63,9 +63,9 @@ export function useSocket(options: UseSocketOptions = {}) {
           options.onDisconnect?.()
         })
 
-        socket.on('connect_error', (error) => {
+        socket.on('connect_error', (error: any) => {
           if (process.env.NODE_ENV === 'development') {
-            console.warn('Socket connection failed (this is optional):', error.message)
+            console.warn('Socket connection failed (this is optional):', error?.message || 'Connection error')
           }
           setIsConnected(false)
           setIsConnecting(false)
