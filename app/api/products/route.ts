@@ -1,19 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Product from '@/models/Product'
-import { requireAdmin } from '@/lib/auth-middleware'
+import { getProducts } from '@/lib/storage'
 
 export async function GET(request: NextRequest) {
   try {
-    // Try to connect to database, but don't fail if not available during build
-    const dbConnection = await connectDB()
-    if (!dbConnection) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 503 }
-      )
-    }
-    
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const subcategory = searchParams.get('subcategory')
@@ -24,79 +13,121 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc'
     const priceRange = searchParams.get('priceRange')
     
-    // Build query
-    const query: any = { isActive: true }
+    // Get all products from file storage
+    const allProducts = await getProducts()
     
-    // Category filter - strict filtering
-    if (category && category !== 'all') {
-      query.category = category
-    }
-    
-    // Subcategory filter
-    if (subcategory && subcategory !== 'all') {
-      query.subcategory = subcategory
-    }
-    
-    // Search filter
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { punjabiName: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
-        { subcategory: { $regex: search, $options: 'i' } }
-      ]
-    }
-    
-    // Price range filter
-    if (priceRange && priceRange !== 'all') {
-      const [min, max] = priceRange.split('-').map(p => p.replace('+', ''))
-      if (max) {
-        query.price = { $gte: parseInt(min), $lte: parseInt(max) }
-      } else {
-        query.price = { $gte: parseInt(min) }
+    // Filter products
+    let filteredProducts = allProducts.filter((product: any) => {
+      // Only show active products
+      if (product.isActive !== true && product.isActive !== undefined) return false
+      
+      // Category filter
+      if (category && category !== 'all') {
+        if (product.category !== category) return false
       }
-    }
+      
+      // Subcategory filter (productType)
+      if (subcategory && subcategory !== 'all') {
+        if (product.productType !== subcategory && product.subcategory !== subcategory) return false
+      }
+      
+      // Search filter
+      if (search) {
+        const searchLower = search.toLowerCase()
+        const nameMatch = product.name?.toLowerCase().includes(searchLower)
+        const punjabiNameMatch = product.punjabiName?.toLowerCase().includes(searchLower)
+        const descriptionMatch = product.description?.toLowerCase().includes(searchLower)
+        const categoryMatch = product.category?.toLowerCase().includes(searchLower)
+        const productTypeMatch = product.productType?.toLowerCase().includes(searchLower)
+        
+        if (!nameMatch && !punjabiNameMatch && !descriptionMatch && !categoryMatch && !productTypeMatch) {
+          return false
+        }
+      }
+      
+      // Price range filter
+      if (priceRange && priceRange !== 'all') {
+        const [min, max] = priceRange.split('-').map(p => parseInt(p.replace('+', '')))
+        const price = parseFloat(product.price)
+        if (max) {
+          if (price < min || price > max) return false
+        } else {
+          if (price < min) return false
+        }
+      }
+      
+      return true
+    })
     
-    // Build sort object
-    const sort: any = {}
+    // Sort products
+    filteredProducts.sort((a: any, b: any) => {
+      let aVal, bVal
+      
+      switch (sortBy) {
+        case 'newest':
+        case 'createdAt':
+          aVal = new Date(a.createdAt || a.updatedAt || 0)
+          bVal = new Date(b.createdAt || b.updatedAt || 0)
+          break
+        case 'price-low':
+        case 'price':
+          aVal = parseFloat(a.price) || 0
+          bVal = parseFloat(b.price) || 0
+          return sortOrder === 'desc' ? bVal - aVal : aVal - bVal
+        case 'price-high':
+          aVal = parseFloat(a.price) || 0
+          bVal = parseFloat(b.price) || 0
+          return bVal - aVal
+        case 'rating':
+          aVal = parseFloat(a.rating) || 0
+          bVal = parseFloat(b.rating) || 0
+          break
+        case 'popular':
+        case 'reviews':
+          aVal = parseInt(a.reviews) || 0
+          bVal = parseInt(b.reviews) || 0
+          break
+        case 'name':
+          aVal = a.name || ''
+          bVal = b.name || ''
+          break
+        default:
+          aVal = a[sortBy]
+          bVal = b[sortBy]
+      }
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortOrder === 'desc' ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal)
+      }
+      
+      if (aVal instanceof Date && bVal instanceof Date) {
+        return sortOrder === 'desc' ? bVal.getTime() - aVal.getTime() : aVal.getTime() - bVal.getTime()
+      }
+      
+      return sortOrder === 'desc' ? bVal - aVal : aVal - bVal
+    })
     
-    switch (sortBy) {
-      case 'newest':
-        sort.createdAt = -1
-        break
-      case 'price-low':
-        sort.price = 1
-        break
-      case 'price-high':
-        sort.price = -1
-        break
-      case 'rating':
-        sort.rating = -1
-        break
-      case 'popular':
-        sort.reviews = -1
-        break
-      default:
-        sort[sortBy] = sortOrder === 'desc' ? -1 : 1
-    }
-    
-    // Calculate skip value for pagination
+    // Calculate pagination
+    const total = filteredProducts.length
     const skip = (page - 1) * limit
+    const paginatedProducts = filteredProducts.slice(skip, skip + limit)
     
-    // Execute query
-    const products = await Product.find(query)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean()
-    
-    // Get total count for pagination
-    const total = await Product.countDocuments(query)
+    // Ensure products have _id field for compatibility
+    const formattedProducts = paginatedProducts.map((product: any) => ({
+      _id: product.id || product._id,
+      id: product.id || product._id,
+      ...product,
+      // Ensure required fields have defaults
+      rating: product.rating || 4.5,
+      reviews: product.reviews || 0,
+      colors: product.colors || ['Default'],
+      sizes: product.sizes || ['One Size'],
+      images: product.images || ['/placeholder.svg']
+    }))
     
     return NextResponse.json({
       success: true,
-      data: products,
+      data: formattedProducts,
       pagination: {
         page,
         limit,
@@ -108,58 +139,6 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching products:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // Require admin authentication for creating products
-    await requireAdmin(request)
-    
-    // Try to connect to database, but don't fail if not available during build
-    const dbConnection = await connectDB()
-    if (!dbConnection) {
-      return NextResponse.json(
-        { success: false, error: 'Database connection not available' },
-        { status: 503 }
-      )
-    }
-    
-    const body = await request.json()
-    
-    // Validate required fields
-    const requiredFields = ['name', 'punjabiName', 'description', 'punjabiDescription', 'price', 'originalPrice', 'category', 'images', 'colors', 'sizes']
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json(
-          { success: false, error: `${field} is required` },
-          { status: 400 }
-        )
-      }
-    }
-    
-    const product = new Product(body)
-    await product.save()
-    
-    return NextResponse.json({
-      success: true,
-      data: product,
-      message: 'Product created successfully'
-    }, { status: 201 })
-  } catch (error: any) {
-    console.error('Error creating product:', error)
-    
-    if (error.name === 'ValidationError') {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      )
-    }
-    
-    return NextResponse.json(
-      { success: false, error: 'Failed to create product' },
       { status: 500 }
     )
   }
