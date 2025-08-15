@@ -16,12 +16,17 @@ function verifyAdminToken(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Upload request received')
     verifyAdminToken(request)
+    console.log('Admin token verified successfully')
     
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
     
+    console.log('Files received:', files.length)
+    
     if (!files || files.length === 0) {
+      console.log('No files provided in request')
       return NextResponse.json(
         { success: false, error: 'No files provided' },
         { status: 400 }
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Error uploading files:', error)
+    console.error('Error stack:', error.stack)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to upload files' },
       { status: error.message === 'No token provided' ? 401 : 500 }

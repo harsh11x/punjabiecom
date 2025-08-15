@@ -57,12 +57,28 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: I
             const result = await response.json()
             if (result.success && result.files.length > 0) {
               newImages.push(result.files[0])
+            } else {
+              console.error('Upload failed:', result)
+              toast.error(result.error || `Failed to upload ${file.name}`)
             }
           } else {
-            toast.error(`Failed to upload ${file.name}`)
+            const errorData = await response.text()
+            console.error('Upload response error:', response.status, errorData)
+            
+            if (response.status === 401) {
+              toast.error('Authentication required. Please login to admin panel.')
+            } else {
+              try {
+                const errorJson = JSON.parse(errorData)
+                toast.error(errorJson.error || `Failed to upload ${file.name}`)
+              } catch {
+                toast.error(`Failed to upload ${file.name} (Status: ${response.status})`)
+              }
+            }
           }
         } catch (uploadError) {
-          toast.error(`Failed to upload ${file.name}`)
+          console.error('Upload error:', uploadError)
+          toast.error(`Network error uploading ${file.name}`)
         }
       }
 
