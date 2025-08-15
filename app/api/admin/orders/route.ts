@@ -1,177 +1,130 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
-import fs from 'fs'
-import path from 'path'
+import { connectDB } from '@/lib/mongodb'
+import Order from '@/models/Order'
+import { verifyAdminAuth } from '@/lib/admin-auth'
 
-// Auth middleware
-function verifyAdminToken(request: NextRequest) {
-  const token = request.cookies.get('admin-token')?.value
-  if (!token) {
-    throw new Error('No token provided')
-  }
-  
-  const decoded = jwt.verify(token, process.env.JWT_SECRET || 'punjab-admin-secret-key')
-  return decoded
-}
-
-// Data file paths
-const DATA_DIR = path.resolve(process.cwd(), 'data')
-const ORDERS_FILE = path.join(DATA_DIR, 'orders.json')
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true })
-}
-
-function getOrders() {
-  if (!fs.existsSync(ORDERS_FILE)) {
-    // Create empty orders file for real transactions only
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2), 'utf8')
-    return []
-  }
-  
-  try {
-    const data = fs.readFileSync(ORDERS_FILE, 'utf8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error reading orders:', error)
-    return []
-  }
-}
-
-function saveOrders(orders: any[]) {
-  try {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), 'utf8')
-  } catch (error) {
-    console.error('Error saving orders:', error)
-    throw error
-  }
-}
-
-// GET - Fetch all orders
 export async function GET(request: NextRequest) {
   try {
-    verifyAdminToken(request)
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: 401 })
+    }
+
+    await connectDB()
+
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const status = searchParams.get('status')
+    const paymentStatus = searchParams.get('paymentStatus')
+    const search = searchParams.get('search')
+    const sortBy = searchParams.get('sortBy') || 'createdAt'
+    const sortOrder = searchParams.get('sortOrder') || 'desc'
+
+    // Build query
+    const query: any = {}
     
-    const orders = getOrders()
-    
-    // Sort by creation date (newest first)
-    orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    
-    // Calculate statistics
-    const stats = {
-      total: orders.length,
-      pending: orders.filter((o: any) => o.status === 'pending').length,
-      processing: orders.filter((o: any) => o.status === 'processing').length,
-      shipped: orders.filter((o: any) => o.status === 'shipped').length,
-      delivered: orders.filter((o: any) => o.status === 'delivered').length,
-      cancelled: orders.filter((o: any) => o.status === 'cancelled').length,
-      totalRevenue: orders.reduce((sum: number, order: any) => sum + order.total, 0),
-      codOrders: orders.filter((o: any) => o.paymentMethod === 'COD').length,
-      onlineOrders: orders.filter((o: any) => o.paymentMethod === 'online').length
+    if (status && status !== 'all') {
+      query.status = status
     }
     
+    if (paymentStatus && paymentStatus !== 'all') {
+      query.paymentStatus = paymentStatus
+    }
+    
+    if (search) {
+      query.$or = [
+        { orderNumber: { $regex: search, $options: 'i' } },
+        { customerEmail: { $regex: search, $options: 'i' } },
+        { 'shippingAddress.fullName': { $regex: search, $options: 'i' } },
+        { trackingNumber: { $regex: search, $options: 'i' } }
+      ]
+    }
+
+    // Build sort object
+    const sortObj: any = {}
+    sortObj[sortBy] = sortOrder === 'desc' ? -1 : 1
+
+    // Get total count
+    const total = await Order.countDocuments(query)
+
+    // Get orders with pagination
+    const orders = await Order.find(query)
+      .sort(sortObj)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+
+    // Transform orders for frontend
+    const transformedOrders = orders.map((order: any) => ({
+      _id: order._id?.toString(),
+      orderNumber: order.orderNumber,
+      customerEmail: order.customerEmail,
+      customerName: order.shippingAddress?.fullName || 'N/A',
+      items: order.items || [],
+      subtotal: order.subtotal || 0,
+      shippingCost: order.shippingCost || 0,
+      tax: order.tax || 0,
+      total: order.total || 0,
+      status: order.status || 'pending',
+      paymentStatus: order.paymentStatus || 'pending',
+      paymentMethod: order.paymentMethod || 'razorpay',
+      shippingAddress: order.shippingAddress,
+      trackingNumber: order.trackingNumber || '',
+      estimatedDelivery: order.estimatedDelivery,
+      deliveredAt: order.deliveredAt,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt
+    }))
+
     return NextResponse.json({
       success: true,
-      orders,
-      stats
+      data: transformedOrders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
     })
-  } catch (error: any) {
+
+  } catch (error) {
     console.error('Error fetching orders:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch orders' },
-      { status: error.message === 'No token provided' ? 401 : 500 }
+      { success: false, error: 'Failed to fetch orders' },
+      { status: 500 }
     )
   }
 }
 
-// PUT - Update order status or tracking
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    verifyAdminToken(request)
-    
-    const updateData = await request.json()
-    const { orderId, status, trackingNumber, paymentStatus } = updateData
-    
-    if (!orderId) {
-      return NextResponse.json(
-        { success: false, error: 'Order ID is required' },
-        { status: 400 }
-      )
+    // Verify admin authentication
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: 401 })
     }
-    
-    const orders = getOrders()
-    const orderIndex = orders.findIndex((o: any) => o._id === orderId)
-    
-    if (orderIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Order not found' },
-        { status: 404 }
-      )
-    }
-    
-    // Update order fields
-    if (status) orders[orderIndex].status = status
-    if (trackingNumber !== undefined) orders[orderIndex].trackingNumber = trackingNumber
-    if (paymentStatus) orders[orderIndex].paymentStatus = paymentStatus
-    orders[orderIndex].updatedAt = new Date().toISOString()
-    
-    saveOrders(orders)
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Order updated successfully',
-      order: orders[orderIndex]
-    })
-  } catch (error: any) {
-    console.error('Error updating order:', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update order' },
-      { status: error.message === 'No token provided' ? 401 : 500 }
-    )
-  }
-}
 
-// DELETE - Cancel/Delete order
-export async function DELETE(request: NextRequest) {
-  try {
-    verifyAdminToken(request)
+    await connectDB()
+
+    const body = await request.json()
     
-    const { searchParams } = new URL(request.url)
-    const orderId = searchParams.get('id')
-    
-    if (!orderId) {
-      return NextResponse.json(
-        { success: false, error: 'Order ID is required' },
-        { status: 400 }
-      )
-    }
-    
-    const orders = getOrders()
-    const orderIndex = orders.findIndex((o: any) => o._id === orderId)
-    
-    if (orderIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Order not found' },
-        { status: 404 }
-      )
-    }
-    
-    // Mark as cancelled instead of deleting
-    orders[orderIndex].status = 'cancelled'
-    orders[orderIndex].updatedAt = new Date().toISOString()
-    
-    saveOrders(orders)
-    
+    // Create new order
+    const order = new Order(body)
+    await order.save()
+
     return NextResponse.json({
       success: true,
-      message: 'Order cancelled successfully'
+      data: order,
+      message: 'Order created successfully'
     })
-  } catch (error: any) {
-    console.error('Error cancelling order:', error)
+
+  } catch (error) {
+    console.error('Error creating order:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to cancel order' },
-      { status: error.message === 'No token provided' ? 401 : 500 }
+      { success: false, error: 'Failed to create order' },
+      { status: 500 }
     )
   }
 }

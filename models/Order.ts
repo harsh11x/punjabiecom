@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 export interface IOrderItem {
-  product: mongoose.Types.ObjectId
+  productId: string
   name: string
   punjabiName: string
   price: number
@@ -13,37 +13,43 @@ export interface IOrderItem {
 
 export interface IShippingAddress {
   fullName: string
-  address: string
+  addressLine1: string
+  addressLine2?: string
   city: string
   state: string
   pincode: string
   phone: string
-  email: string
 }
 
 export interface IOrder extends mongoose.Document {
   orderNumber: string
-  customer: IShippingAddress
+  userId?: string
+  customerEmail: string
   items: IOrderItem[]
-  totalAmount: number
-  paymentMethod: 'razorpay' | 'cod' | 'bank_transfer'
+  subtotal: number
+  shippingCost: number
+  tax: number
+  total: number
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
+  paymentMethod: 'razorpay' | 'cod' | 'bank_transfer'
   paymentId?: string
-  orderStatus: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  trackingId?: string
-  shippingProvider?: string
+  razorpayOrderId?: string
+  razorpayPaymentId?: string
+  razorpaySignature?: string
+  shippingAddress: IShippingAddress
+  billingAddress?: IShippingAddress
+  trackingNumber?: string
   estimatedDelivery?: Date
   deliveredAt?: Date
   notes?: string
-  adminNotes?: string
   createdAt: Date
   updatedAt: Date
 }
 
 const OrderItemSchema = new mongoose.Schema({
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
+  productId: {
+    type: String,
     required: true
   },
   name: {
@@ -81,46 +87,37 @@ const OrderItemSchema = new mongoose.Schema({
 const ShippingAddressSchema = new mongoose.Schema({
   fullName: {
     type: String,
-    required: [true, 'Full name is required'],
-    trim: true,
-    maxlength: [100, 'Name cannot exceed 100 characters']
+    required: true,
+    trim: true
   },
-  address: {
+  addressLine1: {
     type: String,
-    required: [true, 'Address is required'],
-    trim: true,
-    maxlength: [500, 'Address cannot exceed 500 characters']
+    required: true,
+    trim: true
+  },
+  addressLine2: {
+    type: String,
+    trim: true
   },
   city: {
     type: String,
-    required: [true, 'City is required'],
-    trim: true,
-    maxlength: [50, 'City cannot exceed 50 characters']
+    required: true,
+    trim: true
   },
   state: {
     type: String,
-    required: [true, 'State is required'],
-    trim: true,
-    maxlength: [50, 'State cannot exceed 50 characters']
+    required: true,
+    trim: true
   },
   pincode: {
     type: String,
-    required: [true, 'Pincode is required'],
-    trim: true,
-    match: [/^\d{6}$/, 'Please enter a valid 6-digit pincode']
+    required: true,
+    trim: true
   },
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
-    trim: true,
-    match: [/^\+?[\d\s-()]{10,15}$/, 'Please enter a valid phone number']
-  },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    trim: true,
-    lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    required: true,
+    trim: true
   }
 })
 
@@ -129,47 +126,88 @@ const OrderSchema = new mongoose.Schema<IOrder>({
     type: String,
     required: true,
     unique: true,
-    uppercase: true
+    index: true
   },
-  customer: {
-    type: ShippingAddressSchema,
-    required: true
+  userId: {
+    type: String,
+    index: true
   },
-  items: [OrderItemSchema],
-  totalAmount: {
-    type: Number,
-    required: true,
-    min: [0, 'Total amount cannot be negative']
-  },
-  paymentMethod: {
+  customerEmail: {
     type: String,
     required: true,
-    enum: ['razorpay', 'cod', 'bank_transfer']
+    trim: true,
+    lowercase: true,
+    index: true
+  },
+  items: [OrderItemSchema],
+  subtotal: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  shippingCost: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0
+  },
+  tax: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0
+  },
+  total: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+    default: 'pending',
+    index: true
   },
   paymentStatus: {
     type: String,
     required: true,
     enum: ['pending', 'paid', 'failed', 'refunded'],
-    default: 'pending'
+    default: 'pending',
+    index: true
+  },
+  paymentMethod: {
+    type: String,
+    required: true,
+    enum: ['razorpay', 'cod', 'bank_transfer'],
+    default: 'razorpay'
   },
   paymentId: {
     type: String,
-    trim: true
+    index: true
   },
-  orderStatus: {
+  razorpayOrderId: {
     type: String,
-    required: true,
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending'
+    index: true
   },
-  trackingId: {
+  razorpayPaymentId: {
+    type: String,
+    index: true
+  },
+  razorpaySignature: {
+    type: String
+  },
+  shippingAddress: {
+    type: ShippingAddressSchema,
+    required: true
+  },
+  billingAddress: {
+    type: ShippingAddressSchema
+  },
+  trackingNumber: {
     type: String,
     trim: true,
-    uppercase: true
-  },
-  shippingProvider: {
-    type: String,
-    trim: true
+    index: true
   },
   estimatedDelivery: {
     type: Date
@@ -179,32 +217,25 @@ const OrderSchema = new mongoose.Schema<IOrder>({
   },
   notes: {
     type: String,
-    trim: true,
-    maxlength: [500, 'Notes cannot exceed 500 characters']
-  },
-  adminNotes: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'Admin notes cannot exceed 1000 characters']
+    trim: true
   }
 }, {
   timestamps: true
 })
 
+// Create indexes for better query performance
+OrderSchema.index({ createdAt: -1 })
+OrderSchema.index({ status: 1, createdAt: -1 })
+OrderSchema.index({ paymentStatus: 1, createdAt: -1 })
+OrderSchema.index({ customerEmail: 1, createdAt: -1 })
+
 // Generate order number before saving
 OrderSchema.pre('save', async function(next) {
-  if (!this.orderNumber) {
-    const count = await mongoose.models.Order.countDocuments()
-    this.orderNumber = `PH${String(count + 1).padStart(6, '0')}`
+  if (this.isNew && !this.orderNumber) {
+    const count = await mongoose.model('Order').countDocuments()
+    this.orderNumber = `PH${Date.now()}${(count + 1).toString().padStart(4, '0')}`
   }
   next()
 })
-
-// Create indexes for better query performance (orderNumber already has unique: true, so skip it)
-OrderSchema.index({ 'customer.email': 1 })
-OrderSchema.index({ 'customer.phone': 1 })
-OrderSchema.index({ orderStatus: 1 })
-OrderSchema.index({ paymentStatus: 1 })
-OrderSchema.index({ createdAt: -1 })
 
 export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema)
