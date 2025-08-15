@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Save, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import ImageUpload from '@/components/admin/ImageUpload'
+import SizeSelector from '@/components/admin/SizeSelector'
 
 interface Product {
   id?: string;
@@ -74,9 +75,8 @@ export default function ProductForm({
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleArrayChange = (name: string, value: string) => {
-    const items = value.split(',').map(item => item.trim()).filter(Boolean)
-    setFormData(prev => ({ ...prev, [name]: items }))
+  const handleSizesChange = (sizes: string[]) => {
+    setFormData(prev => ({ ...prev, sizes }))
   }
 
   const handleSave = async () => {
@@ -295,18 +295,11 @@ export default function ProductForm({
       {/* Product Variants */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Product Variants</h3>
-        <div>
-          <Label htmlFor="sizes">Available Sizes *</Label>
-          <Input
-            id="sizes"
-            name="sizes"
-            value={formData.sizes.join(', ')}
-            onChange={(e) => handleArrayChange('sizes', e.target.value)}
-            placeholder="UK 6, UK 7, UK 8, UK 9, UK 10"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">Enter sizes separated by commas</p>
-        </div>
+        <SizeSelector
+          selectedSizes={formData.sizes}
+          onSizesChange={handleSizesChange}
+          required={true}
+        />
       </div>
 
       {/* Status */}
