@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { getProducts, saveProducts } from '@/lib/storage'
+import { connectDB } from '@/lib/mongodb'
+import Product from '@/models/Product'
+import { revalidatePath } from 'next/cache'
 
 // Auth middleware
 function verifyAdminToken(request: NextRequest) {
@@ -19,12 +21,38 @@ export async function GET(request: NextRequest) {
   try {
     verifyAdminToken(request)
     
-    const products = await getProducts()
+    await connectDB()
+    const products = await Product.find({}).sort({ createdAt: -1 }).lean()
+    
+    // Transform MongoDB documents to match admin interface
+    const formattedProducts = products.map((product: any) => ({
+      _id: product._id?.toString(),
+      id: product._id?.toString(),
+      name: product.name,
+      punjabiName: product.punjabiName,
+      description: product.description,
+      punjabiDescription: product.punjabiDescription,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      category: product.category,
+      subcategory: product.subcategory,
+      images: product.images,
+      colors: product.colors,
+      sizes: product.sizes,
+      stock: product.stock,
+      rating: product.rating,
+      reviews: product.reviews,
+      badge: product.badge,
+      badgeEn: product.badgeEn,
+      isActive: product.isActive,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt
+    }))
     
     return NextResponse.json({
       success: true,
-      products: products,
-      total: products.length
+      products: formattedProducts,
+      total: formattedProducts.length
     })
   } catch (error: any) {
     console.error('Error fetching products:', error)
@@ -41,43 +69,74 @@ export async function POST(request: NextRequest) {
     verifyAdminToken(request)
     
     const productData = await request.json()
-    const products = await getProducts()
     
     // Validate required fields
     if (!productData.name || !productData.description || !productData.price || 
-        !productData.category || !productData.productType || !productData.sizes || 
+        !productData.category || !productData.sizes || 
         productData.sizes.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: name, description, price, category, productType, and sizes are required' },
+        { success: false, error: 'Missing required fields: name, description, price, category, and sizes are required' },
         { status: 400 }
       )
     }
 
-    const newProduct = {
-      id: Date.now().toString(),
-      name: productData.name,
-      punjabiName: productData.punjabiName || '',
-      description: productData.description,
-      punjabiDescription: productData.punjabiDescription || '',
-      price: parseFloat(productData.price),
-      originalPrice: parseFloat(productData.originalPrice || 0),
-      category: productData.category, // men, women, kids
-      productType: productData.productType, // jutti or fulkari
-      images: productData.images || [],
-      sizes: productData.sizes || [],
-      stock: parseInt(productData.stock) || 0,
-      isActive: productData.isActive !== false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+    await connectDB()
+
+    // Map category and productType to the correct format
+    let category = productData.category
+    let subcategory = productData.subcategory || ''
     
-    products.push(newProduct)
-    await saveProducts(products)
+    // Handle legacy productType field
+    if (productData.productType) {
+      if (productData.productType === 'phulkari') {
+        category = 'phulkari'
+      } else if (productData.productType === 'jutti') {
+        subcategory = 'jutti'
+      }
+    }
+
+    const newProduct = new Product({
+      name: productData.name,
+      punjabiName: productData.punjabiName || productData.name,
+      description: productData.description,
+      punjabiDescription: productData.punjabiDescription || productData.description,
+      price: parseFloat(productData.price),
+      originalPrice: parseFloat(productData.originalPrice || productData.price),
+      category: category,
+      subcategory: subcategory,
+      images: productData.images || ['/placeholder.svg'],
+      colors: productData.colors || ['Default'],
+      sizes: productData.sizes || ['One Size'],
+      stock: parseInt(productData.stock) || 0,
+      rating: parseFloat(productData.rating) || 4.5,
+      reviews: parseInt(productData.reviews) || 0,
+      badge: productData.badge || '',
+      badgeEn: productData.badgeEn || '',
+      isActive: productData.isActive !== false
+    })
+    
+    const savedProduct = await newProduct.save()
+    
+    // Revalidate product pages to clear cache
+    try {
+      revalidatePath('/')
+      revalidatePath('/products')
+      revalidatePath(`/${category}`)
+      if (subcategory) {
+        revalidatePath(`/${category}/${subcategory}`)
+      }
+    } catch (revalidateError) {
+      console.warn('Failed to revalidate paths:', revalidateError)
+    }
     
     return NextResponse.json({
       success: true,
       message: 'Product created successfully',
-      product: newProduct
+      product: {
+        _id: savedProduct._id.toString(),
+        id: savedProduct._id.toString(),
+        ...savedProduct.toObject()
+      }
     })
   } catch (error: any) {
     console.error('Error creating product:', error)
@@ -94,43 +153,73 @@ export async function PUT(request: NextRequest) {
     verifyAdminToken(request)
     
     const updateData = await request.json()
-    const { _id, ...productData } = updateData
+    const { _id, id, ...productData } = updateData
     
-    if (!_id) {
+    const productId = _id || id
+    if (!productId) {
       return NextResponse.json(
         { success: false, error: 'Product ID is required' },
         { status: 400 }
       )
     }
     
-    const products = await getProducts()
-    const productIndex = products.findIndex((p: any) => p.id === _id)
+    await connectDB()
     
-    if (productIndex === -1) {
+    // Map category and productType to the correct format
+    if (productData.productType) {
+      if (productData.productType === 'phulkari') {
+        productData.category = 'phulkari'
+        delete productData.productType
+      } else if (productData.productType === 'jutti') {
+        productData.subcategory = 'jutti'
+        delete productData.productType
+      }
+    }
+
+    // Ensure numeric fields are properly converted
+    if (productData.price) productData.price = parseFloat(productData.price)
+    if (productData.originalPrice) productData.originalPrice = parseFloat(productData.originalPrice)
+    if (productData.stock) productData.stock = parseInt(productData.stock)
+    if (productData.rating) productData.rating = parseFloat(productData.rating)
+    if (productData.reviews) productData.reviews = parseInt(productData.reviews)
+    
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      { ...productData, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    ).lean()
+    
+    if (!updatedProduct) {
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 404 }
       )
     }
     
-    const updatedProduct = {
-      ...products[productIndex],
-      ...productData,
-      price: parseFloat(productData.price),
-      originalPrice: parseFloat(productData.originalPrice || productData.price),
-      stock: parseInt(productData.stock) || 0,
-      rating: parseFloat(productData.rating) || products[productIndex].rating,
-      reviews: parseInt(productData.reviews) || products[productIndex].reviews,
-      updatedAt: new Date().toISOString()
+    // Revalidate product pages to clear cache
+    try {
+      revalidatePath('/')
+      revalidatePath('/products')
+      const category = (updatedProduct as any).category
+      const subcategory = (updatedProduct as any).subcategory
+      if (category) {
+        revalidatePath(`/${category}`)
+        if (subcategory) {
+          revalidatePath(`/${category}/${subcategory}`)
+        }
+      }
+    } catch (revalidateError) {
+      console.warn('Failed to revalidate paths:', revalidateError)
     }
-    
-    products[productIndex] = updatedProduct
-    await saveProducts(products)
     
     return NextResponse.json({
       success: true,
       message: 'Product updated successfully',
-      product: updatedProduct
+      product: {
+        _id: (updatedProduct as any)._id.toString(),
+        id: (updatedProduct as any)._id.toString(),
+        ...updatedProduct
+      }
     })
   } catch (error: any) {
     console.error('Error updating product:', error)
@@ -156,17 +245,32 @@ export async function DELETE(request: NextRequest) {
       )
     }
     
-    const products = await getProducts()
-    const filteredProducts = products.filter((p: any) => p.id !== productId)
+    await connectDB()
     
-    if (filteredProducts.length === products.length) {
+    const deletedProduct = await Product.findByIdAndDelete(productId)
+    
+    if (!deletedProduct) {
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 404 }
       )
     }
     
-    await saveProducts(filteredProducts)
+    // Revalidate product pages to clear cache
+    try {
+      revalidatePath('/')
+      revalidatePath('/products')
+      const category = (deletedProduct as any).category
+      const subcategory = (deletedProduct as any).subcategory
+      if (category) {
+        revalidatePath(`/${category}`)
+        if (subcategory) {
+          revalidatePath(`/${category}/${subcategory}`)
+        }
+      }
+    } catch (revalidateError) {
+      console.warn('Failed to revalidate paths:', revalidateError)
+    }
     
     return NextResponse.json({
       success: true,
