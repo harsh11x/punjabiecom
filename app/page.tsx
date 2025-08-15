@@ -56,65 +56,74 @@ interface Product {
 const heroSlides = [
   {
     id: 1,
-    image: '/hero/punjabi-suits-collection.jpg',
-    title: 'Authentic Punjabi Fashion',
-    subtitle: 'ਪੰਜਾਬੀ ਫੈਸ਼ਨ',
-    description: 'Discover our premium collection of traditional Punjabi suits and accessories',
-    cta: 'Shop Collection',
-    link: '/products?category=suits'
+    image: '/hero/jutti-collection.jpg',
+    title: 'ਹੱਥਾਂ ਨਾਲ ਬਣੇ ਜੁੱਤੇ',
+    subtitle: 'Handmade Leather Jutti Collection',
+    description: 'Discover our premium collection of authentic Punjabi jutti, handcrafted with pure leather and traditional embroidery',
+    cta: 'Shop Jutti Collection',
+    link: '/jutti'
   },
   {
     id: 2,
-    image: '/hero/wedding-collection.jpg',
-    title: 'Wedding Collection',
-    subtitle: 'ਵਿਆਹ ਦੇ ਸੂਟ',
-    description: 'Elegant bridal wear and ceremonial outfits for your special moments',
-    cta: 'View Bridal Wear',
-    link: '/products?category=bridal'
+    image: '/hero/mens-jutti.jpg',
+    title: "Men's Heritage Collection",
+    subtitle: 'ਮਰਦਾਂ ਦੇ ਜੁੱਤੇ',
+    description: 'Traditional Punjabi jutti designed for the modern gentleman who values heritage and comfort',
+    cta: 'Shop Men\'s Collection',
+    link: '/men'
   },
   {
     id: 3,
-    image: '/hero/festival-wear.jpg',
-    title: 'Festival Collection',
-    subtitle: 'ਤਿਉਹਾਰੀ ਪਹਿਰਾਵਾ',
-    description: 'Celebrate in style with our vibrant festival and party wear collection',
-    cta: 'Shop Festival Wear',
-    link: '/products?category=festival'
+    image: '/hero/womens-jutti.jpg',
+    title: "Women's Elegant Collection",
+    subtitle: 'ਔਰਤਾਂ ਦੇ ਜੁੱਤੇ',
+    description: 'Exquisite handcrafted jutti adorned with beautiful embroidery for the elegant woman',
+    cta: 'Shop Women\'s Collection',
+    link: '/women'
+  },
+  {
+    id: 4,
+    image: '/hero/fulkari-collection.jpg',
+    title: 'ਫੁਲਕਾਰੀ ਕਲਾ',
+    subtitle: 'Traditional Fulkari Embroidery',
+    description: 'Intricate hand embroidery passed down through generations of skilled artisans',
+    cta: 'Shop Fulkari Collection',
+    link: '/fulkari'
   }
 ]
 
 const categories = [
   {
-    id: 'suits',
-    name: 'Punjabi Suits',
-    punjabiName: 'ਪੰਜਾਬੀ ਸੂਟ',
-    description: 'Traditional and modern Punjabi suits',
-    image: '/categories/punjabi-suits.jpg',
-    count: '200+ items'
-  },
-  {
-    id: 'sarees',
-    name: 'Sarees',
-    punjabiName: 'ਸਾੜੀਆਂ',
-    description: 'Elegant sarees for all occasions',
-    image: '/categories/sarees.jpg',
+    id: 'men',
+    name: "Men's Jutti",
+    punjabiName: 'ਮਰਦਾਂ ਦੇ ਜੁੱਤੇ',
+    description: 'Handcrafted leather jutti for men',
+    image: '/categories/mens-jutti.jpg',
     count: '150+ items'
   },
   {
-    id: 'lehengas',
-    name: 'Lehengas',
-    punjabiName: 'ਲਹਿੰਗੇ',
-    description: 'Designer lehengas and ghagras',
-    image: '/categories/lehengas.jpg',
-    count: '100+ items'
+    id: 'women',
+    name: "Women's Jutti",
+    punjabiName: 'ਔਰਤਾਂ ਦੇ ਜੁੱਤੇ',
+    description: 'Elegant embroidered jutti for women',
+    image: '/categories/womens-jutti.jpg',
+    count: '200+ items'
   },
   {
-    id: 'accessories',
-    name: 'Accessories',
-    punjabiName: 'ਗਹਿਣੇ',
-    description: 'Traditional jewelry and accessories',
-    image: '/categories/accessories.jpg',
-    count: '300+ items'
+    id: 'kids',
+    name: "Kids' Jutti",
+    punjabiName: 'ਬੱਚਿਆਂ ਦੇ ਜੁੱਤੇ',
+    description: 'Colorful and comfortable kids jutti',
+    image: '/categories/kids-jutti.jpg',
+    count: '75+ items'
+  },
+  {
+    id: 'fulkari',
+    name: 'Fulkari Collection',
+    punjabiName: 'ਫੁਲਕਾਰੀ',
+    description: 'Traditional embroidered artistry',
+    image: '/categories/fulkari.jpg',
+    count: '100+ items'
   }
 ]
 
@@ -228,7 +237,7 @@ export default function HomePage() {
             {categories.map((category) => (
               <Link 
                 key={category.id} 
-                href={`/products?category=${category.id}`}
+                href={`/${category.id}`}
                 className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 hover:scale-105"
               >
                 <div className="aspect-square bg-gradient-to-br from-pink-100 to-yellow-100 flex items-center justify-center">
@@ -393,27 +402,27 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-pink-500 to-yellow-500">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-red-800 via-red-700 to-amber-700">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Start Shopping Today
+            ਪੰਜਾਬ ਹੈਰਿਟੇਜ ਤੋਂ ਖਰੀਦਾਰੀ ਕਰੋ
           </h2>
-          <p className="text-xl text-pink-100 mb-2">
-            ਅੱਜ ਹੀ ਖਰੀਦਦਾਰੀ ਸ਼ੁਰੂ ਕਰੋ
+          <p className="text-xl text-amber-200 mb-2">
+            Shop From Punjab Heritage
           </p>
-          <p className="text-lg text-pink-100 mb-8 max-w-2xl mx-auto">
-            Discover the finest collection of authentic Punjabi fashion and traditional wear. 
-            Quality guaranteed, delivered to your doorstep.
+          <p className="text-lg text-amber-100 mb-8 max-w-2xl mx-auto">
+            Discover the finest collection of authentic handcrafted Punjabi jutti and traditional fulkari embroidery. 
+            Quality guaranteed, heritage preserved, delivered to your doorstep.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/products">
-              <Button size="lg" className="bg-white text-pink-600 hover:bg-pink-50 flex items-center gap-2">
+            <Link href="/jutti">
+              <Button size="lg" className="bg-white text-red-800 hover:bg-amber-50 flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5" />
-                Shop Now
+                Shop Jutti Collection
               </Button>
             </Link>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-pink-600">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-red-800">
                 Contact Us
               </Button>
             </Link>
