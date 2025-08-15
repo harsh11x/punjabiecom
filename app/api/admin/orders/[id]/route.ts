@@ -5,7 +5,7 @@ import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -16,6 +16,7 @@ export async function GET(
 
     await connectDB()
 
+    const params = await context.params
     const order = await Order.findById(params.id).lean()
     
     if (!order) {
@@ -67,7 +68,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -78,6 +79,7 @@ export async function PUT(
 
     await connectDB()
 
+    const params = await context.params
     const body = await request.json()
     
     // Update order
@@ -121,7 +123,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify admin authentication
@@ -132,6 +134,7 @@ export async function DELETE(
 
     await connectDB()
 
+    const params = await context.params
     const order = await Order.findByIdAndDelete(params.id)
     
     if (!order) {
