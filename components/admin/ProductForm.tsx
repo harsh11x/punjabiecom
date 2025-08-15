@@ -11,6 +11,7 @@ import { Save, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import ImageUpload from '@/components/admin/ImageUpload'
 import SizeSelector from '@/components/admin/SizeSelector'
+import AuthStatus from '@/components/admin/AuthStatus'
 
 interface Product {
   id?: string;
@@ -80,11 +81,18 @@ export default function ProductForm({
   }
 
   const handleSave = async () => {
+    // Validate required fields
     if (!formData.name || !formData.price || !formData.category) {
-      toast.error('Please fill in required fields')
+      toast.error('Please fill in required fields: name, price, and category are required')
       return
     }
 
+    if (!formData.sizes || formData.sizes.length === 0) {
+      toast.error('Please select at least one size')
+      return
+    }
+
+    console.log('Saving product with data:', formData)
     setIsSaving(true)
     try {
       const url = '/api/admin/products'
@@ -94,6 +102,8 @@ export default function ProductForm({
         ? { ...formData, _id: initialData.id }
         : formData
 
+      console.log('Sending request:', { method, url, payload })
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -101,8 +111,12 @@ export default function ProductForm({
         body: JSON.stringify(payload)
       })
 
+      console.log('Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Response data:', data)
+        
         if (data.success) {
           toast.success(initialData?.id ? 'Product updated successfully' : 'Product created successfully')
           
@@ -113,14 +127,27 @@ export default function ProductForm({
             router.push('/admin/products')
           }
         } else {
+          console.error('Save failed:', data)
           toast.error(data.error || 'Failed to save product')
         }
       } else {
-        toast.error('Failed to save product')
+        const errorText = await response.text()
+        console.error('HTTP Error:', response.status, errorText)
+        
+        if (response.status === 401) {
+          toast.error('Authentication required. Please login to admin panel.')
+        } else {
+          try {
+            const errorData = JSON.parse(errorText)
+            toast.error(errorData.error || `Failed to save product (Status: ${response.status})`)
+          } catch {
+            toast.error(`Failed to save product (Status: ${response.status})`)
+          }
+        }
       }
     } catch (error) {
-      console.error('Error saving product:', error)
-      toast.error('Failed to save product')
+      console.error('Network error saving product:', error)
+      toast.error('Network error: Failed to save product')
     } finally {
       setIsSaving(false)
     }
@@ -153,6 +180,9 @@ export default function ProductForm({
           </div>
         </div>
       )}
+      
+      {/* Authentication Status */}
+      <AuthStatus />
 
       {/* Basic Information */}
       <div className="space-y-4">

@@ -245,5 +245,25 @@
     "isActive": true,
     "createdAt": "2025-08-15T10:51:49.271Z",
     "updatedAt": "2025-08-15T10:51:49.271Z"
+  },
+  {
+    "id": "1755256873971",
+    "name": "Test Product",
+    "punjabiName": "",
+    "description": "Test description",
+    "punjabiDescription": "",
+    "price": 1500,
+    "originalPrice": 0,
+    "category": "men",
+    "productType": "jutti",
+    "images": [],
+    "sizes": [
+      "UK 6",
+      "UK 7"
+    ],
+    "stock": 10,
+    "isActive": true,
+    "createdAt": "2025-08-15T11:21:13.971Z",
+    "updatedAt": "2025-08-15T11:21:13.971Z"
   }
 ]
