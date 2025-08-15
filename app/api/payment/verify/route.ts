@@ -67,15 +67,16 @@ export async function POST(request: NextRequest) {
     // TODO: Update inventory
     // TODO: Create analytics entry
 
+    const orderData = order as any
     return NextResponse.json({
       success: true,
       message: 'Payment verified successfully',
       data: {
-        orderId: order._id.toString(),
-        orderNumber: order.orderNumber,
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-        total: order.total
+        orderId: orderData._id?.toString() || orderData.id?.toString() || '',
+        orderNumber: orderData.orderNumber || '',
+        status: orderData.status || 'confirmed',
+        paymentStatus: orderData.paymentStatus || 'paid',
+        total: orderData.total || 0
       }
     })
 

@@ -21,10 +21,10 @@ export async function GET() {
         totalProducts: productCount,
         activeProducts: activeProductCount,
         sampleProduct: sampleProduct ? {
-          id: sampleProduct._id?.toString(),
-          name: sampleProduct.name,
-          category: sampleProduct.category,
-          isActive: sampleProduct.isActive
+          id: (sampleProduct as any)._id?.toString() || (sampleProduct as any).id?.toString() || '',
+          name: (sampleProduct as any).name || '',
+          category: (sampleProduct as any).category || '',
+          isActive: (sampleProduct as any).isActive !== false
         } : null,
         timestamp: new Date().toISOString()
       }
