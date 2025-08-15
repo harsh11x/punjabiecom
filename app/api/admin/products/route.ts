@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { connectDB } from '@/lib/mongodb'
-import Product from '@/models/Product'
+import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/lib/product-sync'
 import { revalidatePath } from 'next/cache'
 
 // Auth middleware
@@ -15,47 +14,26 @@ function verifyAdminToken(request: NextRequest) {
   return decoded
 }
 
-
 // GET - Fetch all products for admin
 export async function GET(request: NextRequest) {
   try {
     verifyAdminToken(request)
     
-    await connectDB()
-    const products = await Product.find({}).sort({ createdAt: -1 }).lean()
+    console.log('🔍 Admin fetching all products...')
+    const products = await getAllProducts()
     
-    // Transform MongoDB documents to match admin interface
-    const formattedProducts = products.map((product: any) => ({
-      _id: product._id?.toString(),
-      id: product._id?.toString(),
-      name: product.name,
-      punjabiName: product.punjabiName,
-      description: product.description,
-      punjabiDescription: product.punjabiDescription,
-      price: product.price,
-      originalPrice: product.originalPrice,
-      category: product.category,
-      subcategory: product.subcategory,
-      images: product.images,
-      colors: product.colors,
-      sizes: product.sizes,
-      stock: product.stock,
-      rating: product.rating,
-      reviews: product.reviews,
-      badge: product.badge,
-      badgeEn: product.badgeEn,
-      isActive: product.isActive,
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt
-    }))
+    // Include inactive products for admin
+    const allProducts = products // Admin should see all products
+    
+    console.log(`✅ Admin retrieved ${allProducts.length} products`)
     
     return NextResponse.json({
       success: true,
-      products: formattedProducts,
-      total: formattedProducts.length
+      products: allProducts,
+      total: allProducts.length
     })
   } catch (error: any) {
-    console.error('Error fetching products:', error)
+    console.error('❌ Error fetching products for admin:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch products' },
       { status: error.message === 'No token provided' ? 401 : 500 }
@@ -69,6 +47,7 @@ export async function POST(request: NextRequest) {
     verifyAdminToken(request)
     
     const productData = await request.json()
+    console.log('📝 Admin creating new product:', productData.name)
     
     // Validate required fields
     if (!productData.name || !productData.description || !productData.price || 
@@ -79,8 +58,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    await connectDB()
 
     // Map category and productType to the correct format
     let category = productData.category
@@ -95,14 +72,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const newProduct = new Product({
+    const newProductData = {
       name: productData.name,
       punjabiName: productData.punjabiName || productData.name,
       description: productData.description,
       punjabiDescription: productData.punjabiDescription || productData.description,
       price: parseFloat(productData.price),
       originalPrice: parseFloat(productData.originalPrice || productData.price),
-      category: category,
+      category: category as 'men' | 'women' | 'kids' | 'phulkari',
       subcategory: subcategory,
       images: productData.images || ['/placeholder.svg'],
       colors: productData.colors || ['Default'],
@@ -113,9 +90,10 @@ export async function POST(request: NextRequest) {
       badge: productData.badge || '',
       badgeEn: productData.badgeEn || '',
       isActive: productData.isActive !== false
-    })
+    }
     
-    const savedProduct = await newProduct.save()
+    const savedProduct = await addProduct(newProductData)
+    console.log('✅ Product created successfully:', savedProduct.name)
     
     // Revalidate product pages to clear cache
     try {
@@ -125,21 +103,18 @@ export async function POST(request: NextRequest) {
       if (subcategory) {
         revalidatePath(`/${category}/${subcategory}`)
       }
+      console.log('🔄 Cache revalidated for product pages')
     } catch (revalidateError) {
-      console.warn('Failed to revalidate paths:', revalidateError)
+      console.warn('⚠️ Failed to revalidate paths:', revalidateError)
     }
     
     return NextResponse.json({
       success: true,
       message: 'Product created successfully',
-      product: {
-        _id: savedProduct._id.toString(),
-        id: savedProduct._id.toString(),
-        ...savedProduct.toObject()
-      }
+      product: savedProduct
     })
   } catch (error: any) {
-    console.error('Error creating product:', error)
+    console.error('❌ Error creating product:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create product' },
       { status: error.message === 'No token provided' ? 401 : 500 }
@@ -163,7 +138,7 @@ export async function PUT(request: NextRequest) {
       )
     }
     
-    await connectDB()
+    console.log('📝 Admin updating product:', productId)
     
     // Map category and productType to the correct format
     if (productData.productType) {
@@ -183,18 +158,8 @@ export async function PUT(request: NextRequest) {
     if (productData.rating) productData.rating = parseFloat(productData.rating)
     if (productData.reviews) productData.reviews = parseInt(productData.reviews)
     
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { ...productData, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    ).lean()
-    
-    if (!updatedProduct) {
-      return NextResponse.json(
-        { success: false, error: 'Product not found' },
-        { status: 404 }
-      )
-    }
+    const updatedProduct = await updateProduct(productId, productData)
+    console.log('✅ Product updated successfully:', updatedProduct.name)
     
     // Revalidate product pages to clear cache
     try {
@@ -208,21 +173,18 @@ export async function PUT(request: NextRequest) {
           revalidatePath(`/${category}/${subcategory}`)
         }
       }
+      console.log('🔄 Cache revalidated for product pages')
     } catch (revalidateError) {
-      console.warn('Failed to revalidate paths:', revalidateError)
+      console.warn('⚠️ Failed to revalidate paths:', revalidateError)
     }
     
     return NextResponse.json({
       success: true,
       message: 'Product updated successfully',
-      product: {
-        _id: (updatedProduct as any)._id.toString(),
-        id: (updatedProduct as any)._id.toString(),
-        ...updatedProduct
-      }
+      product: updatedProduct
     })
   } catch (error: any) {
-    console.error('Error updating product:', error)
+    console.error('❌ Error updating product:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to update product' },
       { status: error.message === 'No token provided' ? 401 : 500 }
@@ -245,31 +207,22 @@ export async function DELETE(request: NextRequest) {
       )
     }
     
-    await connectDB()
+    console.log('🗑️ Admin deleting product:', productId)
     
-    const deletedProduct = await Product.findByIdAndDelete(productId)
-    
-    if (!deletedProduct) {
-      return NextResponse.json(
-        { success: false, error: 'Product not found' },
-        { status: 404 }
-      )
-    }
+    await deleteProduct(productId)
+    console.log('✅ Product deleted successfully')
     
     // Revalidate product pages to clear cache
     try {
       revalidatePath('/')
       revalidatePath('/products')
-      const category = (deletedProduct as any).category
-      const subcategory = (deletedProduct as any).subcategory
-      if (category) {
-        revalidatePath(`/${category}`)
-        if (subcategory) {
-          revalidatePath(`/${category}/${subcategory}`)
-        }
-      }
+      revalidatePath('/men')
+      revalidatePath('/women')
+      revalidatePath('/kids')
+      revalidatePath('/phulkari')
+      console.log('🔄 Cache revalidated for all product pages')
     } catch (revalidateError) {
-      console.warn('Failed to revalidate paths:', revalidateError)
+      console.warn('⚠️ Failed to revalidate paths:', revalidateError)
     }
     
     return NextResponse.json({
@@ -277,7 +230,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Product deleted successfully'
     })
   } catch (error: any) {
-    console.error('Error deleting product:', error)
+    console.error('❌ Error deleting product:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to delete product' },
       { status: error.message === 'No token provided' ? 401 : 500 }

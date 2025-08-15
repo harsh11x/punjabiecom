@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Product from '@/models/Product'
+import { getAllProducts } from '@/lib/product-sync'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,87 +13,120 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc'
     const priceRange = searchParams.get('priceRange')
     
-    // Connect to MongoDB
-    await connectDB()
+    console.log('🔍 Fetching products with filters:', {
+      category, subcategory, search, page, limit, sortBy, sortOrder, priceRange
+    })
     
-    // Build MongoDB query
-    const query: any = { isActive: true }
+    // Get all products using hybrid system
+    let products = await getAllProducts()
+    console.log(`📦 Retrieved ${products.length} products from hybrid system`)
+    
+    // Apply filters
+    let filteredProducts = products.filter(product => product.isActive !== false)
     
     // Category filter
     if (category && category !== 'all') {
-      query.category = category
+      filteredProducts = filteredProducts.filter(product => {
+        if (category === 'jutti') {
+          return product.subcategory === 'jutti' || 
+                 (product.category !== 'phulkari' && !product.subcategory)
+        }
+        return product.category === category
+      })
     }
     
     // Subcategory filter
     if (subcategory && subcategory !== 'all') {
-      query.subcategory = subcategory
+      filteredProducts = filteredProducts.filter(product => product.subcategory === subcategory)
     }
     
     // Search filter
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { punjabiName: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } }
-      ]
+      const searchLower = search.toLowerCase()
+      filteredProducts = filteredProducts.filter(product =>
+        product.name.toLowerCase().includes(searchLower) ||
+        product.punjabiName?.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower) ||
+        product.category.toLowerCase().includes(searchLower)
+      )
     }
     
     // Price range filter
     if (priceRange && priceRange !== 'all') {
       const [min, max] = priceRange.split('-').map(p => parseInt(p.replace('+', '')))
       if (max) {
-        query.price = { $gte: min, $lte: max }
+        filteredProducts = filteredProducts.filter(product => 
+          product.price >= min && product.price <= max
+        )
       } else {
-        query.price = { $gte: min }
+        filteredProducts = filteredProducts.filter(product => product.price >= min)
       }
     }
     
-    // Build sort object
-    const sortObj: any = {}
-    switch (sortBy) {
-      case 'newest':
-      case 'createdAt':
-        sortObj.createdAt = sortOrder === 'desc' ? -1 : 1
-        break
-      case 'price-low':
-      case 'price':
-        sortObj.price = sortOrder === 'desc' ? -1 : 1
-        break
-      case 'price-high':
-        sortObj.price = -1
-        break
-      case 'rating':
-        sortObj.rating = sortOrder === 'desc' ? -1 : 1
-        break
-      case 'popular':
-      case 'reviews':
-        sortObj.reviews = sortOrder === 'desc' ? -1 : 1
-        break
-      case 'name':
-        sortObj.name = sortOrder === 'desc' ? -1 : 1
-        break
-      default:
-        sortObj.createdAt = -1
-    }
+    console.log(`🔍 Filtered to ${filteredProducts.length} products`)
     
-    // Get total count for pagination
-    const total = await Product.countDocuments(query)
+    // Sort products
+    filteredProducts.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case 'newest':
+        case 'createdAt':
+          aValue = new Date(a.createdAt || 0).getTime()
+          bValue = new Date(b.createdAt || 0).getTime()
+          break
+        case 'price-low':
+        case 'price':
+          aValue = a.price
+          bValue = b.price
+          break
+        case 'price-high':
+          aValue = a.price
+          bValue = b.price
+          sortOrder === 'desc' // Force descending for price-high
+          break
+        case 'rating':
+          aValue = a.rating || 0
+          bValue = b.rating || 0
+          break
+        case 'popular':
+        case 'reviews':
+          aValue = a.reviews || 0
+          bValue = b.reviews || 0
+          break
+        case 'name':
+          aValue = a.name.toLowerCase()
+          bValue = b.name.toLowerCase()
+          break
+        default:
+          aValue = new Date(a.createdAt || 0).getTime()
+          bValue = new Date(b.createdAt || 0).getTime()
+      }
+      
+      if (sortBy === 'price-high') {
+        return bValue - aValue // Always descending for price-high
+      }
+      
+      if (sortOrder === 'desc') {
+        return bValue > aValue ? 1 : bValue < aValue ? -1 : 0
+      } else {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0
+      }
+    })
     
-    // Get products from MongoDB with pagination
-    const products = await Product.find(query)
-      .sort(sortObj)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean()
+    // Pagination
+    const total = filteredProducts.length
+    const startIndex = (page - 1) * limit
+    const paginatedProducts = filteredProducts.slice(startIndex, startIndex + limit)
     
-    // Transform MongoDB documents to match frontend interface
-    const formattedProducts = products.map((product: any) => ({
-      _id: product._id?.toString() || product.id?.toString() || '',
-      id: product._id?.toString() || product.id?.toString() || '',
+    // Transform products to match frontend interface
+    const formattedProducts = paginatedProducts.map((product: any) => ({
+      _id: product._id || product.id || '',
+      id: product._id || product.id || '',
       name: product.name || '',
       punjabiName: product.punjabiName || product.name || '',
       description: product.description || '',
+      punjabiDescription: product.punjabiDescription || product.description || '',
       price: product.price || 0,
       originalPrice: product.originalPrice || product.price || 0,
       category: product.category || '',
@@ -107,11 +139,14 @@ export async function GET(request: NextRequest) {
       reviews: product.reviews || 0,
       isActive: product.isActive !== false,
       badge: product.badge || '',
+      badgeEn: product.badgeEn || '',
       createdAt: product.createdAt,
       updatedAt: product.updatedAt
     }))
     
-    // Set cache headers for better performance (reduced cache time for real-time updates)
+    console.log(`✅ Returning ${formattedProducts.length} products (page ${page}/${Math.ceil(total / limit)})`)
+    
+    // Set cache headers for better performance
     const response = NextResponse.json({
       success: true,
       data: formattedProducts,
@@ -123,12 +158,12 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    // Cache for 1 minute on client, 5 minutes on CDN (shorter for real-time updates)
+    // Cache for 1 minute on client, 5 minutes on CDN
     response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=300')
     
     return response
   } catch (error) {
-    console.error('Error fetching products:', error)
+    console.error('❌ Error fetching products:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch products' },
       { status: 500 }

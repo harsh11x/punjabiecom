@@ -30,8 +30,8 @@ export interface IOrder extends mongoose.Document {
   shippingCost: number
   tax: number
   total: number
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded' | 'return_requested' | 'return_approved' | 'return_rejected' | 'returned'
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' | 'refund_pending' | 'cancelled'
   paymentMethod: 'razorpay' | 'cod' | 'bank_transfer'
   paymentId?: string
   razorpayOrderId?: string
@@ -42,6 +42,16 @@ export interface IOrder extends mongoose.Document {
   trackingNumber?: string
   estimatedDelivery?: Date
   deliveredAt?: Date
+  cancelledAt?: Date
+  cancellationReason?: string
+  returnRequestedAt?: Date
+  returnReason?: string
+  returnItems?: IOrderItem[]
+  returnStatus?: 'pending' | 'approved' | 'rejected' | 'completed'
+  returnApprovedAt?: Date
+  returnCompletedAt?: Date
+  refundAmount?: number
+  refundedAt?: Date
   notes?: string
   createdAt: Date
   updatedAt: Date
@@ -165,14 +175,14 @@ const OrderSchema = new mongoose.Schema<IOrder>({
   status: {
     type: String,
     required: true,
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded', 'return_requested', 'return_approved', 'return_rejected', 'returned'],
     default: 'pending',
     index: true
   },
   paymentStatus: {
     type: String,
     required: true,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
+    enum: ['pending', 'paid', 'failed', 'refunded', 'refund_pending', 'cancelled'],
     default: 'pending',
     index: true
   },
@@ -213,6 +223,38 @@ const OrderSchema = new mongoose.Schema<IOrder>({
     type: Date
   },
   deliveredAt: {
+    type: Date
+  },
+  cancelledAt: {
+    type: Date
+  },
+  cancellationReason: {
+    type: String,
+    trim: true
+  },
+  returnRequestedAt: {
+    type: Date
+  },
+  returnReason: {
+    type: String,
+    trim: true
+  },
+  returnItems: [OrderItemSchema],
+  returnStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'completed']
+  },
+  returnApprovedAt: {
+    type: Date
+  },
+  returnCompletedAt: {
+    type: Date
+  },
+  refundAmount: {
+    type: Number,
+    min: 0
+  },
+  refundedAt: {
     type: Date
   },
   notes: {
