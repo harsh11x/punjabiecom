@@ -22,7 +22,8 @@ export function useSocket(options: UseSocketOptions = {}) {
   useEffect(() => {
     // Initialize socket connection
     const initSocket = () => {
-      if (socketRef.current?.connected) return
+      // Skip Socket.IO initialization if URL is null (production)
+      if (!SOCKET_CONFIG.url || socketRef.current?.connected) return
 
       setIsConnecting(true)
       

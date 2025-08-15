@@ -10,17 +10,17 @@ const LOCAL_SERVER_PORT = '3003'
 
 // Socket.IO Configuration
 export const SOCKET_CONFIG = {
-  // Production: Connect to AWS server
+  // Production: Disabled for now to avoid mixed content issues
   // Development: Connect to local server
   url: isProduction 
-    ? `http://${AWS_SERVER_IP}:${AWS_SERVER_PORT}`
+    ? null // Temporarily disabled in production
     : `http://localhost:${LOCAL_SERVER_PORT}`,
   
   options: {
     transports: ['websocket', 'polling'],
-    autoConnect: true,
-    reconnection: true,
-    reconnectionAttempts: 5,
+    autoConnect: !isProduction, // Disable auto-connect in production
+    reconnection: !isProduction,
+    reconnectionAttempts: isProduction ? 0 : 5,
     reconnectionDelay: 1000,
     timeout: 20000,
     forceNew: true
@@ -29,10 +29,10 @@ export const SOCKET_CONFIG = {
 
 // API Base URLs
 export const API_CONFIG = {
-  // Production: Use Vercel deployment URL
+  // Production: Use production deployment URL
   // Development: Use local Next.js API routes
   baseURL: isProduction 
-    ? 'https://your-vercel-domain.vercel.app/api'
+    ? 'https://punjabijuttiandfulkari.com/api'
     : 'http://localhost:3000/api',
   
   // Socket server URL for API calls
@@ -101,6 +101,11 @@ export const validateEnvironment = () => {
 
 // Server Status Check
 export const checkServerStatus = async () => {
+  // Skip status check if Socket URL is null (production)
+  if (!SOCKET_CONFIG.url) {
+    return false
+  }
+  
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
@@ -113,7 +118,7 @@ export const checkServerStatus = async () => {
     clearTimeout(timeoutId)
     return response.ok
   } catch (error) {
-    console.error('Server status check failed:', error)
+    console.warn('Server status check failed (this is optional):', error)
     return false
   }
 }
