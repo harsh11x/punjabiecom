@@ -8,12 +8,11 @@ const nextConfig = {
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
-    domains: [
-      'punjabijuttiandfulkari.com',
-      'firebasestorage.googleapis.com',
-      'localhost',
-    ],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'punjabijuttiandfulkari.com',
+      },
       {
         protocol: 'https',
         hostname: '**.firebaseapp.com',
@@ -21,6 +20,22 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '**.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },
