@@ -27,29 +27,30 @@ export async function GET(
     }
 
     // Transform order for frontend
+    const orderData = order as any
     const transformedOrder = {
-      _id: order._id?.toString(),
-      orderNumber: order.orderNumber,
-      customerEmail: order.customerEmail,
-      items: order.items || [],
-      subtotal: order.subtotal || 0,
-      shippingCost: order.shippingCost || 0,
-      tax: order.tax || 0,
-      total: order.total || 0,
-      status: order.status || 'pending',
-      paymentStatus: order.paymentStatus || 'pending',
-      paymentMethod: order.paymentMethod || 'razorpay',
-      paymentId: order.paymentId,
-      razorpayOrderId: order.razorpayOrderId,
-      razorpayPaymentId: order.razorpayPaymentId,
-      shippingAddress: order.shippingAddress,
-      billingAddress: order.billingAddress,
-      trackingNumber: order.trackingNumber || '',
-      estimatedDelivery: order.estimatedDelivery,
-      deliveredAt: order.deliveredAt,
-      notes: order.notes || '',
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt
+      _id: orderData._id?.toString() || orderData.id?.toString() || '',
+      orderNumber: orderData.orderNumber || '',
+      customerEmail: orderData.customerEmail || '',
+      items: orderData.items || [],
+      subtotal: orderData.subtotal || 0,
+      shippingCost: orderData.shippingCost || 0,
+      tax: orderData.tax || 0,
+      total: orderData.total || 0,
+      status: orderData.status || 'pending',
+      paymentStatus: orderData.paymentStatus || 'pending',
+      paymentMethod: orderData.paymentMethod || 'razorpay',
+      paymentId: orderData.paymentId || '',
+      razorpayOrderId: orderData.razorpayOrderId || '',
+      razorpayPaymentId: orderData.razorpayPaymentId || '',
+      shippingAddress: orderData.shippingAddress || {},
+      billingAddress: orderData.billingAddress || {},
+      trackingNumber: orderData.trackingNumber || '',
+      estimatedDelivery: orderData.estimatedDelivery,
+      deliveredAt: orderData.deliveredAt,
+      notes: orderData.notes || '',
+      createdAt: orderData.createdAt,
+      updatedAt: orderData.updatedAt
     }
 
     return NextResponse.json({
@@ -100,7 +101,8 @@ export async function PUT(
     }
 
     // If status is updated to delivered, set deliveredAt
-    if (body.status === 'delivered' && !order.deliveredAt) {
+    const orderData = order as any
+    if (body.status === 'delivered' && !orderData.deliveredAt) {
       await Order.findByIdAndUpdate(params.id, {
         deliveredAt: new Date()
       })
@@ -108,7 +110,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      data: order,
+      data: orderData,
       message: 'Order updated successfully'
     })
 
