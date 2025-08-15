@@ -38,8 +38,8 @@ async function initializeFromFiles() {
         console.log(`Loaded ${usersData.length} users from file into memory`)
       }
     }
-  } catch (error) {
-    console.log('Using empty memory storage (could not load from files):', error.message)
+  } catch (error: unknown) {
+    console.log('Using empty memory storage (could not load from files):', error instanceof Error ? error.message : 'Unknown error')
   }
   
   initialized = true
