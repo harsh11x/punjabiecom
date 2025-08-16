@@ -1,324 +1,267 @@
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
-import { connectDB } from './mongodb'
-import Product from '@/models/Product'
 
-/**
- * Robust Product Management System
- * Primary: File Storage (always works)
- * Secondary: MongoDB (when available)
- * This ensures products are always accessible and synced
- */
-
-export interface ProductData {
-  _id?: string
+// Product interface
+export interface Product {
   id: string
   name: string
-  punjabiName: string
   description: string
-  punjabiDescription?: string
   price: number
-  originalPrice: number
-  category: 'men' | 'women' | 'kids' | 'phulkari'
+  originalPrice?: number
+  category: string
   subcategory?: string
   images: string[]
-  colors: string[]
-  sizes: string[]
-  stock: number
-  rating?: number
-  reviews?: number
-  badge?: string
-  badgeEn?: string
-  isActive: boolean
-  createdAt?: string | Date
-  updatedAt?: string | Date
+  sizes?: string[]
+  colors?: string[]
+  inStock: boolean
+  stockQuantity: number
+  featured?: boolean
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
 }
 
 // File paths
-const DATA_DIR = path.resolve(process.cwd(), 'data')
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
+const PRODUCTS_FILE = path.join(process.cwd(), 'data', 'products.json')
+const DATA_DIR = path.join(process.cwd(), 'data')
 
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true })
+async function ensureDataDir() {
+  try {
+    await fs.access(DATA_DIR)
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true })
+  }
 }
 
-/**
- * Get all products (File Storage Primary)
- */
-export async function getAllProducts(): Promise<ProductData[]> {
-  let products: ProductData[] = []
-
-  // Always try file storage first (most reliable)
+// Initialize empty products file if it doesn't exist
+async function initializeProductsFile() {
   try {
-    if (fs.existsSync(PRODUCTS_FILE)) {
-      const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
-      products = JSON.parse(data)
-      console.log(`📁 Loaded ${products.length} products from file storage`)
-    } else {
-      // Create empty products file if it doesn't exist
-      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify([], null, 2), 'utf8')
-      products = []
-    }
+    await fs.access(PRODUCTS_FILE)
+  } catch {
+    await ensureDataDir()
+    await fs.writeFile(PRODUCTS_FILE, JSON.stringify([], null, 2))
+    console.log('✅ Initialized empty products.json file')
+  }
+}
+
+// Get all products
+export async function getAllProducts(): Promise<Product[]> {
+  try {
+    await initializeProductsFile()
+    const data = await fs.readFile(PRODUCTS_FILE, 'utf-8')
+    const products = JSON.parse(data)
+    console.log(`📦 Retrieved ${products.length} products from storage`)
+    return products
   } catch (error) {
-    console.error('❌ Error reading from file storage:', error)
-    products = []
+    console.error('❌ Error reading products:', error)
+    return []
   }
-
-  // Try to sync with MongoDB in background (non-blocking)
-  syncWithMongoDB(products).catch(error => {
-    console.warn('⚠️ MongoDB sync failed (running in file-only mode):', error.message)
-  })
-
-  return products.filter(p => p.isActive !== false)
 }
 
-/**
- * Add a new product (File Storage Primary)
- */
-export async function addProduct(productData: Omit<ProductData, 'id' | '_id'>): Promise<ProductData> {
-  const newProduct: ProductData = {
-    id: generateProductId(),
-    ...productData,
-    punjabiDescription: productData.punjabiDescription || productData.description,
-    rating: productData.rating || 4.5,
-    reviews: productData.reviews || 0,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-
-  // Save to file storage (primary)
+// Get product by ID
+export async function getProductById(id: string): Promise<Product | null> {
   try {
-    const products = await getAllProductsFromFile()
+    const products = await getAllProducts()
+    const product = products.find(p => p.id === id)
+    return product || null
+  } catch (error) {
+    console.error('❌ Error getting product by ID:', error)
+    return null
+  }
+}
+
+// Add new product
+export async function addProduct(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+  try {
+    const products = await getAllProducts()
+    
+    const newProduct: Product = {
+      ...productData,
+      id: generateProductId(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    
     products.push(newProduct)
-    saveProductsToFile(products)
-    console.log('✅ Product saved to file storage:', newProduct.name)
+    await saveProducts(products)
+    
+    console.log(`✅ Added new product: ${newProduct.name} (ID: ${newProduct.id})`)
+    return newProduct
   } catch (error) {
-    console.error('❌ Failed to save to file storage:', error)
-    throw new Error('Failed to save product')
+    console.error('❌ Error adding product:', error)
+    throw new Error('Failed to add product')
   }
-
-  // Try to save to MongoDB (secondary, non-blocking)
-  saveToMongoDB(newProduct).catch(error => {
-    console.warn('⚠️ MongoDB save failed (product saved to file storage):', error.message)
-  })
-
-  return newProduct
 }
 
-/**
- * Update a product (File Storage Primary)
- */
-export async function updateProduct(productId: string, updateData: Partial<ProductData>): Promise<ProductData> {
-  // Update in file storage (primary)
-  const products = await getAllProductsFromFile()
-  const productIndex = products.findIndex(p => p.id === productId || p._id === productId)
-  
-  if (productIndex === -1) {
-    throw new Error('Product not found')
+// Update existing product
+export async function updateProduct(id: string, updates: Partial<Omit<Product, 'id' | 'createdAt'>>): Promise<Product> {
+  try {
+    const products = await getAllProducts()
+    const productIndex = products.findIndex(p => p.id === id)
+    
+    if (productIndex === -1) {
+      throw new Error('Product not found')
+    }
+    
+    const updatedProduct: Product = {
+      ...products[productIndex],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }
+    
+    products[productIndex] = updatedProduct
+    await saveProducts(products)
+    
+    console.log(`✅ Updated product: ${updatedProduct.name} (ID: ${id})`)
+    return updatedProduct
+  } catch (error) {
+    console.error('❌ Error updating product:', error)
+    throw new Error('Failed to update product')
   }
-
-  const updatedProduct = {
-    ...products[productIndex],
-    ...updateData,
-    updatedAt: new Date().toISOString()
-  }
-
-  products[productIndex] = updatedProduct
-  saveProductsToFile(products)
-  console.log('✅ Product updated in file storage:', updatedProduct.name)
-
-  // Try to update in MongoDB (secondary, non-blocking)
-  updateInMongoDB(productId, updateData).catch(error => {
-    console.warn('⚠️ MongoDB update failed (product updated in file storage):', error.message)
-  })
-
-  return updatedProduct
 }
 
-/**
- * Delete a product (File Storage Primary)
- */
-export async function deleteProduct(productId: string): Promise<void> {
-  // Delete from file storage (primary)
-  const products = await getAllProductsFromFile()
-  const filteredProducts = products.filter(p => p.id !== productId && p._id !== productId)
-  
-  if (filteredProducts.length === products.length) {
-    throw new Error('Product not found')
+// Delete product
+export async function deleteProduct(id: string): Promise<void> {
+  try {
+    const products = await getAllProducts()
+    const productIndex = products.findIndex(p => p.id === id)
+    
+    if (productIndex === -1) {
+      throw new Error('Product not found')
+    }
+    
+    const deletedProduct = products[productIndex]
+    products.splice(productIndex, 1)
+    await saveProducts(products)
+    
+    console.log(`✅ Deleted product: ${deletedProduct.name} (ID: ${id})`)
+  } catch (error) {
+    console.error('❌ Error deleting product:', error)
+    throw new Error('Failed to delete product')
   }
-
-  saveProductsToFile(filteredProducts)
-  console.log('✅ Product deleted from file storage')
-
-  // Try to delete from MongoDB (secondary, non-blocking)
-  deleteFromMongoDB(productId).catch(error => {
-    console.warn('⚠️ MongoDB delete failed (product deleted from file storage):', error.message)
-  })
 }
 
-/**
- * Get products by category
- */
-export async function getProductsByCategory(category: string): Promise<ProductData[]> {
-  const allProducts = await getAllProducts()
-  
-  if (category === 'all') {
-    return allProducts
+// Get products by category
+export async function getProductsByCategory(category: string): Promise<Product[]> {
+  try {
+    const products = await getAllProducts()
+    return products.filter(p => p.category.toLowerCase() === category.toLowerCase())
+  } catch (error) {
+    console.error('❌ Error getting products by category:', error)
+    return []
   }
-  
-  if (category === 'jutti') {
-    return allProducts.filter(p => 
-      p.subcategory === 'jutti' || 
-      (p.category !== 'phulkari' && !p.subcategory)
+}
+
+// Get featured products
+export async function getFeaturedProducts(): Promise<Product[]> {
+  try {
+    const products = await getAllProducts()
+    return products.filter(p => p.featured === true)
+  } catch (error) {
+    console.error('❌ Error getting featured products:', error)
+    return []
+  }
+}
+
+// Search products
+export async function searchProducts(query: string): Promise<Product[]> {
+  try {
+    const products = await getAllProducts()
+    const searchTerm = query.toLowerCase()
+    
+    return products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.description.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
     )
+  } catch (error) {
+    console.error('❌ Error searching products:', error)
+    return []
   }
-  
-  return allProducts.filter(p => p.category === category)
 }
 
-/**
- * Search products
- */
-export async function searchProducts(query: string): Promise<ProductData[]> {
-  const allProducts = await getAllProducts()
-  const searchLower = query.toLowerCase()
-  
-  return allProducts.filter(product =>
-    product.name.toLowerCase().includes(searchLower) ||
-    product.punjabiName?.toLowerCase().includes(searchLower) ||
-    product.description.toLowerCase().includes(searchLower) ||
-    product.category.toLowerCase().includes(searchLower)
-  )
+// Save products to file
+async function saveProducts(products: Product[]): Promise<void> {
+  try {
+    await ensureDataDir()
+    await fs.writeFile(PRODUCTS_FILE, JSON.stringify(products, null, 2))
+  } catch (error) {
+    console.error('❌ Error saving products:', error)
+    throw new Error('Failed to save products')
+  }
 }
 
-// Helper functions
+// Generate unique product ID
 function generateProductId(): string {
-  return `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  const timestamp = Date.now().toString(36)
+  const random = Math.random().toString(36).substr(2, 5)
+  return `prod_${timestamp}_${random}`
 }
 
-async function getAllProductsFromFile(): Promise<ProductData[]> {
+// Get product statistics
+export async function getProductStats() {
   try {
-    if (fs.existsSync(PRODUCTS_FILE)) {
-      const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
-      return JSON.parse(data)
-    }
-    return []
-  } catch (error) {
-    console.error('Error reading products from file:', error)
-    return []
-  }
-}
-
-function saveProductsToFile(products: ProductData[]): void {
-  try {
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8')
-  } catch (error) {
-    console.error('Error saving products to file:', error)
-    throw error
-  }
-}
-
-// MongoDB helper functions (non-blocking)
-async function syncWithMongoDB(fileProducts: ProductData[]): Promise<void> {
-  try {
-    await connectDB()
+    const products = await getAllProducts()
     
-    // Get products from MongoDB
-    const mongoProducts = await Product.find({}).lean()
+    const stats = {
+      total: products.length,
+      inStock: products.filter(p => p.inStock).length,
+      outOfStock: products.filter(p => !p.inStock).length,
+      featured: products.filter(p => p.featured).length,
+      categories: [...new Set(products.map(p => p.category))].length,
+      totalValue: products.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0)
+    }
     
-    // If MongoDB has more recent products, update file storage
-    if (mongoProducts.length > fileProducts.length) {
-      const formattedProducts = mongoProducts.map((product: any) => ({
-        ...product,
-        _id: product._id.toString(),
-        id: product._id.toString()
-      }))
-      saveProductsToFile(formattedProducts)
-      console.log('🔄 Synced MongoDB products to file storage')
+    return stats
+  } catch (error) {
+    console.error('❌ Error getting product stats:', error)
+    return {
+      total: 0,
+      inStock: 0,
+      outOfStock: 0,
+      featured: 0,
+      categories: 0,
+      totalValue: 0
     }
-    // If file storage has more products, sync to MongoDB
-    else if (fileProducts.length > mongoProducts.length) {
-      for (const product of fileProducts) {
-        const exists = await Product.findOne({ 
-          $or: [{ name: product.name }, { _id: product._id || product.id }] 
-        })
-        
-        if (!exists) {
-          await new Product(product).save()
-        }
+  }
+}
+
+// Bulk import products
+export async function bulkImportProducts(products: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<Product[]> {
+  try {
+    const existingProducts = await getAllProducts()
+    const newProducts: Product[] = []
+    
+    for (const productData of products) {
+      const newProduct: Product = {
+        ...productData,
+        id: generateProductId(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
-      console.log('🔄 Synced file products to MongoDB')
+      newProducts.push(newProduct)
     }
+    
+    const allProducts = [...existingProducts, ...newProducts]
+    await saveProducts(allProducts)
+    
+    console.log(`✅ Bulk imported ${newProducts.length} products`)
+    return newProducts
   } catch (error) {
-    // MongoDB not available, continue with file storage
-    throw error
+    console.error('❌ Error bulk importing products:', error)
+    throw new Error('Failed to bulk import products')
   }
 }
 
-async function saveToMongoDB(product: ProductData): Promise<void> {
+// Clear all products (for fresh start)
+export async function clearAllProducts(): Promise<void> {
   try {
-    await connectDB()
-    await new Product(product).save()
-    console.log('✅ Product synced to MongoDB:', product.name)
+    await saveProducts([])
+    console.log('✅ Cleared all products - fresh start!')
   } catch (error) {
-    throw error
-  }
-}
-
-async function updateInMongoDB(productId: string, updateData: Partial<ProductData>): Promise<void> {
-  try {
-    await connectDB()
-    await Product.findByIdAndUpdate(productId, updateData)
-    console.log('✅ Product updated in MongoDB')
-  } catch (error) {
-    throw error
-  }
-}
-
-async function deleteFromMongoDB(productId: string): Promise<void> {
-  try {
-    await connectDB()
-    await Product.findByIdAndDelete(productId)
-    console.log('✅ Product deleted from MongoDB')
-  } catch (error) {
-    throw error
-  }
-}
-
-/**
- * Force sync between file storage and MongoDB
- */
-export async function forceSyncProducts(): Promise<{ fileCount: number; mongoCount: number; synced: boolean }> {
-  const fileProducts = await getAllProductsFromFile()
-  let mongoCount = 0
-  let synced = false
-
-  try {
-    await connectDB()
-    const mongoProducts = await Product.find({}).lean()
-    mongoCount = mongoProducts.length
-
-    // Always prioritize file storage as source of truth
-    if (fileProducts.length > 0) {
-      // Clear MongoDB and resync from file storage
-      await Product.deleteMany({})
-      
-      for (const product of fileProducts) {
-        await new Product(product).save()
-      }
-      
-      synced = true
-      console.log('✅ Force synced file storage to MongoDB')
-    }
-  } catch (error) {
-    console.warn('⚠️ MongoDB not available for sync')
-  }
-
-  return {
-    fileCount: fileProducts.length,
-    mongoCount,
-    synced
+    console.error('❌ Error clearing products:', error)
+    throw new Error('Failed to clear products')
   }
 }

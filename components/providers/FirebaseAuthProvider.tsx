@@ -97,7 +97,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       // Mock profile update
       console.log('Update profile:', data)
-      setUser(prev => ({ ...prev, ...data }))
+      setUser((prev: any) => ({ ...prev, ...data }))
       return { success: true }
     } catch (err: any) {
       setError(err.message)
