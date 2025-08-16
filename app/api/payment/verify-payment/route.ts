@@ -5,7 +5,7 @@ import Order from '@/models/Order'
 import { verifyMockPayment } from '@/lib/mock-payment'
 
 // Initialize Razorpay with fallback for missing credentials
-let razorpay = null;
+let razorpay: Razorpay | null = null;
 const MOCK_KEY_ID = 'rzp_test_mock_key_for_fallback';
 
 try {
