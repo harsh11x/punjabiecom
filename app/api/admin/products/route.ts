@@ -3,6 +3,46 @@ import jwt from 'jsonwebtoken'
 import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/lib/product-manager'
 import { revalidatePath } from 'next/cache'
 
+// AWS Sync Configuration
+const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3001'
+const AWS_SYNC_SECRET = process.env.AWS_SYNC_SECRET || 'punjabi-heritage-sync-secret-2024'
+
+// Function to sync with AWS server
+async function syncToAWS(action: 'add' | 'update' | 'delete', productData: any) {
+  try {
+    console.log(`🔄 Syncing to AWS: ${action}`, productData.name || productData.id)
+    
+    const response = await fetch(`${AWS_SYNC_SERVER_URL}/api/sync/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AWS_SYNC_SECRET}`
+      },
+      body: JSON.stringify({
+        action: action,
+        product: productData
+      })
+    })
+
+    if (response.ok) {
+      const result = await response.json()
+      if (result.success) {
+        console.log(`✅ AWS sync successful: ${action}`)
+        return true
+      } else {
+        console.error(`❌ AWS sync failed: ${result.error}`)
+        return false
+      }
+    } else {
+      console.error(`❌ AWS sync HTTP error: ${response.status}`)
+      return false
+    }
+  } catch (error) {
+    console.error('❌ AWS sync error:', error)
+    return false
+  }
+}
+
 // Auth middleware
 function verifyAdminToken(request: NextRequest) {
   const token = request.cookies.get('admin-token')?.value
@@ -95,6 +135,12 @@ export async function POST(request: NextRequest) {
     const savedProduct = await addProduct(newProductData)
     console.log('✅ Product created successfully:', savedProduct.name)
     
+    // Sync to AWS server
+    const awsSyncSuccess = await syncToAWS('add', savedProduct)
+    if (!awsSyncSuccess) {
+      console.warn('⚠️ AWS sync failed, but product was saved locally')
+    }
+    
     // Revalidate product pages to clear cache
     try {
       revalidatePath('/')
@@ -111,7 +157,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Product created successfully',
-      product: savedProduct
+      product: savedProduct,
+      awsSync: awsSyncSuccess
     })
   } catch (error: any) {
     console.error('❌ Error creating product:', error)
@@ -161,6 +208,12 @@ export async function PUT(request: NextRequest) {
     const updatedProduct = await updateProduct(productId, productData)
     console.log('✅ Product updated successfully:', updatedProduct.name)
     
+    // Sync to AWS server
+    const awsSyncSuccess = await syncToAWS('update', updatedProduct)
+    if (!awsSyncSuccess) {
+      console.warn('⚠️ AWS sync failed, but product was updated locally')
+    }
+    
     // Revalidate product pages to clear cache
     try {
       revalidatePath('/')
@@ -181,7 +234,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Product updated successfully',
-      product: updatedProduct
+      product: updatedProduct,
+      awsSync: awsSyncSuccess
     })
   } catch (error: any) {
     console.error('❌ Error updating product:', error)
@@ -212,6 +266,12 @@ export async function DELETE(request: NextRequest) {
     await deleteProduct(productId)
     console.log('✅ Product deleted successfully')
     
+    // Sync to AWS server
+    const awsSyncSuccess = await syncToAWS('delete', { id: productId })
+    if (!awsSyncSuccess) {
+      console.warn('⚠️ AWS sync failed, but product was deleted locally')
+    }
+    
     // Revalidate product pages to clear cache
     try {
       revalidatePath('/')
@@ -227,7 +287,8 @@ export async function DELETE(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Product deleted successfully'
+      message: 'Product deleted successfully',
+      awsSync: awsSyncSuccess
     })
   } catch (error: any) {
     console.error('❌ Error deleting product:', error)
