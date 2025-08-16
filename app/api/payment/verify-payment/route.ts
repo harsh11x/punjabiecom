@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
+import crypto from 'crypto'
 import { connectDB } from '@/lib/mongodb'
 import Order from '@/models/Order'
 import { verifyMockPayment } from '@/lib/mock-payment'
@@ -63,17 +64,15 @@ export async function POST(request: NextRequest) {
       isVerified = await verifyMockPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature || '');
       console.log('Mock payment verification result:', isVerified);
     } else if (razorpay) {
-      // Verify with Razorpay
+      // Verify with Razorpay using crypto
       console.log('Verifying Razorpay payment...');
-      const generated_signature = razorpay.webhooks.generateSignature(
-        JSON.stringify({
-          order_id: razorpayOrderId,
-          payment_id: razorpayPaymentId
-        }),
-        process.env.RAZORPAY_WEBHOOK_SECRET || ''
-      );
+      const body = razorpayOrderId + "|" + razorpayPaymentId;
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '')
+        .update(body.toString())
+        .digest('hex');
 
-      isVerified = generated_signature === razorpaySignature;
+      isVerified = expectedSignature === razorpaySignature;
       console.log('Razorpay payment verification result:', isVerified);
     } else {
       console.error('Cannot verify payment: Razorpay not initialized and not a mock payment');
