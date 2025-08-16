@@ -14,7 +14,7 @@ RUN npm install express cors mongoose dotenv
 RUN mkdir -p sync-data
 
 # Expose port
-EXPOSE 3001
+EXPOSE 3000
 
 # Start server
 CMD ["node", "server.js"]

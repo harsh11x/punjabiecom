@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 
-const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3001';
+const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3000';
 const WEBSITE_SYNC_TOKEN = process.env.WEBSITE_SYNC_TOKEN || 'punjabi-heritage-website-sync-token-2024';
 
 // Function to pull products from AWS server

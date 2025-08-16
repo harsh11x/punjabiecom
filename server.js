@@ -25,7 +25,7 @@ try {
 }
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 console.log('🚀 Starting Punjabi Heritage Sync Server...');
 console.log('📊 Port:', PORT);

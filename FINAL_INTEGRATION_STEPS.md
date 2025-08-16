@@ -2,7 +2,7 @@
 
 ## ✅ **What's Already Done:**
 
-1. **AWS Server** - Ready to deploy (`server.js`)
+1. **AWS Server** - Ready to deploy (`server.js`) on port 3000
 2. **Admin Panel Integration** - Automatically syncs when you add/edit/delete products
 3. **Website Sync API** - Route to pull updates from AWS (`/api/sync-from-aws`)
 4. **Auto-Sync Component** - Background sync for website
@@ -25,13 +25,13 @@ pm2 start server.js --name punjabiecom
 pm2 save
 
 # Test server
-curl http://3.111.208.77:3001/api/health
+curl http://3.111.208.77:3000/api/health
 ```
 
 ## 🔧 **Step 2: Update Vercel Environment Variables**
 
 Add these to your Vercel project settings:
-- `AWS_SYNC_SERVER_URL` = `http://3.111.208.77:3001`
+- `AWS_SYNC_SERVER_URL` = `http://3.111.208.77:3000`
 - `AWS_SYNC_SECRET` = `punjabi-heritage-sync-secret-2024`
 - `WEBSITE_SYNC_TOKEN` = `punjabi-heritage-website-sync-token-2024`
 
@@ -63,7 +63,7 @@ export default function RootLayout({
 
 ### Test 1: AWS Server Health
 ```bash
-curl http://3.111.208.77:3001/api/health
+curl http://3.111.208.77:3000/api/health
 # Should return: {"status":"healthy",...}
 ```
 
@@ -104,7 +104,7 @@ pm2 logs punjabiecom
 
 # Check stored products
 curl -H "Authorization: Bearer punjabi-heritage-sync-secret-2024" \
-     http://3.111.208.77:3001/api/sync/products
+     http://3.111.208.77:3000/api/sync/products
 ```
 
 ## 🎯 **Expected Results:**

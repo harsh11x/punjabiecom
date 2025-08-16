@@ -4,7 +4,7 @@ import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/lib/
 import { revalidatePath } from 'next/cache'
 
 // AWS Sync Configuration
-const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3001'
+const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3000'
 const AWS_SYNC_SECRET = process.env.AWS_SYNC_SECRET || 'punjabi-heritage-sync-secret-2024'
 
 // Function to sync with AWS server
