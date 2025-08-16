@@ -49,25 +49,26 @@ async function dbConnect() {
     }
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 15000, // Increased from 10 to 15 seconds
-      socketTimeoutMS: 60000, // Increased from 45 to 60 seconds  
-      connectTimeoutMS: 30000, // Increased from 15 to 30 seconds
-      maxIdleTimeMS: 30000, // 30 seconds
-      // Use compression
-      compressors: ['zlib' as const],
-      // Optimize for faster reads
-      readPreference: 'primaryPreferred' as const,
-      retryWrites: true,
-      retryReads: true,
-      // DNS resolution settings
-      family: 4 // Use IPv4 only for better compatibility
-      // Don't specify authSource to use default
-    }
+  // Define connection options
+  const opts = {
+    bufferCommands: false,
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 15000, // Increased from 10 to 15 seconds
+    socketTimeoutMS: 60000, // Increased from 45 to 60 seconds  
+    connectTimeoutMS: 30000, // Increased from 15 to 30 seconds
+    maxIdleTimeMS: 30000, // 30 seconds
+    // Use compression
+    compressors: ['zlib' as const],
+    // Optimize for faster reads
+    readPreference: 'primaryPreferred' as const,
+    retryWrites: true,
+    retryReads: true,
+    // DNS resolution settings
+    family: 4 // Use IPv4 only for better compatibility
+    // Don't specify authSource to use default
+  }
 
+  if (!cached.promise) {
     console.log('Connecting to MongoDB...')
     console.log('URI:', MONGODB_URI.substring(0, 20) + '...')
 
