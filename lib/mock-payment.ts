@@ -88,7 +88,7 @@ export const createMockPaymentOrder = async (orderData: any): Promise<MockPaymen
 /**
  * Create a mock payment response
  */
-export const createMockPaymentResponse = (savedOrder: any, mockOrder: MockPaymentOrder): MockPaymentResponse => {
+export const createMockPaymentResponse = (savedOrder: any, mockOrder: MockPaymentOrder | any): MockPaymentResponse => {
   return {
     success: true,
     order: {
