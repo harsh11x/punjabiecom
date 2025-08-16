@@ -1,0 +1,20 @@
+# Simple Dockerfile for Punjabi Heritage Sync Server
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy all files
+COPY . .
+
+# Install dependencies
+RUN npm install express cors mongoose dotenv
+
+# Create sync data directory
+RUN mkdir -p sync-data
+
+# Expose port
+EXPOSE 3001
+
+# Start server
+CMD ["node", "server.js"]
