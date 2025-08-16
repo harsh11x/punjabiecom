@@ -53,9 +53,9 @@ async function dbConnect() {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000, // 10 seconds
-      socketTimeoutMS: 45000, // 45 seconds  
-      connectTimeoutMS: 15000, // 15 seconds
+      serverSelectionTimeoutMS: 15000, // Increased from 10 to 15 seconds
+      socketTimeoutMS: 60000, // Increased from 45 to 60 seconds  
+      connectTimeoutMS: 30000, // Increased from 15 to 30 seconds
       maxIdleTimeMS: 30000, // 30 seconds
       // Use compression
       compressors: ['zlib' as const],
@@ -63,10 +63,9 @@ async function dbConnect() {
       readPreference: 'primaryPreferred' as const,
       retryWrites: true,
       retryReads: true,
-      // Add these for better DNS resolution
-      family: 4, // Use IPv4, skip trying IPv6
-      // Add auth source
-      authSource: 'admin'
+      // DNS resolution settings
+      family: 4 // Use IPv4 only for better compatibility
+      // Don't specify authSource to use default
     }
 
     console.log('Connecting to MongoDB...')
@@ -87,13 +86,31 @@ async function dbConnect() {
       codeName: e.codeName
     })
     
+    // Try alternative connection string if available
+    const ALT_MONGODB_URI = process.env.ALT_MONGODB_URI
+    if (ALT_MONGODB_URI && !MONGODB_URI.includes(ALT_MONGODB_URI)) {
+      console.log('Attempting connection with alternative MongoDB URI...')
+      try {
+        cached.promise = mongoose.connect(ALT_MONGODB_URI, opts)
+        cached.conn = await cached.promise
+        console.log('MongoDB connected successfully using alternative URI')
+        return cached.conn
+      } catch (altError) {
+        console.error('Alternative MongoDB connection also failed:', altError)
+      }
+    }
+    
     // Provide more specific error messages
     if (e.message.includes('querySrv ENOTFOUND')) {
-      throw new Error('MongoDB DNS resolution failed. Check your internet connection and MongoDB cluster URL.')
+      console.error('MongoDB DNS resolution failed. Using file-based fallback for critical operations.')
+      // Return null instead of throwing to allow fallback to file storage
+      return null
     } else if (e.message.includes('Authentication failed')) {
       throw new Error('MongoDB authentication failed. Check your username and password.')
     } else if (e.message.includes('Server selection timed out')) {
-      throw new Error('MongoDB server selection timed out. Check your network connection and MongoDB cluster status.')
+      console.error('MongoDB server selection timed out. Using file-based fallback for critical operations.')
+      // Return null instead of throwing to allow fallback to file storage
+      return null
     }
     
     throw e
