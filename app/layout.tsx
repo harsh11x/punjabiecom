@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import AutoSync from '@/components/AutoSync'
+import { Providers } from '@/components/providers/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,14 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <Toaster />
-        {/* Auto-sync component for real-time updates */}
-        <AutoSync 
-          interval={30000} 
-          enabled={true} 
-          showStatus={process.env.NODE_ENV === 'development'} 
-        />
+        <Providers>
+          {children}
+          <Toaster />
+          {/* Auto-sync component for real-time updates */}
+          <AutoSync 
+            interval={30000} 
+            enabled={true} 
+            showStatus={process.env.NODE_ENV === 'development'} 
+          />
+        </Providers>
       </body>
     </html>
   )
