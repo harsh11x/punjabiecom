@@ -1,81 +1,156 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 
 interface AutoSyncProps {
-  interval?: number; // in milliseconds, default 30 seconds
-  enabled?: boolean;
+  interval?: number // Sync interval in milliseconds (default: 30 seconds)
+  enabled?: boolean // Enable/disable auto sync (default: true)
+  showStatus?: boolean // Show sync status indicator (default: false)
 }
 
-export default function AutoSync({ interval = 30000, enabled = true }: AutoSyncProps) {
-  const [lastSync, setLastSync] = useState<string | null>(null);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+interface SyncStatus {
+  lastSync: Date | null
+  isLoading: boolean
+  error: string | null
+  successCount: number
+  errorCount: number
+}
 
-  useEffect(() => {
-    if (!enabled) return;
+export default function AutoSync({ 
+  interval = 30000, // 30 seconds
+  enabled = true,
+  showStatus = false 
+}: AutoSyncProps) {
+  const [status, setStatus] = useState<SyncStatus>({
+    lastSync: null,
+    isLoading: false,
+    error: null,
+    successCount: 0,
+    errorCount: 0
+  })
 
-    const performSync = async () => {
-      try {
-        setSyncStatus('syncing');
-        console.log('🔄 Auto-syncing products from AWS...');
+  const syncFromAWS = async () => {
+    if (!enabled) return
 
-        const response = await fetch('/api/sync-from-aws', {
-          method: 'GET',
-          cache: 'no-cache'
-        });
+    setStatus(prev => ({ ...prev, isLoading: true, error: null }))
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
-            console.log(`✅ Auto-sync successful: ${result.count} products synced`);
-            setLastSync(new Date().toISOString());
-            setSyncStatus('success');
-          } else {
-            console.error('❌ Auto-sync failed:', result.error);
-            setSyncStatus('error');
+    try {
+      console.log('🔄 Auto-syncing from AWS server...')
+      
+      const response = await fetch('/api/sync-from-aws', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-cache'
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('✅ Auto-sync successful:', result)
+        
+        setStatus(prev => ({
+          ...prev,
+          lastSync: new Date(),
+          isLoading: false,
+          error: null,
+          successCount: prev.successCount + 1
+        }))
+
+        // Trigger page refresh if products were updated
+        if (result.count > 0) {
+          console.log(`🔄 ${result.count} products updated, refreshing page...`)
+          // Use router refresh or window reload based on your setup
+          if (typeof window !== 'undefined') {
+            window.location.reload()
           }
-        } else {
-          console.error('❌ Auto-sync HTTP error:', response.status);
-          setSyncStatus('error');
         }
-      } catch (error) {
-        console.error('❌ Auto-sync error:', error);
-        setSyncStatus('error');
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
-
-      // Reset status after 5 seconds
-      setTimeout(() => setSyncStatus('idle'), 5000);
-    };
-
-    // Perform initial sync
-    performSync();
-
-    // Set up interval
-    const intervalId = setInterval(performSync, interval);
-
-    return () => clearInterval(intervalId);
-  }, [interval, enabled]);
-
-  // Don't render anything visible - this is a background component
-  if (process.env.NODE_ENV === 'development') {
-    // Only show sync status in development
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <div className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-          syncStatus === 'syncing' ? 'bg-blue-100 text-blue-800' :
-          syncStatus === 'success' ? 'bg-green-100 text-green-800' :
-          syncStatus === 'error' ? 'bg-red-100 text-red-800' :
-          'bg-gray-100 text-gray-600'
-        }`}>
-          {syncStatus === 'syncing' && '🔄 Syncing...'}
-          {syncStatus === 'success' && '✅ Synced'}
-          {syncStatus === 'error' && '❌ Sync Failed'}
-          {syncStatus === 'idle' && lastSync && `🔄 Last sync: ${new Date(lastSync).toLocaleTimeString()}`}
-          {syncStatus === 'idle' && !lastSync && '⏳ Waiting...'}
-        </div>
-      </div>
-    );
+    } catch (error: any) {
+      console.error('❌ Auto-sync failed:', error.message)
+      setStatus(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error.message,
+        errorCount: prev.errorCount + 1
+      }))
+    }
   }
 
-  return null;
+  useEffect(() => {
+    if (!enabled) return
+
+    // Initial sync after 5 seconds
+    const initialTimer = setTimeout(() => {
+      syncFromAWS()
+    }, 5000)
+
+    // Regular sync interval
+    const syncTimer = setInterval(() => {
+      syncFromAWS()
+    }, interval)
+
+    return () => {
+      clearTimeout(initialTimer)
+      clearInterval(syncTimer)
+    }
+  }, [enabled, interval])
+
+  // Manual sync function (can be called from parent components)
+  const manualSync = () => {
+    syncFromAWS()
+  }
+
+  // Expose manual sync to window for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      ;(window as any).manualSync = manualSync
+    }
+  }, [])
+
+  if (!showStatus) {
+    return null // Hidden component
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 max-w-xs">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Auto Sync
+          </span>
+          <div className={`w-2 h-2 rounded-full ${
+            status.isLoading 
+              ? 'bg-yellow-500 animate-pulse' 
+              : status.error 
+                ? 'bg-red-500' 
+                : 'bg-green-500'
+          }`} />
+        </div>
+        
+        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+          {status.lastSync && (
+            <div>Last: {status.lastSync.toLocaleTimeString()}</div>
+          )}
+          <div>✅ {status.successCount} | ❌ {status.errorCount}</div>
+          {status.error && (
+            <div className="text-red-500 truncate" title={status.error}>
+              Error: {status.error}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={manualSync}
+          disabled={status.isLoading}
+          className="mt-2 w-full text-xs bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-2 py-1 rounded"
+        >
+          {status.isLoading ? 'Syncing...' : 'Sync Now'}
+        </button>
+      </div>
+    </div>
+  )
 }

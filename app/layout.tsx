@@ -1,26 +1,33 @@
 import type { Metadata } from 'next'
-import { SafeProviders } from '@/components/safe-providers'
-import { Toaster } from '@/components/ui/sonner'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import { Toaster } from '@/components/ui/sonner'
+import AutoSync from '@/components/AutoSync'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Punjab Heritage - Authentic Punjabi Crafts',
-  description: 'Discover the finest collection of traditional handmade leather jutti and exquisite phulkari, crafted by master artisans preserving centuries-old Punjabi heritage.',
-  keywords: 'punjabi jutti, phulkari, traditional crafts, handmade, punjab heritage',
+  title: 'Punjabi Heritage Store',
+  description: 'Authentic Punjabi traditional products including Juttis, Phulkari, and more',
+  keywords: 'punjabi, heritage, juttis, phulkari, traditional, clothing, accessories',
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en">
-      <body>
-        <SafeProviders>
-          {children}
-          <Toaster />
-        </SafeProviders>
+      <body className={inter.className}>
+        {children}
+        <Toaster />
+        {/* Auto-sync component for real-time updates */}
+        <AutoSync 
+          interval={30000} 
+          enabled={true} 
+          showStatus={process.env.NODE_ENV === 'development'} 
+        />
       </body>
     </html>
   )

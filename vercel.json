@@ -1,8 +1,6 @@
 {
-  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
@@ -10,6 +8,34 @@
     }
   },
   "env": {
-    "NODE_ENV": "production"
-  }
+    "AWS_SYNC_SERVER_URL": "http://3.111.208.77:3000",
+    "AWS_SYNC_SECRET": "punjabi-heritage-sync-secret-2024",
+    "WEBSITE_SYNC_TOKEN": "punjabi-heritage-website-sync-token-2024",
+    "SYNC_INTERVAL": "30000"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Sync-Token"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/admin/:path*",
+      "destination": "/admin/:path*"
+    }
+  ]
 }
