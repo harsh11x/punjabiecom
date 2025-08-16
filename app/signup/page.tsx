@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+'use client'
+
+import { useState } from 'react'
+import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react'
 
