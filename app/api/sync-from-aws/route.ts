@@ -66,7 +66,11 @@ async function updateWebsiteProducts(products: any[]) {
     console.error('❌ Failed to update website products:', error);
     return {
       success: false,
-      error: error.message
+      error: error.message,
+      added: 0,
+      updated: 0,
+      deleted: 0,
+      total: 0
     };
   }
 }
@@ -126,7 +130,7 @@ async function handleSync() {
       console.warn('⚠️ Page revalidation failed:', revalidateError);
     }
 
-    const totalChanges = updateResult.added + updateResult.updated + updateResult.deleted;
+    const totalChanges = (updateResult.added || 0) + (updateResult.updated || 0) + (updateResult.deleted || 0);
     
     return NextResponse.json({
       success: true,
@@ -134,9 +138,9 @@ async function handleSync() {
       count: totalChanges,
       details: {
         total: awsData.products.length,
-        added: updateResult.added,
-        updated: updateResult.updated,
-        deleted: updateResult.deleted
+        added: updateResult.added || 0,
+        updated: updateResult.updated || 0,
+        deleted: updateResult.deleted || 0
       },
       timestamp: new Date().toISOString(),
       source: 'aws-server'
