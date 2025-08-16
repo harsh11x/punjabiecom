@@ -67,14 +67,14 @@ export async function GET(request: NextRequest) {
           aValue = a.price
           bValue = b.price
           break
-        case 'rating':
-          aValue = a.rating || 0
-          bValue = b.rating || 0
+        case 'newest':
+          aValue = new Date(b.createdAt).getTime()
+          bValue = new Date(a.createdAt).getTime()
           break
         case 'popular':
-        case 'reviews':
-          aValue = a.reviews || 0
-          bValue = b.reviews || 0
+          // Sort by featured first, then by stock
+          aValue = (a.featured ? 1 : 0) + (a.inStock ? 1 : 0)
+          bValue = (b.featured ? 1 : 0) + (b.inStock ? 1 : 0)
           break
         case 'name':
           aValue = a.name.toLowerCase()
