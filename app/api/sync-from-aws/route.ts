@@ -38,11 +38,42 @@ async function updateWebsiteProducts(products: any[]) {
   try {
     console.log(`🔄 Updating website with ${products.length} products...`);
     
-    // Import your product manager
-    const { updateAllProducts } = await import('@/lib/product-manager');
+    // Import your product manager functions
+    const { getAllProducts, addProduct, updateProduct, deleteProduct } = await import('@/lib/product-manager');
     
-    // Update all products in your system
-    await updateAllProducts(products);
+    // Get current products
+    const currentProducts = await getAllProducts();
+    const currentProductIds = new Set(currentProducts.map(p => p.id));
+    const newProductIds = new Set(products.map(p => p.id));
+    
+    // Update or add products
+    for (const product of products) {
+      try {
+        if (currentProductIds.has(product.id)) {
+          // Update existing product
+          await updateProduct(product.id, product);
+          console.log(`✅ Updated product: ${product.name}`);
+        } else {
+          // Add new product
+          await addProduct(product);
+          console.log(`✅ Added new product: ${product.name}`);
+        }
+      } catch (error) {
+        console.error(`❌ Failed to sync product ${product.name}:`, error);
+      }
+    }
+    
+    // Delete products that are no longer in AWS
+    for (const currentProduct of currentProducts) {
+      if (!newProductIds.has(currentProduct.id)) {
+        try {
+          await deleteProduct(currentProduct.id);
+          console.log(`🗑️ Deleted product: ${currentProduct.name}`);
+        } catch (error) {
+          console.error(`❌ Failed to delete product ${currentProduct.name}:`, error);
+        }
+      }
+    }
     
     console.log('✅ Website products updated successfully');
     return true;
