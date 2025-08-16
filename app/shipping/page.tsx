@@ -1,290 +1,314 @@
-'use client'
-
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingCart } from '@/components/shopping-cart'
-import { ArrowLeft, Truck, Package, Clock, MapPin, Shield, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Truck, Package, Clock, MapPin, Shield, AlertCircle, Globe, Plane } from 'lucide-react'
 
 export default function ShippingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b-4 border-amber-600 bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-white sticky top-0 z-50 shadow-lg">
+      <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-amber-100 hover:text-amber-300 hover:bg-red-700/50"
-                >
-                  <ArrowLeft className="h-6 w-6" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-amber-100">ਸ਼ਿਪਿੰਗ ਜਾਣਕਾਰੀ</h1>
-                <p className="text-amber-200">Shipping Information</p>
-              </div>
-            </div>
-            <ShoppingCart />
+            <Link href="/" className="flex items-center text-gray-600 hover:text-gray-900">
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back to Home
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">Shipping Information</h1>
+            <div className="w-24"></div> {/* Spacer for centering */}
           </div>
         </div>
-        <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500"></div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl lg:text-5xl font-bold text-red-900 mb-4">
-            ਸ਼ਿਪਿੰਗ ਅਤੇ ਡਿਲੀਵਰੀ
-          </h2>
-          <p className="text-xl text-red-700 mb-2">Shipping & Delivery Information</p>
-          <p className="text-lg text-gray-700 max-w-3xl mx-auto">
-            We deliver authentic Punjabi products across India with care and speed. 
-            Learn about our shipping options, delivery times, and policies.
-          </p>
-        </div>
-
-        {/* Quick Overview */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <Card className="text-center p-6">
-            <CardContent className="space-y-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <Truck className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-red-900">Free Shipping</h3>
-              <p className="text-gray-700">On orders above ₹999 across India</p>
-              <Badge className="bg-green-100 text-green-800">No minimum for Punjab</Badge>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center p-6">
-            <CardContent className="space-y-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <Clock className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold text-red-900">Fast Delivery</h3>
-              <p className="text-gray-700">3-7 business days across India</p>
-              <Badge className="bg-blue-100 text-blue-800">1-2 days in Punjab</Badge>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center p-6">
-            <CardContent className="space-y-4">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto">
-                <Shield className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-red-900">Secure Packaging</h3>
-              <p className="text-gray-700">Products carefully packed to prevent damage</p>
-              <Badge className="bg-purple-100 text-purple-800">100% Safe</Badge>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Shipping Options */}
-        <Card className="mb-12">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Package className="h-5 w-5" />
-              <span>Shipping Options</span>
-            </CardTitle>
-            <CardDescription>
-              Choose the delivery option that works best for you
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="border rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h4 className="font-semibold text-lg">Standard Delivery</h4>
-                    <p className="text-gray-600">3-7 business days</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg">₹99</p>
-                    <p className="text-sm text-gray-500">or Free above ₹999</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  <span>Available across India</span>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-6 bg-gradient-to-r from-green-50 to-blue-50">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h4 className="font-semibold text-lg">Express Delivery</h4>
-                    <p className="text-gray-600">1-3 business days</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg">₹199</p>
-                    <p className="text-sm text-gray-500">or Free above ₹1499</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  <span>Available in major cities</span>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-6 bg-gradient-to-r from-purple-50 to-pink-50">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h4 className="font-semibold text-lg">Same Day Delivery</h4>
-                    <p className="text-gray-600">Order by 12 PM, delivered same day</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-lg">₹299</p>
-                    <p className="text-sm text-gray-500">Limited areas</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  <span>Available in select cities</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Delivery Process */}
-        <Card className="mb-12">
-          <CardHeader>
-            <CardTitle>Delivery Process</CardTitle>
-            <CardDescription>
-              Here's what happens after you place your order
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  1
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Order Confirmation</h4>
-                  <p className="text-gray-700 text-sm">
-                    You'll receive an email and SMS confirmation with your order details.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  2
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Processing</h4>
-                  <p className="text-gray-700 text-sm">
-                    We carefully pack your authentic Punjabi products with love and care.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  3
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Shipment Dispatch</h4>
-                  <p className="text-gray-700 text-sm">
-                    Your order is handed over to our delivery partner with tracking details.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  4
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Out for Delivery</h4>
-                  <p className="text-gray-700 text-sm">
-                    Your package is on its way! Track it using the provided tracking number.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  5
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Delivered</h4>
-                  <p className="text-gray-700 text-sm">
-                    Your authentic Punjabi products are delivered to your doorstep!
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Important Notes */}
-        <Card className="mb-12">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5" />
-              <span>Important Information</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-semibold text-yellow-800 mb-2">Order Cut-off Times</h4>
-                <p className="text-yellow-700 text-sm">
-                  Orders placed before 2:00 PM (IST) on business days are processed the same day. 
-                  Orders placed after 2:00 PM or on weekends/holidays are processed the next business day.
-                </p>
-              </div>
-
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2">Tracking Your Order</h4>
-                <p className="text-blue-700 text-sm">
-                  Once your order is shipped, you'll receive a tracking number via email and SMS. 
-                  You can track your package on our website or the courier partner's website.
-                </p>
-              </div>
-
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <h4 className="font-semibold text-red-800 mb-2">Delivery Attempts</h4>
-                <p className="text-red-700 text-sm">
-                  Our delivery partners will make 3 attempts to deliver your package. 
-                  If unsuccessful, the package will be returned to us, and you'll be contacted for re-delivery.
-                </p>
-              </div>
-
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-2">Packaging</h4>
-                <p className="text-green-700 text-sm">
-                  All products are carefully packed in protective materials to ensure they reach you in perfect condition. 
-                  We use eco-friendly packaging whenever possible.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Contact for Shipping */}
-        <div className="text-center bg-gradient-to-r from-red-600 to-amber-600 text-white rounded-lg p-8">
-          <h3 className="text-2xl font-bold mb-4">Questions About Shipping?</h3>
-          <p className="text-lg mb-6 opacity-90">
-            Our customer service team is here to help with any shipping-related queries.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact">
-              <Button className="bg-white text-red-600 hover:bg-gray-100 px-6 py-2">
-                Contact Support
-              </Button>
-            </Link>
-            <Button variant="outline" className="border-white text-white hover:bg-white hover:text-red-600 px-6 py-2">
-              Call: +91 98765 43210
-            </Button>
+        <div className="max-w-4xl mx-auto">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <div className="text-6xl mb-4">🚚</div>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Fast & Reliable Shipping
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              We deliver your authentic Punjabi heritage products safely and quickly 
+              to your doorstep, anywhere in the world.
+            </p>
           </div>
+
+          {/* Shipping Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <MapPin className="h-5 w-5 mr-2 text-green-600" />
+                  Domestic Shipping (India)
+                </CardTitle>
+                <CardDescription>
+                  Fast delivery across all Indian states and territories
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Standard Delivery</span>
+                    <Badge variant="outline">3-7 Business Days</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Express Delivery</span>
+                    <Badge variant="outline">1-3 Business Days</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Free Shipping</span>
+                    <Badge className="bg-green-100 text-green-800">Orders ₹999+</Badge>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      <Shield className="h-4 w-4 inline mr-1" />
+                      Cash on Delivery available for all domestic orders
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2 text-blue-600" />
+                  International Shipping
+                </CardTitle>
+                <CardDescription>
+                  Worldwide delivery to bring Punjab to your doorstep
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Standard International</span>
+                    <Badge variant="outline">7-14 Business Days</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Express International</span>
+                    <Badge variant="outline">3-7 Business Days</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Tracking Included</span>
+                    <Badge className="bg-blue-100 text-blue-800">All Orders</Badge>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <Plane className="h-4 w-4 inline mr-1" />
+                      Customs duties may apply based on destination country
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Shipping Rates */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Package className="h-5 w-5 mr-2" />
+                Shipping Rates
+              </CardTitle>
+              <CardDescription>
+                Transparent pricing for all shipping options
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2">Destination</th>
+                      <th className="text-left py-2">Standard</th>
+                      <th className="text-left py-2">Express</th>
+                      <th className="text-left py-2">Free Shipping</th>
+                    </tr>
+                  </thead>
+                  <tbody className="space-y-2">
+                    <tr className="border-b">
+                      <td className="py-3 font-medium">India (All States)</td>
+                      <td className="py-3">₹99</td>
+                      <td className="py-3">₹199</td>
+                      <td className="py-3">Orders ₹999+</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-3 font-medium">USA & Canada</td>
+                      <td className="py-3">₹1,299</td>
+                      <td className="py-3">₹2,499</td>
+                      <td className="py-3">Orders ₹4,999+</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-3 font-medium">UK & Europe</td>
+                      <td className="py-3">₹1,199</td>
+                      <td className="py-3">₹2,299</td>
+                      <td className="py-3">Orders ₹4,999+</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-3 font-medium">Australia & NZ</td>
+                      <td className="py-3">₹1,399</td>
+                      <td className="py-3">₹2,699</td>
+                      <td className="py-3">Orders ₹4,999+</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 font-medium">Other Countries</td>
+                      <td className="py-3">₹1,499</td>
+                      <td className="py-3">₹2,899</td>
+                      <td className="py-3">Orders ₹5,999+</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Shipping Process */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Truck className="h-5 w-5 mr-2" />
+                How We Ship Your Order
+              </CardTitle>
+              <CardDescription>
+                From our warehouse to your doorstep
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold mr-4">
+                    1
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Order Processing</h4>
+                    <p className="text-gray-600">
+                      We carefully pack your items within 1-2 business days. 
+                      You'll receive a confirmation email with tracking details.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold mr-4">
+                    2
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Quality Check</h4>
+                    <p className="text-gray-600">
+                      Each item is inspected for quality and authenticity before packaging 
+                      to ensure you receive perfect products.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold mr-4">
+                    3
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Secure Packaging</h4>
+                    <p className="text-gray-600">
+                      Items are wrapped in protective materials and placed in branded packaging 
+                      to prevent damage during transit.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold mr-4">
+                    4
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Tracking & Delivery</h4>
+                    <p className="text-gray-600">
+                      Track your package in real-time and receive updates until it reaches your doorstep. 
+                      Signature may be required for high-value items.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Important Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-orange-600">
+                  <AlertCircle className="h-5 w-5 mr-2" />
+                  Important Notes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-gray-600 text-sm">
+                  <li>• Delivery times are estimates and may vary during peak seasons</li>
+                  <li>• International orders may be subject to customs delays</li>
+                  <li>• We're not responsible for customs duties or taxes</li>
+                  <li>• Address changes after shipping incur additional charges</li>
+                  <li>• Signature required for orders above ₹5,000</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-green-600">
+                  <Shield className="h-5 w-5 mr-2" />
+                  Shipping Protection
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-gray-600 text-sm">
+                  <li>• All packages are insured against loss or damage</li>
+                  <li>• Real-time tracking provided for all orders</li>
+                  <li>• Secure packaging to prevent damage</li>
+                  <li>• Replacement guarantee for damaged items</li>
+                  <li>• 24/7 customer support for shipping issues</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Contact for Shipping */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Questions About Shipping?</CardTitle>
+              <CardDescription>
+                Our shipping team is here to help with any questions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2">Shipping Support</h4>
+                  <div className="space-y-2 text-gray-600">
+                    <p>📧 shipping@punjabi-heritage.com</p>
+                    <p>📞 +91 98765 43210</p>
+                    <p>🕒 Mon-Sat: 9 AM - 7 PM IST</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Track Your Order</h4>
+                  <div className="space-y-2 text-gray-600">
+                    <p>Use your order number to track shipments</p>
+                    <p>Receive SMS and email updates</p>
+                    <p>Real-time location tracking</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 flex gap-4">
+                <Link href="/contact">
+                  <Button>Contact Support</Button>
+                </Link>
+                <Link href="/orders">
+                  <Button variant="outline">Track My Order</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
