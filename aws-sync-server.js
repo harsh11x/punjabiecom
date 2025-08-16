@@ -7,7 +7,7 @@ const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.AWS_SERVER_PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -48,7 +48,7 @@ const connectMongoDB = async () => {
 };
 
 // File storage paths
-const SYNC_DATA_DIR = path.join(__dirname, 'sync-data');
+const SYNC_DATA_DIR = path.join(__dirname, 'aws-sync-data');
 const PRODUCTS_FILE = path.join(SYNC_DATA_DIR, 'products.json');
 const ORDERS_FILE = path.join(SYNC_DATA_DIR, 'orders.json');
 const SETTINGS_FILE = path.join(SYNC_DATA_DIR, 'settings.json');
@@ -287,8 +287,7 @@ app.get('/api/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     mongodb: mongoConnection ? 'connected' : 'disconnected',
-    uptime: process.uptime(),
-    port: PORT
+    uptime: process.uptime()
   });
 });
 
@@ -357,11 +356,10 @@ const startServer = async () => {
   await connectMongoDB();
   
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Punjabi Heritage Sync Server running on port ${PORT}`);
+    console.log(`🚀 AWS Sync Server running on port ${PORT}`);
     console.log(`📁 Sync data directory: ${SYNC_DATA_DIR}`);
     console.log(`🔐 Authentication required for all sync endpoints`);
     console.log(`🌐 CORS enabled for admin panel and website`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   });
 };
 
