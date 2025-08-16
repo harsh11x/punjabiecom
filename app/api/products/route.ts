@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllProducts } from '@/lib/product-sync'
+import { getAllProducts, getProductsByCategory, searchProducts } from '@/lib/product-manager'
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,38 +17,21 @@ export async function GET(request: NextRequest) {
       category, subcategory, search, page, limit, sortBy, sortOrder, priceRange
     })
     
-    // Get all products using hybrid system
-    let products = await getAllProducts()
-    console.log(`📦 Retrieved ${products.length} products from hybrid system`)
+    // Get products using robust product manager
+    let products = search ? 
+      await searchProducts(search) : 
+      category ? 
+        await getProductsByCategory(category) : 
+        await getAllProducts()
     
-    // Apply filters
+    console.log(`📦 Retrieved ${products.length} products`)
+    
+    // Apply additional filters
     let filteredProducts = products.filter(product => product.isActive !== false)
-    
-    // Category filter
-    if (category && category !== 'all') {
-      filteredProducts = filteredProducts.filter(product => {
-        if (category === 'jutti') {
-          return product.subcategory === 'jutti' || 
-                 (product.category !== 'phulkari' && !product.subcategory)
-        }
-        return product.category === category
-      })
-    }
     
     // Subcategory filter
     if (subcategory && subcategory !== 'all') {
       filteredProducts = filteredProducts.filter(product => product.subcategory === subcategory)
-    }
-    
-    // Search filter
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filteredProducts = filteredProducts.filter(product =>
-        product.name.toLowerCase().includes(searchLower) ||
-        product.punjabiName?.toLowerCase().includes(searchLower) ||
-        product.description.toLowerCase().includes(searchLower) ||
-        product.category.toLowerCase().includes(searchLower)
-      )
     }
     
     // Price range filter
@@ -83,7 +66,6 @@ export async function GET(request: NextRequest) {
         case 'price-high':
           aValue = a.price
           bValue = b.price
-          sortOrder === 'desc' // Force descending for price-high
           break
         case 'rating':
           aValue = a.rating || 0
@@ -158,8 +140,8 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    // Cache for 1 minute on client, 5 minutes on CDN
-    response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=300')
+    // Cache for 30 seconds to ensure real-time updates
+    response.headers.set('Cache-Control', 'public, max-age=30, s-maxage=60')
     
     return response
   } catch (error) {

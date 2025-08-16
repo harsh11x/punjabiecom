@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
-import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/lib/product-sync'
+import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/lib/product-manager'
 import { revalidatePath } from 'next/cache'
 
 // Auth middleware
