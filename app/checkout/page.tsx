@@ -80,7 +80,7 @@ export default function CheckoutPage() {
       // Prepare order data
       const orderData = {
         items: items.map(item => ({
-          productId: item.productId,
+          productId: item.id, // Use id instead of productId
           name: item.name,
           price: item.price,
           quantity: item.quantity,
