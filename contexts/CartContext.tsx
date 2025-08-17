@@ -168,7 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         socket?.emit('get-cart')
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('[CartProvider] Socket connection failed, using localStorage only:', error.message)
       }
