@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
       sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
       colors: Array.isArray(productData.colors) ? productData.colors : [],
       inStock: productData.inStock !== false,
+      isActive: productData.isActive !== false, // Default to true (active)
       stockQuantity: Number(productData.stockQuantity) || 1,
       featured: productData.featured === true,
       tags: Array.isArray(productData.tags) ? productData.tags : []

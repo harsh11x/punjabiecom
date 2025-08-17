@@ -13,6 +13,7 @@ interface SimpleProduct {
   sizes: string[]
   colors: string[]
   inStock: boolean
+  isActive: boolean
   stockQuantity: number
   featured: boolean
   tags: string[]
@@ -47,6 +48,7 @@ export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' |
     sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
     colors: Array.isArray(productData.colors) ? productData.colors : [],
     inStock: productData.inStock !== false,
+    isActive: productData.isActive !== false, // Default to true (active)
     stockQuantity: productData.stockQuantity || 1,
     featured: productData.featured === true,
     tags: Array.isArray(productData.tags) ? productData.tags : [],
@@ -121,6 +123,8 @@ export function getFeaturedProducts(): SimpleProduct[] {
 export function getProductStats() {
   return {
     total: products.length,
+    active: products.filter(p => p.isActive).length,
+    inactive: products.filter(p => !p.isActive).length,
     inStock: products.filter(p => p.inStock).length,
     outOfStock: products.filter(p => !p.inStock).length,
     featured: products.filter(p => p.featured).length,

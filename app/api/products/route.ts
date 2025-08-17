@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     console.log(`📦 Retrieved ${products.length} products`)
     
     // Apply additional filters
-    let filteredProducts = products.filter(product => product.inStock !== false)
+    let filteredProducts = products.filter(product => product.isActive !== false && product.inStock !== false)
     
     // Subcategory filter
     if (subcategory && subcategory !== 'all') {

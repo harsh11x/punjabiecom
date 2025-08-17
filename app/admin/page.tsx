@@ -80,13 +80,13 @@ export default async function AdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Products</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.outOfStock}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
             <p className="text-xs text-muted-foreground">
-              Need restocking
+              Published and visible
             </p>
           </CardContent>
         </Card>
@@ -144,6 +144,9 @@ export default async function AdminDashboard() {
                         <p className="text-sm font-medium">₹{product.price.toLocaleString()}</p>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Badge variant={product.isActive ? "default" : "destructive"}>
+                          {product.isActive ? "Active" : "Inactive"}
+                        </Badge>
                         <Badge variant={product.inStock ? "default" : "secondary"}>
                           {product.inStock ? "In Stock" : "Out of Stock"}
                         </Badge>
