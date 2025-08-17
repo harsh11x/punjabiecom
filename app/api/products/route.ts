@@ -131,7 +131,8 @@ export async function GET(request: NextRequest) {
     // Set cache headers for better performance
     const response = NextResponse.json({
       success: true,
-      data: formattedProducts,
+      products: formattedProducts, // Changed from 'data' to 'products'
+      data: formattedProducts, // Keep both for compatibility
       pagination: {
         page,
         limit,
