@@ -248,14 +248,19 @@ export async function DELETE(request: NextRequest) {
     await deleteProduct(productId)
     console.log('✅ Product deleted from local storage:', productId)
 
-    // Sync to AWS (secondary)
-    const syncResult = await syncToAWS('delete', null, productId)
+    // Try to sync to AWS (optional)
+    try {
+      console.log('🔄 Attempting to sync delete to AWS...')
+      const syncResult = await syncToAWS('delete', null, productId)
+      console.log('📡 AWS delete sync result:', syncResult)
+    } catch (syncError) {
+      console.log('⚠️ AWS delete sync failed, but product deleted locally:', syncError)
+    }
     
     return NextResponse.json({
       success: true,
       message: 'Product deleted successfully',
-      productId,
-      awsSync: syncResult
+      productId
     })
   } catch (error: any) {
     console.error('❌ Error deleting product:', error)

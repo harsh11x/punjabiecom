@@ -55,11 +55,12 @@ function ProductsPageContent() {
   const [totalPages, setTotalPages] = useState(1)
   const [wishlist, setWishlist] = useState<string[]>([])
 
-  const socket = useSocket({
-    onProductUpdate: () => {
-      fetchProducts()
-    }
-  })
+  // Temporarily disable socket to prevent issues
+  // const socket = useSocket({
+  //   onProductUpdate: () => {
+  //     fetchProducts()
+  //   }
+  // })
 
   useEffect(() => {
     fetchProducts()
@@ -70,13 +71,16 @@ function ProductsPageContent() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
+        _t: Date.now().toString(), // Cache busting
         ...(searchTerm && { search: searchTerm }),
         ...(categoryFilter !== 'all' && { category: categoryFilter }),
         ...(sortBy && { sort: sortBy }),
         ...(priceRange !== 'all' && { priceRange })
       })
 
-      const response = await fetch(`/api/products?${params}`)
+      const response = await fetch(`/api/products?${params}`, {
+        cache: 'no-store' // Prevent caching
+      })
       if (response.ok) {
         const data = await response.json()
         setProducts(data.data || [])

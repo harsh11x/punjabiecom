@@ -148,7 +148,8 @@ export function updateProduct(id: string, updates: Partial<Omit<SimpleProduct, '
 }
 
 // Delete product
-export function deleteProduct(id: string): void {
+export async function deleteProduct(id: string): Promise<void> {
+  await initializeFromAWS() // Ensure we have latest data
   const index = products.findIndex(p => p.id === id)
   if (index === -1) {
     throw new Error('Product not found')
@@ -157,6 +158,7 @@ export function deleteProduct(id: string): void {
   const deletedProduct = products[index]
   products.splice(index, 1)
   console.log(`✅ Deleted product from memory: ${deletedProduct.name} (ID: ${id})`)
+  console.log(`📊 Total products remaining: ${products.length}`)
 }
 
 // Get product by ID
