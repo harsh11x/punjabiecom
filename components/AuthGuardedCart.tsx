@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+import { useFirebaseAuth } from '@/components/providers/SimpleAuthProvider'
 import { useCart } from '@/contexts/CartContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { ShoppingCart, Plus } from 'lucide-react'
