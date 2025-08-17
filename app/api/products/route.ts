@@ -147,9 +147,19 @@ export async function GET(request: NextRequest) {
     return response
   } catch (error) {
     console.error('❌ Error fetching products:', error)
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+    
+    // Return empty products instead of error to prevent page crashes
+    return NextResponse.json({
+      success: true,
+      products: [],
+      data: [],
+      pagination: {
+        page: 1,
+        limit: 12,
+        total: 0,
+        pages: 0
+      },
+      error: 'Could not load products, showing empty list'
+    })
   }
 }

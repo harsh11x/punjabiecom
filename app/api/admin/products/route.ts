@@ -121,16 +121,19 @@ export async function POST(request: NextRequest) {
     const newProduct = await addProduct(simpleProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
 
-    // Sync to AWS (secondary)
-    console.log('🔄 Syncing to AWS...')
-    const syncResult = await syncToAWS('add', newProduct)
-    console.log('📡 AWS sync result:', syncResult)
+    // Try to sync to AWS (optional - don't fail if it doesn't work)
+    try {
+      console.log('🔄 Attempting to sync to AWS...')
+      const syncResult = await syncToAWS('add', newProduct)
+      console.log('📡 AWS sync result:', syncResult)
+    } catch (syncError) {
+      console.log('⚠️ AWS sync failed, but product saved locally:', syncError)
+    }
     
     return NextResponse.json({
       success: true,
       product: newProduct,
-      message: 'Product added successfully',
-      awsSync: syncResult
+      message: 'Product added successfully'
     })
   } catch (error: any) {
     console.error('❌ Error adding product:', error)

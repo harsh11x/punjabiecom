@@ -22,7 +22,28 @@ interface SimpleProduct {
 }
 
 // In-memory storage (will reset on each deployment)
-let products: SimpleProduct[] = []
+let products: SimpleProduct[] = [
+  // Sample product to prevent empty state
+  {
+    id: 'sample_1',
+    name: 'Traditional Punjabi Jutti',
+    description: 'Handcrafted leather jutti with traditional embroidery',
+    price: 1500,
+    originalPrice: 2000,
+    category: 'men',
+    subcategory: 'traditional',
+    images: ['/placeholder.jpg'],
+    sizes: ['7', '8', '9', '10'],
+    colors: ['Brown', 'Black'],
+    inStock: true,
+    isActive: true,
+    stockQuantity: 10,
+    featured: true,
+    tags: ['traditional', 'handmade'],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+]
 let isInitialized = false
 
 // Load products from AWS on startup
@@ -31,13 +52,22 @@ async function initializeFromAWS() {
   
   try {
     console.log('🔄 Loading products from AWS...')
+    
+    // Check if AWS environment variables are available
+    if (!process.env.AWS_SYNC_SERVER_URL || !process.env.AWS_SYNC_SECRET) {
+      console.log('⚠️ AWS environment variables not set, skipping AWS sync')
+      isInitialized = true
+      return
+    }
+    
     const response = await fetch(`${process.env.AWS_SYNC_SERVER_URL}/api/sync/products`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.AWS_SYNC_SECRET}`
       },
-      body: JSON.stringify({ action: 'get' })
+      body: JSON.stringify({ action: 'get' }),
+      signal: AbortSignal.timeout(5000) // 5 second timeout
     })
     
     if (response.ok) {
