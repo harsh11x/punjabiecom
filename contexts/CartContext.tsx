@@ -241,7 +241,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Socket event listeners for authenticated users (only if socket is available)
   useEffect(() => {
-    if (socket?.socket?.connected && isAuthenticated) {
+    if (socket?.connected && isAuthenticated) {
       // Listen for cart loaded from server
       socket.on('cart-loaded', (cartData) => {
         const items = cartData.items.map((item: any) => ({
@@ -305,7 +305,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     const cartItem = { ...item, quantity: item.quantity || 1 }
 
-    if (isAuthenticated && socket?.socket?.connected) {
+    if (isAuthenticated && socket?.connected) {
       // Send to server for authenticated users (only if socket is connected)
       socket.emit('add-to-cart', {
         productId: item.productId,
@@ -331,7 +331,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const removeItem = (id: string, size: string, color: string) => {
-    if (isAuthenticated && socket?.socket?.connected) {
+    if (isAuthenticated && socket?.connected) {
       // Send to server for authenticated users (only if socket is connected)
       const [productId] = id.split('-')
       socket.emit('remove-from-cart', { productId, size, color })
@@ -344,7 +344,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateQuantity = (id: string, size: string, color: string, quantity: number) => {
-    if (isAuthenticated && socket?.socket?.connected) {
+    if (isAuthenticated && socket?.connected) {
       // Send to server for authenticated users (only if socket is connected)
       const [productId] = id.split('-')
       socket.emit('update-cart-item', { productId, size, color, quantity })
@@ -356,7 +356,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const clearCart = () => {
-    if (isAuthenticated && socket?.socket?.connected) {
+    if (isAuthenticated && socket?.connected) {
       // Send to server for authenticated users (only if socket is connected)
       socket.emit('clear-cart')
       dispatch({ type: 'SET_LOADING', payload: true })
