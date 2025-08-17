@@ -214,11 +214,6 @@ export async function PUT(request: NextRequest) {
       product: updatedProduct,
       message: 'Product updated successfully'
     })
-      success: true,
-      product: updatedProduct,
-      message: 'Product updated successfully',
-      awsSync: syncResult
-    })
   } catch (error: any) {
     console.error('❌ Error updating product:', error)
     return NextResponse.json(
