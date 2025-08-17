@@ -283,7 +283,6 @@ export default function ProductsPage() {
                     createdAt: product.createdAt,
                     updatedAt: product.updatedAt,
                     subcategory: product.subcategory,
-                    isActive: product.isActive,
                     tags: product.tags
                   }}
                   className={viewMode === 'list' ? 'flex flex-row' : ''}
