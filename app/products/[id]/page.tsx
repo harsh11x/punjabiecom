@@ -70,23 +70,26 @@ export default function ProductDetailPage() {
 
   const fetchProduct = async (id: string) => {
     try {
-      const response = await fetch(`/api/products/local/${id}`)
+      console.log(`🔍 Fetching product with ID: ${id}`)
+      const response = await fetch(`/api/products/${id}`)
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ Product data received:', data.data?.name)
         setProduct(data.data)
         
         // Set default selections
-        if (data.data.sizes.length > 0) {
+        if (data.data.sizes && data.data.sizes.length > 0) {
           setSelectedSize(data.data.sizes[0])
         }
-        if (data.data.colors.length > 0) {
+        if (data.data.colors && data.data.colors.length > 0) {
           setSelectedColor(data.data.colors[0])
         }
       } else {
+        console.error('❌ Product not found, response:', response.status)
         toast.error('Product not found')
       }
     } catch (error) {
-      console.error('Error fetching product:', error)
+      console.error('❌ Error fetching product:', error)
       toast.error('Error loading product')
     } finally {
       setLoading(false)
