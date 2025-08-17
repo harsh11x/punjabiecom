@@ -71,7 +71,7 @@ export function AuthGuardedCart({
     const finalColor = selectedColor || 'Default'
     
     const cartItem = {
-      id: `${(product as any).id || (product as any)._id}-${finalSize}-${finalColor}`,
+      id: (product as any).id || (product as any)._id || `product-${Date.now()}`,
       name: (product as any).name,
       price: (product as any).price,
       image: (product as any).images?.[0] || '/placeholder.jpg',
@@ -80,13 +80,20 @@ export function AuthGuardedCart({
       quantity
     }
 
-    addItem(cartItem)
-
-    if (variant === 'add-to-cart') {
-      toast.success('Added to cart successfully!')
-    } else {
-      // For buy-now, redirect to checkout
-      window.location.href = '/checkout'
+    console.log('🛒 Adding item to cart:', cartItem)
+    
+    try {
+      addItem(cartItem)
+      
+      if (variant === 'add-to-cart') {
+        toast.success('Added to cart successfully!')
+      } else {
+        // For buy-now, redirect to checkout
+        window.location.href = '/checkout'
+      }
+    } catch (error) {
+      console.error('❌ Error adding to cart:', error)
+      toast.error('Failed to add to cart')
     }
   }
 

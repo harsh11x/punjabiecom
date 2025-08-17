@@ -42,90 +42,103 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load cart when user changes
+  // Load cart when component mounts or user changes
   useEffect(() => {
     loadCart()
-  }, [user, isAuthenticated])
+  }, [user?.uid]) // Only depend on user ID to avoid infinite loops
 
   const loadCart = async () => {
     try {
       setIsLoading(true)
+      console.log('🛒 Loading cart...')
       
-      if (isAuthenticated && user) {
-        // Load cart from server for authenticated users
-        console.log('Loading cart for authenticated user:', user.email)
-        const response = await fetch('/api/cart', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': user.uid,
-            'x-user-email': user.email || '',
-          },
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          setItems(data.items || [])
-          console.log('Cart loaded from server:', data.items?.length || 0, 'items')
-        } else {
-          console.log('No server cart found, using localStorage')
-          loadFromLocalStorage()
+      // Always try localStorage first
+      const savedCart = localStorage.getItem('punjabi-heritage-cart')
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart)
+          setItems(parsedCart)
+          console.log('✅ Cart loaded from localStorage:', parsedCart.length, 'items')
+        } catch (parseError) {
+          console.error('Error parsing cart from localStorage:', parseError)
+          setItems([])
         }
       } else {
-        // Load from localStorage for guest users
-        console.log('Loading cart from localStorage for guest user')
-        loadFromLocalStorage()
+        console.log('📭 No cart found in localStorage')
+        setItems([])
+      }
+      
+      // If user is authenticated, try to sync with server (but don't block)
+      if (isAuthenticated && user?.uid) {
+        try {
+          console.log('🔄 Syncing cart with server for user:', user.email)
+          const response = await fetch('/api/cart', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user.uid,
+              'x-user-email': user.email || '',
+            },
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            if (data.items && data.items.length > 0) {
+              setItems(data.items)
+              // Also update localStorage
+              localStorage.setItem('punjabi-heritage-cart', JSON.stringify(data.items))
+              console.log('✅ Cart synced from server:', data.items.length, 'items')
+            }
+          } else {
+            console.log('⚠️ Server cart not available, using localStorage')
+          }
+        } catch (serverError) {
+          console.log('⚠️ Server sync failed, using localStorage:', serverError)
+          // Continue with localStorage cart - don't show error to user
+        }
       }
     } catch (error) {
-      console.error('Error loading cart:', error)
-      loadFromLocalStorage()
+      console.error('❌ Error loading cart:', error)
+      // Fallback to empty cart
+      setItems([])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const loadFromLocalStorage = () => {
-    try {
-      const savedCart = localStorage.getItem('punjabi-heritage-cart')
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart)
-        setItems(parsedCart)
-        console.log('Cart loaded from localStorage:', parsedCart.length, 'items')
-      } else {
-        setItems([])
-      }
-    } catch (error) {
-      console.error('Error loading cart from localStorage:', error)
-      setItems([])
-    }
-  }
-
   const saveCart = async (newItems: CartItem[]) => {
     try {
-      // Always save to localStorage
+      // Always save to localStorage immediately
       localStorage.setItem('punjabi-heritage-cart', JSON.stringify(newItems))
+      console.log('✅ Cart saved to localStorage')
       
-      // Also save to server if user is authenticated
-      if (isAuthenticated && user) {
-        console.log('Saving cart to server for user:', user.email)
-        const response = await fetch('/api/cart', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': user.uid,
-            'x-user-email': user.email || '',
-          },
-          body: JSON.stringify({ items: newItems }),
-        })
-        
-        if (response.ok) {
-          console.log('Cart saved to server successfully')
-        } else {
-          console.log('Failed to save cart to server, but localStorage updated')
+      // Try to save to server if user is authenticated (but don't block)
+      if (isAuthenticated && user?.uid) {
+        try {
+          const response = await fetch('/api/cart', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user.uid,
+              'x-user-email': user.email || '',
+            },
+            body: JSON.stringify({ items: newItems }),
+          })
+          
+          if (response.ok) {
+            console.log('✅ Cart synced to server')
+          } else {
+            console.log('⚠️ Server sync failed, but localStorage updated')
+          }
+        } catch (serverError) {
+          console.log('⚠️ Server sync error, but localStorage updated:', serverError)
+          // Don't show error to user - localStorage is working
         }
       }
     } catch (error) {
-      console.error('Error saving cart:', error)
+      console.error('❌ Error saving cart:', error)
+      // Show error only if localStorage fails
+      toast.error('Failed to save cart')
     }
   }
 
@@ -147,20 +160,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ...newItems[existingItemIndex],
           quantity: newItems[existingItemIndex].quantity + quantity
         }
+        toast.success(`Updated ${item.name} quantity in cart`)
       } else {
         // Add new item
         newItems = [...prevItems, { ...item, quantity }]
+        toast.success(`${item.name} added to cart`)
       }
       
       saveCart(newItems)
-      toast.success(`${item.name} added to cart`)
       return newItems
     })
   }
 
   const removeItem = (id: string) => {
     setItems(prevItems => {
-      const newItems = prevItems.filter(item => item.id !== id)
+      const newItems = prevItems.filter(item => {
+        const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`
+        return itemKey !== id
+      })
       saveCart(newItems)
       toast.success('Item removed from cart')
       return newItems
@@ -174,35 +191,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     
     setItems(prevItems => {
-      const newItems = prevItems.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
+      const newItems = prevItems.map(item => {
+        const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`
+        return itemKey === id ? { ...item, quantity } : item
+      })
       saveCart(newItems)
       return newItems
     })
   }
 
   const clearCart = async () => {
-    setItems([])
-    localStorage.removeItem('punjabi-heritage-cart')
-    
-    if (isAuthenticated && user) {
-      try {
-        await fetch('/api/cart', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': user.uid,
-            'x-user-email': user.email || '',
-          },
-        })
-        console.log('Cart cleared from server')
-      } catch (error) {
-        console.error('Error clearing cart from server:', error)
+    try {
+      setItems([])
+      localStorage.removeItem('punjabi-heritage-cart')
+      
+      // Try to clear server cart if user is authenticated
+      if (isAuthenticated && user?.uid) {
+        try {
+          await fetch('/api/cart', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user.uid,
+              'x-user-email': user.email || '',
+            },
+          })
+          console.log('✅ Cart cleared from server')
+        } catch (serverError) {
+          console.log('⚠️ Server clear failed, but localStorage cleared:', serverError)
+        }
       }
+      
+      toast.success('Cart cleared')
+    } catch (error) {
+      console.error('❌ Error clearing cart:', error)
+      toast.error('Failed to clear cart')
     }
-    
-    toast.success('Cart cleared')
   }
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
