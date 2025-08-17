@@ -143,7 +143,7 @@ export default function CheckoutPage() {
           
           try {
             // Verify payment
-            const verifyResponse = await fetch('/api/payment/verify-payment', {
+            const verifyResponse = await fetch('/api/payment/verify', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

@@ -1,114 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { connectDB } from '@/lib/mongodb'
-import Order from '@/models/Order'
+import fs from 'fs'
+import path from 'path'
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-
+    console.log('🔥 Verifying REAL Razorpay payment...')
+    
     const body = await request.json()
     const { 
       razorpay_order_id, 
       razorpay_payment_id, 
       razorpay_signature,
-      orderId,
-      paymentId,
-      signature,
-      paymentMethod
+      orderId 
     } = body
 
-    // Handle both parameter formats for backward compatibility
-    const orderIdToUse = orderId
-    const paymentIdToUse = razorpay_payment_id || paymentId
-    const signatureToUse = razorpay_signature || signature
-    const orderIdFromRazorpay = razorpay_order_id
-
-    console.log('Payment verification request:', {
-      orderIdToUse,
-      paymentIdToUse,
-      signatureToUse,
-      orderIdFromRazorpay,
-      paymentMethod
+    console.log('Payment verification data:', {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId
     })
 
-    // Validate required fields
-    if (!orderIdFromRazorpay || !paymentIdToUse || !signatureToUse || !orderIdToUse) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required payment parameters' },
-        { status: 400 }
-      )
+    // Verify Razorpay signature
+    const key_secret = process.env.RAZORPAY_KEY_SECRET
+    if (!key_secret) {
+      throw new Error('Razorpay key secret not configured')
     }
 
-    // Verify signature
-    const sign = orderIdFromRazorpay + '|' + paymentIdToUse
-    const expectedSign = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-      .update(sign.toString())
+    const generated_signature = crypto
+      .createHmac('sha256', key_secret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex')
 
     console.log('Signature verification:', {
-      received: signatureToUse,
-      expected: expectedSign,
-      isValid: signatureToUse === expectedSign
+      generated: generated_signature,
+      received: razorpay_signature,
+      match: generated_signature === razorpay_signature
     })
 
-    if (signatureToUse !== expectedSign) {
-      // Update order as failed
-      await Order.findByIdAndUpdate(orderIdToUse, {
-        paymentStatus: 'failed',
-        status: 'cancelled'
-      })
-
+    if (generated_signature !== razorpay_signature) {
+      console.error('❌ Payment signature verification failed')
       return NextResponse.json(
-        { success: false, error: 'Invalid payment signature' },
+        { success: false, error: 'Payment verification failed' },
         { status: 400 }
       )
     }
 
-    // Payment is verified, update order
-    const order = await Order.findByIdAndUpdate(
-      orderIdToUse,
-      {
-        paymentStatus: 'paid',
-        status: 'confirmed',
-        razorpayPaymentId: paymentIdToUse,
-        razorpaySignature: signatureToUse,
-        paymentId: paymentIdToUse
-      },
-      { new: true }
-    ).lean()
-
-    if (!order) {
+    // Update order status
+    const ordersDir = path.join(process.cwd(), 'data', 'orders')
+    const orderFilePath = path.join(ordersDir, `${orderId}.json`)
+    
+    if (!fs.existsSync(orderFilePath)) {
+      console.error('❌ Order not found:', orderId)
       return NextResponse.json(
         { success: false, error: 'Order not found' },
         { status: 404 }
       )
     }
 
-    console.log('Payment verified successfully for order:', orderIdToUse)
+    const orderData = JSON.parse(fs.readFileSync(orderFilePath, 'utf8'))
+    
+    // Update order with payment details
+    const updatedOrder = {
+      ...orderData,
+      paymentStatus: 'completed',
+      status: 'confirmed',
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+      paidAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
 
-    // TODO: Send confirmation email to customer
-    // TODO: Update inventory
-    // TODO: Create analytics entry
+    fs.writeFileSync(orderFilePath, JSON.stringify(updatedOrder, null, 2))
+    console.log('✅ Order updated with payment details:', orderId)
 
-    const orderData = order as any
+    // Send success response
     return NextResponse.json({
       success: true,
       message: 'Payment verified successfully',
-      data: {
-        orderId: orderData._id?.toString() || orderData.id?.toString() || '',
-        orderNumber: orderData.orderNumber || '',
-        status: orderData.status || 'confirmed',
-        paymentStatus: orderData.paymentStatus || 'paid',
-        total: orderData.total || 0
+      order: {
+        id: orderId,
+        orderNumber: updatedOrder.orderNumber,
+        status: updatedOrder.status,
+        paymentStatus: updatedOrder.paymentStatus,
+        total: updatedOrder.total
       }
     })
 
-  } catch (error) {
-    console.error('Error verifying payment:', error)
+  } catch (error: any) {
+    console.error('❌ Error verifying payment:', error)
+    
     return NextResponse.json(
-      { success: false, error: 'Failed to verify payment' },
+      { 
+        success: false, 
+        error: 'Payment verification failed',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }
