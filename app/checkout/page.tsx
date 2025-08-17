@@ -94,7 +94,7 @@ export default function CheckoutPage() {
           address: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode,
+          zipCode: formData.pincode, // Use pincode for zipCode
           phone: formData.phone
         },
         billingAddress: {
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
           address: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode,
+          zipCode: formData.pincode, // Use pincode for zipCode
           phone: formData.phone
         },
         customerEmail: formData.email,
