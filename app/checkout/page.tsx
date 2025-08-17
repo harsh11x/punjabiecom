@@ -107,7 +107,7 @@ export default function CheckoutPage() {
           phone: formData.phone
         },
         customerEmail: formData.email,
-        subtotal: total,
+        subtotal: totalPrice,
         shippingCost: 0,
         tax: 0
       }
