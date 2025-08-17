@@ -1,20 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/firebase'
-import { getAuth } from 'firebase-admin/auth'
 import fs from 'fs'
 import path from 'path'
-
-// Initialize Firebase Admin if not already done
-let adminAuth: any = null
-try {
-  const admin = require('firebase-admin')
-  if (!admin.apps.length) {
-    // For development, we'll use a simple file-based cart storage
-    console.log('Using file-based cart storage for development')
-  }
-} catch (error) {
-  console.log('Firebase Admin not available, using file-based storage')
-}
 
 const CART_DIR = path.join(process.cwd(), 'data', 'carts')
 
