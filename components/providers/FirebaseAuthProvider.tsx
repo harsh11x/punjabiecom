@@ -1,18 +1,29 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut as firebaseSignOut,
+  signInWithPopup,
+  onAuthStateChanged,
+  updateProfile,
+  User
+} from 'firebase/auth'
+import { auth, googleProvider } from '@/lib/firebase'
+import { toast } from 'sonner'
 
 // Firebase Auth Context
 interface FirebaseAuthContextType {
-  user: any | null
+  user: User | null
   loading: boolean
   isAuthenticated: boolean
   error: string | null
   signIn: (email: string, password: string) => Promise<any>
-  signUp: (email: string, password: string, name?: string, phone?: string) => Promise<any>
+  signUp: (email: string, password: string, name?: string) => Promise<any>
   signOut: () => Promise<void>
   login: (email: string, password: string) => Promise<any>
-  signup: (email: string, password: string, name?: string, phone?: string) => Promise<any>
+  signup: (email: string, password: string, name?: string) => Promise<any>
   loginWithGoogle: () => Promise<any>
   updateUserProfile: (data: any) => Promise<any>
   clearError: () => void
@@ -29,165 +40,115 @@ export function useFirebaseAuth() {
 }
 
 export function FirebaseAuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/me', {
-          method: 'GET',
-          credentials: 'include', // Include cookies
-        })
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user?.email || 'No user')
+      setUser(user)
+      setLoading(false)
+    })
 
-        if (response.ok) {
-          const data = await response.json()
-          const user = {
-            uid: data.user.id,
-            email: data.user.email,
-            displayName: data.user.name,
-            phone: data.user.phone,
-            role: data.user.role
-          }
-          setUser(user)
-        }
-      } catch (error) {
-        console.log('No existing session found')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkAuth()
+    return () => unsubscribe()
   }, [])
 
   const signIn = async (email: string, password: string) => {
     setError(null)
+    setLoading(true)
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
-      }
-
-      const user = {
-        uid: data.user.id,
-        email: data.user.email,
-        displayName: data.user.name,
-        phone: data.user.phone,
-        role: data.user.role
-      }
-      
-      setUser(user)
-      return { user }
+      console.log('Signing in with email:', email)
+      const result = await signInWithEmailAndPassword(auth, email, password)
+      console.log('Sign in successful:', result.user.email)
+      toast.success('Welcome back!')
+      return { user: result.user }
     } catch (err: any) {
-      setError(err.message)
-      throw err
+      console.error('Sign in error:', err)
+      const errorMessage = getFirebaseErrorMessage(err.code)
+      setError(errorMessage)
+      toast.error(errorMessage)
+      throw new Error(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const signUp = async (email: string, password: string, name?: string, phone?: string) => {
+  const signUp = async (email: string, password: string, name?: string) => {
     setError(null)
+    setLoading(true)
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          name: name || email.split('@')[0], 
-          email, 
-          password, 
-          phone 
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Signup failed')
-      }
-
-      const user = {
-        uid: data.user.id,
-        email: data.user.email,
-        displayName: data.user.name,
-        phone: data.user.phone,
-        role: data.user.role
+      console.log('Creating account for:', email)
+      const result = await createUserWithEmailAndPassword(auth, email, password)
+      
+      // Update profile with display name
+      if (name && result.user) {
+        await updateProfile(result.user, {
+          displayName: name
+        })
       }
       
-      setUser(user)
-      return { user }
+      console.log('Account created successfully:', result.user.email)
+      toast.success('Account created successfully!')
+      return { user: result.user }
     } catch (err: any) {
-      setError(err.message)
-      throw err
+      console.error('Sign up error:', err)
+      const errorMessage = getFirebaseErrorMessage(err.code)
+      setError(errorMessage)
+      toast.error(errorMessage)
+      throw new Error(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
   const signOut = async () => {
     setError(null)
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      // Clear user regardless of API response
-      setUser(null)
-      
-      if (!response.ok) {
-        console.warn('Logout API call failed, but user was logged out locally')
-      }
+      await firebaseSignOut(auth)
+      console.log('User signed out')
+      toast.success('Signed out successfully')
     } catch (err: any) {
-      // Still clear user locally even if API fails
-      setUser(null)
-      console.warn('Logout error:', err.message)
+      console.error('Sign out error:', err)
+      setError('Failed to sign out')
+      toast.error('Failed to sign out')
+      throw err
     }
   }
 
   const loginWithGoogle = async () => {
     setError(null)
+    setLoading(true)
     try {
-      // Mock Google login - create a mock user
-      console.log('Google login - creating mock user')
-      const mockUser = { 
-        uid: 'google-' + Date.now(), 
-        email: 'user@gmail.com', 
-        displayName: 'Google User',
-        phone: '',
-        role: 'user'
-      }
-      setUser(mockUser)
-      console.log('Mock Google user created:', mockUser)
-      return { user: mockUser }
+      console.log('Signing in with Google...')
+      const result = await signInWithPopup(auth, googleProvider)
+      console.log('Google sign in successful:', result.user.email)
+      toast.success('Welcome!')
+      return { user: result.user }
     } catch (err: any) {
-      console.error('Google login error:', err)
-      setError(err.message)
-      throw err
+      console.error('Google sign in error:', err)
+      const errorMessage = getFirebaseErrorMessage(err.code)
+      setError(errorMessage)
+      toast.error(errorMessage)
+      throw new Error(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
   const updateUserProfile = async (data: any) => {
     setError(null)
     try {
-      // Mock profile update
-      console.log('Update profile:', data)
-      setUser((prev: any) => ({ ...prev, ...data }))
+      if (user) {
+        await updateProfile(user, data)
+        console.log('Profile updated successfully')
+        toast.success('Profile updated!')
+      }
       return { success: true }
     } catch (err: any) {
-      setError(err.message)
+      console.error('Profile update error:', err)
+      setError('Failed to update profile')
+      toast.error('Failed to update profile')
       throw err
     }
   }
@@ -216,4 +177,28 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       {children}
     </FirebaseAuthContext.Provider>
   )
+}
+
+// Helper function to get user-friendly error messages
+function getFirebaseErrorMessage(errorCode: string): string {
+  switch (errorCode) {
+    case 'auth/user-not-found':
+      return 'No account found with this email address'
+    case 'auth/wrong-password':
+      return 'Incorrect password'
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists'
+    case 'auth/weak-password':
+      return 'Password should be at least 6 characters'
+    case 'auth/invalid-email':
+      return 'Invalid email address'
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please try again later'
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in popup was closed'
+    case 'auth/cancelled-popup-request':
+      return 'Sign-in was cancelled'
+    default:
+      return 'An error occurred. Please try again'
+  }
 }
