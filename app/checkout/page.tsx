@@ -12,13 +12,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
-// Razorpay types
-declare global {
-  interface Window {
-    Razorpay: any
-  }
-}
-
 export default function CheckoutPage() {
   const { items, totalPrice, totalItems, clearCart } = useCart()
   const { user } = useFirebaseAuth()
@@ -198,11 +191,11 @@ export default function CheckoutPage() {
 
       // Load Razorpay script if not already loaded
       if (typeof window !== 'undefined') {
-        if (!window.Razorpay) {
+        if (!(window as any).Razorpay) {
           const script = document.createElement('script')
           script.src = 'https://checkout.razorpay.com/v1/checkout.js'
           script.onload = () => {
-            const rzp = new window.Razorpay(options)
+            const rzp = new (window as any).Razorpay(options)
             rzp.open()
           }
           script.onerror = () => {
@@ -211,7 +204,7 @@ export default function CheckoutPage() {
           }
           document.body.appendChild(script)
         } else {
-          const rzp = new window.Razorpay(options)
+          const rzp = new (window as any).Razorpay(options)
           rzp.open()
         }
       }
