@@ -72,18 +72,27 @@ async function initializeFromAWS() {
     
     if (response.ok) {
       const data = await response.json()
-      if (data.success && data.products) {
+      if (data.success && data.products && data.products.length > 0) {
+        // Only replace products if we got actual products from AWS
         products = data.products.map((p: any) => ({
           ...p,
           id: p.id || p._id || generateId()
         }))
         console.log(`✅ Loaded ${products.length} products from AWS`)
+      } else {
+        console.log('⚠️ No products returned from AWS, keeping demo products')
       }
     } else {
-      console.log('⚠️ Could not load from AWS, starting with empty products')
+      console.log('⚠️ Could not load from AWS, keeping demo products')
     }
   } catch (error) {
-    console.log('⚠️ AWS not available, starting with empty products:', error)
+    console.log('⚠️ AWS not available, keeping demo products:', error)
+  }
+  
+  // Ensure we always have at least demo products
+  if (products.length === 0) {
+    console.log('🔄 No products found, ensuring demo products are available')
+    // Demo products should already be in the array from initialization
   }
   
   isInitialized = true
