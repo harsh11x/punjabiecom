@@ -101,12 +101,16 @@ export async function POST(request: NextRequest) {
       name: String(productData.name),
       description: String(productData.description || ''),
       price: Number(productData.price),
+      originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
       category: String(productData.category || 'general'),
+      subcategory: productData.subcategory ? String(productData.subcategory) : undefined,
       images: Array.isArray(productData.images) ? productData.images : [],
-      inStock: true,
-      stockQuantity: 1,
-      featured: false,
-      tags: []
+      sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
+      colors: Array.isArray(productData.colors) ? productData.colors : [],
+      inStock: productData.inStock !== false,
+      stockQuantity: Number(productData.stockQuantity) || 1,
+      featured: productData.featured === true,
+      tags: Array.isArray(productData.tags) ? productData.tags : []
     }
 
     console.log('Simple product data:', simpleProduct)

@@ -6,8 +6,12 @@ interface SimpleProduct {
   name: string
   description: string
   price: number
+  originalPrice?: number
   category: string
+  subcategory?: string
   images: string[]
+  sizes: string[]
+  colors: string[]
   inStock: boolean
   stockQuantity: number
   featured: boolean
@@ -33,7 +37,19 @@ export function getAllProducts(): SimpleProduct[] {
 // Add product
 export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' | 'updatedAt'>): SimpleProduct {
   const newProduct: SimpleProduct = {
-    ...productData,
+    name: productData.name || '',
+    description: productData.description || '',
+    price: productData.price || 0,
+    originalPrice: productData.originalPrice,
+    category: productData.category || 'general',
+    subcategory: productData.subcategory,
+    images: Array.isArray(productData.images) ? productData.images : [],
+    sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
+    colors: Array.isArray(productData.colors) ? productData.colors : [],
+    inStock: productData.inStock !== false,
+    stockQuantity: productData.stockQuantity || 1,
+    featured: productData.featured === true,
+    tags: Array.isArray(productData.tags) ? productData.tags : [],
     id: generateId(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
