@@ -53,7 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (token) {
         socket.emit('authenticate', { token })
       }
-      }
     }
   }, [socket, user])
 
