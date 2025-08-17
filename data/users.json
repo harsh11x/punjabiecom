@@ -11,6 +11,16 @@
       "isVerified": true,
       "createdAt": "2025-08-13T14:47:29.475Z",
       "updatedAt": "2025-08-13T14:47:29.475Z"
+    },
+    {
+      "id": "u_7lwrzugi9q4meg1klm2",
+      "name": "Test User",
+      "email": "test@test.com",
+      "passwordHash": "$2a$12$WkAa3rkFWzmgbm.0SzMzEe.Fni1s4bozDHcyu95DhoBYZf5Idk2mi",
+      "role": "user",
+      "isVerified": false,
+      "createdAt": "2025-08-17T18:51:02.378Z",
+      "updatedAt": "2025-08-17T18:51:02.378Z"
     }
   ]
 }

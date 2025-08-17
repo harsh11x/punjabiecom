@@ -44,9 +44,12 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
     }
 
     try {
-      await signup(formData.email, formData.password, formData.name)
+      console.log('Attempting signup with:', formData.email, formData.name)
+      const result = await signup(formData.email, formData.password, formData.name)
+      console.log('Signup successful:', result)
       onSuccess?.()
     } catch (error: any) {
+      console.error('Signup error:', error)
       setError(error.message || 'Signup failed')
     } finally {
       setLoading(false)

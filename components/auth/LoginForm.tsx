@@ -29,12 +29,28 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
     setError('')
 
     try {
-      await login(formData.email, formData.password)
+      console.log('Attempting login with:', formData.email)
+      const result = await login(formData.email, formData.password)
+      console.log('Login successful:', result)
       onSuccess?.()
     } catch (error: any) {
+      console.error('Login error:', error)
       setError(error.message || 'Login failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      setError('')
+      console.log('Attempting Google login...')
+      const result = await loginWithGoogle()
+      console.log('Google login successful:', result)
+      onSuccess?.()
+    } catch (error: any) {
+      console.error('Google login error:', error)
+      setError(error.message || 'Google login failed')
     }
   }
 
@@ -105,14 +121,7 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
             type="button"
             variant="outline"
             className="w-full"
-            onClick={async () => {
-              try {
-                await loginWithGoogle()
-                onSuccess?.()
-              } catch (error: any) {
-                setError(error.message || 'Google login failed')
-              }
-            }}
+            onClick={handleGoogleLogin}
             disabled={loading}
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
