@@ -66,7 +66,10 @@ export function Header() {
                   ਜੁੱਤੀ • Jutti
                 </OptimizedLink>
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <OptimizedLink href="/men" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-t-lg">
+                  <OptimizedLink href="/products" className="block px-4 py-3 text-red-800 hover:bg-amber-50 rounded-t-lg font-semibold border-b border-amber-100">
+                    ਸਾਰੇ ਉਤਪਾਦ • All Products
+                  </OptimizedLink>
+                  <OptimizedLink href="/men" className="block px-4 py-3 text-red-800 hover:bg-amber-50">
                     ਮਰਦਾਂ ਲਈ • Men's Jutti
                   </OptimizedLink>
                   <OptimizedLink href="/women" className="block px-4 py-3 text-red-800 hover:bg-amber-50">
@@ -170,6 +173,13 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ਘਰ • Home
+                </OptimizedLink>
+                <OptimizedLink
+                  href="/products"
+                  className="text-amber-100 hover:text-amber-300 font-semibold py-2 transition-colors border-b border-amber-600 pb-2 mb-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  ਸਾਰੇ ਉਤਪਾਦ • All Products
                 </OptimizedLink>
                 <OptimizedLink
                   href="/jutti"
