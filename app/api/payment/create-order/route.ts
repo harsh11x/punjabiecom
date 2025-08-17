@@ -101,8 +101,11 @@ export async function POST(request: NextRequest) {
     console.log('✅ Razorpay order created:', razorpayOrder.id)
 
     // Update order with Razorpay order ID
-    savedOrder.razorpayOrderId = razorpayOrder.id
-    fs.writeFileSync(orderFilePath, JSON.stringify(savedOrder, null, 2))
+    const updatedOrder = {
+      ...savedOrder,
+      razorpayOrderId: razorpayOrder.id
+    }
+    fs.writeFileSync(orderFilePath, JSON.stringify(updatedOrder, null, 2))
 
     // Return response for frontend
     const responseData = {
