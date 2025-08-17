@@ -1,26 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAdminAuth } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await verifyAdminAuth(request)
+    // For now, we'll use a simple token-based auth
+    // In production, you'd want proper JWT verification
     
-    if (authResult.success) {
-      return NextResponse.json({
-        success: true,
-        user: authResult.user
-      })
-    } else {
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+    
+    // Simple admin token check (replace with your actual admin token)
+    const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'admin-secret-token-2024'
+    
+    if (!token || token !== ADMIN_TOKEN) {
       return NextResponse.json(
-        { success: false, error: authResult.error },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       )
     }
-  } catch (error) {
-    console.error('Admin auth verification error:', error)
+    
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: 'admin',
+        email: 'admin@punjabi-heritage.com',
+        role: 'admin',
+        name: 'Admin User'
+      }
+    })
+  } catch (error: any) {
+    console.error('❌ Admin auth verify error:', error)
     return NextResponse.json(
-      { success: false, error: 'Authentication verification failed' },
+      { success: false, error: 'Authentication failed' },
       { status: 500 }
     )
   }
+}
+
+export async function POST(request: NextRequest) {
+  return GET(request) // Same logic for POST requests
 }

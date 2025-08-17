@@ -30,7 +30,13 @@ async function ensureDataDir() {
   try {
     await fs.access(DATA_DIR)
   } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true })
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true })
+      console.log('✅ Created data directory:', DATA_DIR)
+    } catch (error) {
+      console.error('❌ Failed to create data directory:', error)
+      throw error
+    }
   }
 }
 
@@ -39,9 +45,14 @@ async function initializeProductsFile() {
   try {
     await fs.access(PRODUCTS_FILE)
   } catch {
-    await ensureDataDir()
-    await fs.writeFile(PRODUCTS_FILE, JSON.stringify([], null, 2))
-    console.log('✅ Initialized empty products.json file')
+    try {
+      await ensureDataDir()
+      await fs.writeFile(PRODUCTS_FILE, JSON.stringify([], null, 2))
+      console.log('✅ Initialized empty products.json file')
+    } catch (error) {
+      console.error('❌ Failed to initialize products file:', error)
+      throw error
+    }
   }
 }
 
