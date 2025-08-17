@@ -190,7 +190,16 @@ export default function MenPage() {
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm"
             />
             <AuthGuardedCart
-              product={{...product, _id: product.id}}
+              product={{
+                _id: product.id,
+                name: product.name,
+                punjabiName: product.punjabiName || product.name,
+                price: product.price,
+                images: product.images,
+                stock: product.stock || product.stockQuantity || 0,
+                sizes: product.sizes,
+                colors: product.colors
+              }}
               variant="buy-now"
               className="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-black text-white text-sm"
             />
