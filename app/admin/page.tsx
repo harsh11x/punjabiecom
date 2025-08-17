@@ -1,4 +1,4 @@
-import { getAllProducts, getProductStats } from '@/lib/product-manager'
+import { getAllProducts, getProductStats } from '@/lib/simple-product-storage'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

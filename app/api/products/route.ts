@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllProducts, getProductsByCategory, searchProducts } from '@/lib/product-manager'
+import { getAllProducts, getProductsByCategory, searchProducts } from '@/lib/simple-product-storage'
 
 export async function GET(request: NextRequest) {
   try {
