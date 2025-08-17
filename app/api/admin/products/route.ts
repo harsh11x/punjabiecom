@@ -85,52 +85,52 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!productData.name || !productData.price) {
+      console.log('❌ Validation failed - missing name or price')
       return NextResponse.json(
         { success: false, error: 'Name and price are required' },
         { status: 400 }
       )
     }
 
-    // Transform the product data to match our Product interface
-    const transformedProduct = {
-      name: productData.name,
-      description: productData.description || '',
+    // Simple product object for testing
+    const simpleProduct = {
+      name: String(productData.name),
+      description: String(productData.description || ''),
       price: Number(productData.price),
-      originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
-      category: productData.category || 'general',
-      subcategory: productData.subcategory,
-      images: productData.images || [],
-      sizes: productData.sizes || [],
-      colors: productData.colors || [],
-      inStock: productData.inStock !== false,
-      stockQuantity: Number(productData.stockQuantity) || 1,
-      featured: productData.featured === true,
-      tags: productData.tags || []
+      category: String(productData.category || 'general'),
+      images: Array.isArray(productData.images) ? productData.images : [],
+      inStock: true,
+      stockQuantity: 1,
+      featured: false,
+      tags: []
     }
 
-    console.log('Transformed product data:', transformedProduct)
+    console.log('Simple product data:', simpleProduct)
 
-    // Add product to local storage (primary)
-    const newProduct = await addProduct(transformedProduct)
+    // Try to add product to local storage
+    console.log('📁 Attempting to add product to local storage...')
+    const newProduct = await addProduct(simpleProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
 
-    // Sync to AWS (secondary) - don't fail if this fails
-    const syncResult = await syncToAWS('add', newProduct)
+    // Skip AWS sync for now to isolate the issue
+    console.log('⏭️ Skipping AWS sync for debugging')
     
     return NextResponse.json({
       success: true,
       product: newProduct,
-      message: 'Product added successfully',
-      awsSync: syncResult
+      message: 'Product added successfully (AWS sync skipped for debugging)'
     })
   } catch (error: any) {
     console.error('❌ Error adding product:', error)
+    console.error('❌ Error message:', error.message)
     console.error('❌ Error stack:', error.stack)
+    
     return NextResponse.json(
       { 
         success: false, 
         error: 'Failed to add product',
-        details: error.message 
+        details: error.message,
+        stack: error.stack
       },
       { status: 500 }
     )
