@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+import { useFirebaseAuth } from '@/components/providers/SimpleAuthProvider'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
