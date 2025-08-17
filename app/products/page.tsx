@@ -278,7 +278,13 @@ export default function ProductsPage() {
                     featured: product.featured,
                     sizes: product.sizes,
                     colors: product.colors,
-                    description: product.description
+                    description: product.description,
+                    stockQuantity: product.stockQuantity,
+                    createdAt: product.createdAt,
+                    updatedAt: product.updatedAt,
+                    subcategory: product.subcategory,
+                    isActive: product.isActive,
+                    tags: product.tags
                   }}
                   className={viewMode === 'list' ? 'flex flex-row' : ''}
                 />
