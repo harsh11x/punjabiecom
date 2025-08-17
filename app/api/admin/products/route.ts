@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/lib/product-manager'
+import { 
+  getAllProducts, 
+  addProduct, 
+  updateProduct, 
+  deleteProduct 
+} from '@/lib/simple-product-storage'
 
 // AWS Sync Configuration
 const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3000'

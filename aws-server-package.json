@@ -1,0 +1,17 @@
+{
+  "name": "punjabi-heritage-aws-server",
+  "version": "1.0.0",
+  "description": "AWS sync server for Punjabi Heritage Store",
+  "main": "create-aws-sync-server.js",
+  "scripts": {
+    "start": "node create-aws-sync-server.js",
+    "dev": "nodemon create-aws-sync-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
