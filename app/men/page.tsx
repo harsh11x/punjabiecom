@@ -168,8 +168,8 @@ export default function MenPage() {
           </div>
 
           <div className="flex items-center justify-between mb-3">
-            <Badge variant={product.stock > 0 ? "default" : "destructive"} className="text-xs">
-              {product.stock > 0 ? `${product.stock} left` : 'Out of stock'}
+            <Badge variant={(product.stock || product.stockQuantity || 0) > 0 ? "default" : "destructive"} className="text-xs">
+              {(product.stock || product.stockQuantity || 0) > 0 ? `${product.stock || product.stockQuantity || 0} left` : 'Out of stock'}
             </Badge>
             <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Men's</Badge>
           </div>
