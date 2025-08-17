@@ -1,23 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-
-// Data file paths
-const DATA_DIR = path.resolve(process.cwd(), 'data')
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
-
-function getProducts() {
-  if (!fs.existsSync(PRODUCTS_FILE)) {
-    return []
-  }
-  try {
-    const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error reading products:', error)
-    return []
-  }
-}
+import { getAllProducts } from '@/lib/simple-product-storage'
 
 export async function GET(
   request: NextRequest,
@@ -25,19 +7,23 @@ export async function GET(
 ) {
   const resolvedParams = await params
   try {
-    const products = getProducts()
+    console.log(`🔍 Fetching product with ID: ${resolvedParams.id}`)
+    
+    const products = await getAllProducts()
     const product = products.find((p: any) => p.id === resolvedParams.id)
     
     if (!product) {
+      console.log(`❌ Product not found: ${resolvedParams.id}`)
       return NextResponse.json(
         { success: false, error: 'Product not found' },
         { status: 404 }
       )
     }
     
+    console.log(`✅ Product found: ${product.name}`)
     return NextResponse.json({
       success: true,
-      data: product
+      product: product
     })
   } catch (error) {
     console.error('Error fetching product:', error)
@@ -47,5 +33,3 @@ export async function GET(
     )
   }
 }
-
-// PUT and DELETE endpoints handled by admin API

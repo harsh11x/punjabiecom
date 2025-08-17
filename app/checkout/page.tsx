@@ -10,6 +10,14 @@ import { Separator } from '@/components/ui/separator'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
+
+// Razorpay types
+declare global {
+  interface Window {
+    Razorpay: any
+  }
+}
 
 export default function CheckoutPage() {
   const { items, totalPrice, totalItems, clearCart } = useCart()
@@ -31,7 +39,24 @@ export default function CheckoutPage() {
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true)
-  }, [])
+    
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('Please login to continue with checkout')
+      router.push('/login?redirect=/checkout')
+      return
+    }
+    
+    // Pre-fill form with user data if available
+    if (user.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        firstName: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ')[1] || ''
+      }))
+    }
+  }, [user, router])
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -52,17 +77,148 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
-      // Simulate order processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Clear cart after successful order
-      clearCart()
-      
-      // Redirect to success page
-      router.push('/order-success')
-    } catch (error) {
+      // Validate form data
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.address) {
+        toast.error('Please fill in all required fields')
+        setIsProcessing(false)
+        return
+      }
+
+      // Prepare order data
+      const orderData = {
+        items: items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+          image: item.image
+        })),
+        shippingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          phone: formData.phone
+        },
+        billingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          phone: formData.phone
+        },
+        customerEmail: formData.email,
+        subtotal: total,
+        shippingCost: 0,
+        tax: 0
+      }
+
+      console.log('Creating payment order...', orderData)
+
+      // Create Razorpay order
+      const response = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      })
+
+      const data = await response.json()
+      console.log('Payment order response:', data)
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create payment order')
+      }
+
+      // Initialize Razorpay payment
+      const options = {
+        key: data.order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.order.razorpayAmount,
+        currency: 'INR',
+        name: 'Punjab Heritage',
+        description: `Order #${data.order.orderNumber}`,
+        order_id: data.order.razorpayOrderId,
+        handler: async function (response: any) {
+          console.log('Payment successful:', response)
+          
+          try {
+            // Verify payment
+            const verifyResponse = await fetch('/api/payment/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: data.order.id
+              })
+            })
+
+            const verifyData = await verifyResponse.json()
+            
+            if (verifyData.success) {
+              // Clear cart after successful payment
+              clearCart()
+              
+              // Redirect to success page
+              router.push(`/order-success?orderId=${data.order.id}&orderNumber=${data.order.orderNumber}`)
+              toast.success('Payment successful! Order placed.')
+            } else {
+              throw new Error('Payment verification failed')
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error)
+            toast.error('Payment verification failed. Please contact support.')
+          }
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone
+        },
+        theme: {
+          color: '#F59E0B'
+        },
+        modal: {
+          ondismiss: function() {
+            console.log('Payment modal closed')
+            setIsProcessing(false)
+          }
+        }
+      }
+
+      // Load Razorpay script if not already loaded
+      if (typeof window !== 'undefined') {
+        if (!window.Razorpay) {
+          const script = document.createElement('script')
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+          script.onload = () => {
+            const rzp = new window.Razorpay(options)
+            rzp.open()
+          }
+          script.onerror = () => {
+            toast.error('Failed to load payment gateway')
+            setIsProcessing(false)
+          }
+          document.body.appendChild(script)
+        } else {
+          const rzp = new window.Razorpay(options)
+          rzp.open()
+        }
+      }
+
+    } catch (error: any) {
       console.error('Order processing failed:', error)
-    } finally {
+      toast.error(error.message || 'Failed to process order')
       setIsProcessing(false)
     }
   }
@@ -234,8 +390,8 @@ export default function CheckoutPage() {
                       <Label htmlFor="cod">Cash on Delivery</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <input type="radio" id="razorpay" name="payment" value="razorpay" disabled />
-                      <Label htmlFor="razorpay" className="text-gray-400">Online Payment (Coming Soon)</Label>
+                      <input type="radio" id="razorpay" name="payment" value="razorpay" />
+                      <Label htmlFor="razorpay">Online Payment (Razorpay)</Label>
                     </div>
                   </div>
                 </CardContent>
