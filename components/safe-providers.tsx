@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { CartProvider } from '@/contexts/CartContext'
-import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
+import { SimpleAuthProvider } from '@/components/providers/SimpleAuthProvider'
 import ErrorBoundary from '@/components/error-boundary'
 
 interface SafeProvidersProps {
@@ -52,11 +52,11 @@ export function SafeProviders({ children }: SafeProvidersProps) {
 
   return (
     <ErrorBoundary>
-      <FirebaseAuthProvider>
+      <SimpleAuthProvider>
         <CartProvider>
           {children}
         </CartProvider>
-      </FirebaseAuthProvider>
+      </SimpleAuthProvider>
     </ErrorBoundary>
   )
 }

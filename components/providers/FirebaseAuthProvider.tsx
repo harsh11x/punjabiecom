@@ -9,10 +9,10 @@ interface FirebaseAuthContextType {
   isAuthenticated: boolean
   error: string | null
   signIn: (email: string, password: string) => Promise<any>
-  signUp: (email: string, password: string) => Promise<any>
+  signUp: (email: string, password: string, name?: string, phone?: string) => Promise<any>
   signOut: () => Promise<void>
   login: (email: string, password: string) => Promise<any>
-  signup: (email: string, password: string) => Promise<any>
+  signup: (email: string, password: string, name?: string, phone?: string) => Promise<any>
   loginWithGoogle: () => Promise<any>
   updateUserProfile: (data: any) => Promise<any>
   clearError: () => void
@@ -34,32 +34,100 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Simulate auth check
-    setLoading(false)
+    // Check if user is already authenticated
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include', // Include cookies
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const user = {
+            uid: data.user.id,
+            email: data.user.email,
+            displayName: data.user.name,
+            phone: data.user.phone,
+            role: data.user.role
+          }
+          setUser(user)
+        }
+      } catch (error) {
+        console.log('No existing session found')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
   }, [])
 
   const signIn = async (email: string, password: string) => {
     setError(null)
     try {
-      // Mock sign in - replace with actual Firebase auth
-      console.log('Sign in:', email)
-      const mockUser = { email, uid: 'mock-uid', displayName: email.split('@')[0] }
-      setUser(mockUser)
-      return { user: mockUser }
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed')
+      }
+
+      const user = {
+        uid: data.user.id,
+        email: data.user.email,
+        displayName: data.user.name,
+        phone: data.user.phone,
+        role: data.user.role
+      }
+      
+      setUser(user)
+      return { user }
     } catch (err: any) {
       setError(err.message)
       throw err
     }
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name?: string, phone?: string) => {
     setError(null)
     try {
-      // Mock sign up - replace with actual Firebase auth
-      console.log('Sign up:', email)
-      const mockUser = { email, uid: 'mock-uid', displayName: email.split('@')[0] }
-      setUser(mockUser)
-      return { user: mockUser }
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          name: name || email.split('@')[0], 
+          email, 
+          password, 
+          phone 
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed')
+      }
+
+      const user = {
+        uid: data.user.id,
+        email: data.user.email,
+        displayName: data.user.name,
+        phone: data.user.phone,
+        role: data.user.role
+      }
+      
+      setUser(user)
+      return { user }
     } catch (err: any) {
       setError(err.message)
       throw err
@@ -69,12 +137,23 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const signOut = async () => {
     setError(null)
     try {
-      // Mock sign out - replace with actual Firebase auth
-      console.log('Sign out')
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      // Clear user regardless of API response
       setUser(null)
+      
+      if (!response.ok) {
+        console.warn('Logout API call failed, but user was logged out locally')
+      }
     } catch (err: any) {
-      setError(err.message)
-      throw err
+      // Still clear user locally even if API fails
+      setUser(null)
+      console.warn('Logout error:', err.message)
     }
   }
 
