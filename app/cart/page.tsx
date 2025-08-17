@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useCart } from '@/contexts/CartContext'
-import { useFirebaseAuth } from '@/components/providers/SimpleAuthProvider'
+import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { 
   ShoppingCart, 

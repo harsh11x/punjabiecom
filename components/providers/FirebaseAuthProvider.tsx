@@ -160,12 +160,20 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const loginWithGoogle = async () => {
     setError(null)
     try {
-      // Mock Google login
-      console.log('Google login')
-      const mockUser = { email: 'user@gmail.com', uid: 'google-uid', displayName: 'Google User' }
+      // Mock Google login - create a mock user
+      console.log('Google login - creating mock user')
+      const mockUser = { 
+        uid: 'google-' + Date.now(), 
+        email: 'user@gmail.com', 
+        displayName: 'Google User',
+        phone: '',
+        role: 'user'
+      }
       setUser(mockUser)
+      console.log('Mock Google user created:', mockUser)
       return { user: mockUser }
     } catch (err: any) {
+      console.error('Google login error:', err)
       setError(err.message)
       throw err
     }
