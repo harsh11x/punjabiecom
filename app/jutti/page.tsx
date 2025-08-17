@@ -231,7 +231,7 @@ export default function JuttiPage() {
               <div className="w-10 h-1 bg-gradient-to-r from-white to-amber-400 hidden md:block"></div>
             </div>
             <h2 className="text-2xl lg:text-4xl font-bold text-amber-200 mb-6">Handmade Leather Jutti Collection</h2>
-            <p className="text-lg opacity-90 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg opacity-90 max-w-4xl mx-auto leading-relaxed mb-8">
               ਸਾਡੇ ਪਾਸ ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ ਦਾ ਸ਼ਾਨਦਾਰ ਸੰਗ੍ਰਹਿ ਹੈ, ਜੋ ਸ਼ੁੱਧ ਚਮੜੇ ਨਾਲ ਹੱਥ ਨਾਲ ਬਣਾਈ ਗਈ ਹੈ।
               <br />
               <span className="italic text-amber-200">
@@ -239,6 +239,19 @@ export default function JuttiPage() {
                 with authentic embroidery for men, women, and kids.
               </span>
             </p>
+            
+            {/* All Products Button */}
+            <div className="flex justify-center">
+              <Link href="/products">
+                <Button 
+                  size="lg" 
+                  className="bg-amber-500 hover:bg-amber-600 text-red-900 font-bold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  ਸਾਰੇ ਉਤਪਾਦ • All Products
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
