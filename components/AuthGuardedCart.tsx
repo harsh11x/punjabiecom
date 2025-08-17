@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useFirebaseAuth } from '@/components/providers/SimpleAuthProvider'
-import { useCart } from '@/contexts/CartContext'
+import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
+import { useCart } from '@/components/providers/CartProvider'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { ShoppingCart, Plus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -47,35 +47,37 @@ export function AuthGuardedCart({
       return
     }
 
-    // Validate required selections
-    if (!selectedSize && product.sizes.length > 0) {
+    // Validate required selections - Skip size validation for phulkari products
+    const isPhulkariProduct = (product as any).category === 'phulkari' || (product as any).category === 'fulkari'
+    
+    if (!selectedSize && (product as any).sizes && (product as any).sizes.length > 0 && !isPhulkariProduct) {
       toast.error('Please select a size')
       return
     }
 
-    if (!selectedColor && product.colors.length > 0) {
+    if (!selectedColor && (product as any).colors && (product as any).colors.length > 0) {
       toast.error('Please select a color')
       return
     }
 
     // Check stock availability
-    if (product.stock < quantity) {
+    if ((product as any).stockQuantity && (product as any).stockQuantity < quantity) {
       toast.error('Not enough stock available')
       return
     }
 
     // Add to cart
+    const finalSize = isPhulkariProduct ? 'One Size' : (selectedSize || 'One Size')
+    const finalColor = selectedColor || 'Default'
+    
     const cartItem = {
-      id: `${product._id}-${selectedSize || 'One Size'}-${selectedColor || 'Default'}`,
-      productId: product._id,
-      name: product.name,
-      punjabiName: product.punjabiName,
-      price: product.price,
-      image: product.images?.[0] || '/placeholder.jpg',
-      size: selectedSize || 'One Size',
-      color: selectedColor || 'Default',
-      quantity,
-      stock: product.stock
+      id: `${(product as any).id || (product as any)._id}-${finalSize}-${finalColor}`,
+      name: (product as any).name,
+      price: (product as any).price,
+      image: (product as any).images?.[0] || '/placeholder.jpg',
+      size: finalSize,
+      color: finalColor,
+      quantity
     }
 
     addItem(cartItem)

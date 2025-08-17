@@ -1,6 +1,18 @@
 // Simple in-memory product storage for Vercel serverless functions
 // In production, you'd use a database like MongoDB or PostgreSQL
 
+import fs from 'fs'
+import path from 'path'
+
+// File paths
+const DATA_DIR = path.resolve(process.cwd(), 'data')
+const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+}
+
 interface SimpleProduct {
   id: string
   name: string
@@ -44,6 +56,35 @@ let products: SimpleProduct[] = [
     updatedAt: new Date().toISOString()
   }
 ]
+
+// Save products to file
+function saveProductsToFile() {
+  try {
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2))
+    console.log(`💾 Saved ${products.length} products to file`)
+  } catch (error) {
+    console.error('❌ Failed to save products to file:', error)
+  }
+}
+
+// Load products from file
+function loadProductsFromFile() {
+  try {
+    if (fs.existsSync(PRODUCTS_FILE)) {
+      const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
+      const fileProducts = JSON.parse(data)
+      if (Array.isArray(fileProducts) && fileProducts.length > 0) {
+        products.splice(0, products.length, ...fileProducts)
+        console.log(`📁 Loaded ${products.length} products from file`)
+        return true
+      }
+    }
+  } catch (error) {
+    console.error('❌ Failed to load products from file:', error)
+  }
+  return false
+}
+
 let isInitialized = false
 
 // Load products from AWS on startup
@@ -105,6 +146,11 @@ function generateId(): string {
 
 // Get all products
 export async function getAllProducts(): Promise<SimpleProduct[]> {
+  // First try to load from file if not already loaded
+  if (products.length === 0) {
+    loadProductsFromFile()
+  }
+  
   await initializeFromAWS()
   console.log(`📦 Retrieved ${products.length} products from memory`)
   return [...products]
@@ -136,6 +182,9 @@ export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' |
   console.log(`✅ Added product to memory: ${newProduct.name} (ID: ${newProduct.id})`)
   console.log(`📊 Total products in memory: ${products.length}`)
   
+  // Save to file
+  saveProductsToFile()
+  
   return newProduct
 }
 
@@ -153,6 +202,10 @@ export function updateProduct(id: string, updates: Partial<Omit<SimpleProduct, '
   }
   
   console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id})`)
+  
+  // Save to file
+  saveProductsToFile()
+  
   return products[index]
 }
 
@@ -168,6 +221,9 @@ export async function deleteProduct(id: string): Promise<void> {
   products.splice(index, 1)
   console.log(`✅ Deleted product from memory: ${deletedProduct.name} (ID: ${id})`)
   console.log(`📊 Total products remaining: ${products.length}`)
+  
+  // Save to file
+  saveProductsToFile()
 }
 
 // Get product by ID
