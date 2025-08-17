@@ -47,25 +47,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Socket authentication
   useEffect(() => {
-    if (socket?.socket && user) {
+    if (socket?.connected && user) {
       // Authenticate socket with user token
       const token = localStorage.getItem('auth-token')
       if (token) {
-        socket.socket.emit('authenticate', { token })
+        socket.emit('authenticate', { token })
+      }
       }
     }
   }, [socket, user])
 
   // Listen for profile updates
   useEffect(() => {
-    if (socket?.socket) {
-      socket.socket.on('profile-update-success', (userData) => {
+    if (socket?.connected) {
+      socket.on('profile-update-success', (userData) => {
         setUser(userData)
         toast.success('Profile updated successfully')
       })
 
       return () => {
-        socket.socket?.off('profile-update-success')
+        socket.off('profile-update-success')
       }
     }
   }, [socket])
@@ -171,8 +172,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       
       // Disconnect socket
-      if (socket?.socket) {
-        socket.socket.disconnect()
+      if (socket?.connected) {
+        socket.disconnect()
       }
       
       toast.success('Logged out successfully')
