@@ -16,22 +16,27 @@ import { useSocket } from "@/hooks/useSocket"
 import { toast } from 'sonner'
 
 interface Product {
+  _id?: string
   id: string
   name: string
-  punjabiName: string
-  description: string
+  punjabiName?: string
+  description?: string
   price: number
-  originalPrice: number
+  originalPrice?: number
   category: string
   subcategory?: string
   images: string[]
   colors: string[]
   sizes: string[]
-  stock: number
-  rating: number
-  reviews: number
-  isActive: boolean
+  stock?: number
+  stockQuantity?: number
+  rating?: number
+  reviews?: number
+  isActive?: boolean
+  inStock?: boolean
   badge?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export default function MenPage() {
@@ -46,11 +51,12 @@ export default function MenPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [wishlist, setWishlist] = useState<string[]>([])
 
-  const socket = useSocket({
-    onProductUpdate: () => {
-      fetchProducts()
-    }
-  })
+  // Temporarily disable socket to fix errors
+  // const socket = useSocket({
+  //   onProductUpdate: () => {
+  //     fetchProducts()
+  //   }
+  // })
 
   useEffect(() => {
     fetchProducts()
@@ -71,14 +77,17 @@ export default function MenPage() {
       const response = await fetch(`/api/products?${params}`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data.data || [])
+        console.log('API Response:', data) // Debug log
+        setProducts(data.products || data.data || [])
         setTotalPages(data.pagination?.pages || 1)
       } else {
+        console.error('API Error:', response.status, response.statusText)
         toast.error('Failed to fetch men\'s products')
       }
     } catch (error) {
       console.error('Error fetching men\'s products:', error)
       toast.error('Error loading men\'s products')
+      setProducts([]) // Set empty array to prevent crashes
     } finally {
       setLoading(false)
     }
@@ -93,7 +102,9 @@ export default function MenPage() {
   }
 
   const ProductCard = ({ product }: { product: Product }) => {
-    const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    const discountPercentage = product.originalPrice && product.originalPrice > product.price 
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : 0
     const isWishlisted = wishlist.includes(product.id)
 
     return (
@@ -141,17 +152,17 @@ export default function MenPage() {
                 <Star
                   key={i}
                   className={`h-3 w-3 ${
-                    i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                    i < Math.floor(product.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-600">({product.reviews})</span>
+            <span className="text-xs text-gray-600">({product.reviews || 0})</span>
           </div>
 
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-lg font-bold text-blue-600">₹{product.price.toLocaleString()}</span>
-            {product.originalPrice > product.price && (
+            {product.originalPrice && product.originalPrice > product.price && (
               <span className="text-sm text-gray-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
             )}
           </div>
