@@ -11,79 +11,98 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { CartIcon } from "@/components/cart/CartIcon"
 import { AuthGuardedCart } from "@/components/AuthGuardedCart"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+
+interface Product {
+  _id: string
+  id: string
+  name: string
+  punjabiName?: string
+  price: number
+  originalPrice?: number
+  images: string[]
+  rating?: number
+  reviews?: number
+  category: string
+  subcategory?: string
+  colors: string[]
+  sizes: string[]
+  stock: number
+  description?: string
+  badge?: string
+}
 
 export default function JuttiPage() {
-  const products = [
-    {
-      id: 1,
-      name: "Royal Punjabi Jutti - Men",
-      price: "₹2,499",
-      originalPrice: "₹3,199",
-      image: "/mens-punjabi-jutti-leather-brown-traditional.png",
-      rating: 4.8,
-      reviews: 124,
-      category: "Men",
-      colors: ["Brown", "Black", "Tan"],
-    },
-    {
-      id: 2,
-      name: "Bridal Gold Jutti - Women",
-      price: "₹3,299",
-      originalPrice: "₹4,199",
-      image: "/womens-bridal-jutti-gold.png",
-      rating: 4.9,
-      reviews: 89,
-      category: "Women",
-      colors: ["Gold", "Red", "Pink"],
-    },
-    {
-      id: 3,
-      name: "Kids Colorful Jutti",
-      price: "₹1,299",
-      originalPrice: "₹1,699",
-      image: "/colorful-kids-jutti.png",
-      rating: 4.7,
-      reviews: 156,
-      category: "Kids",
-      colors: ["Multi", "Blue", "Pink"],
-    },
-    {
-      id: 4,
-      name: "Traditional Khussa - Men",
-      price: "₹2,799",
-      originalPrice: "₹3,599",
-      image: "/mens-traditional-khussa.png",
-      rating: 4.6,
-      reviews: 203,
-      category: "Men",
-      colors: ["Black", "Brown", "Maroon"],
-    },
-    {
-      id: 5,
-      name: "Embroidered Jutti - Women",
-      price: "₹2,899",
-      originalPrice: "₹3,699",
-      image: "/womens-embroidered-jutti.png",
-      rating: 4.8,
-      reviews: 167,
-      category: "Women",
-      colors: ["Red", "Green", "Blue"],
-    },
-    {
-      id: 6,
-      name: "Casual Jutti - Men",
-      price: "₹1,999",
-      originalPrice: "₹2,599",
-      image: "/placeholder.svg?height=300&width=300",
-      rating: 4.5,
-      reviews: 134,
-      category: "Men",
-      colors: ["Brown", "Tan", "Black"],
-    },
-  ]
-
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all')
+  const [selectedSort, setSelectedSort] = useState<string>('featured')
   const [open, setOpen] = useState(false)
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Build query parameters
+        const params = new URLSearchParams({
+          category: 'jutti',
+          limit: '50' // Get more products for jutti section
+        })
+        
+        if (selectedCategory !== 'all') {
+          params.set('subcategory', selectedCategory)
+        }
+        
+        if (selectedPriceRange !== 'all') {
+          params.set('priceRange', selectedPriceRange)
+        }
+        
+        if (selectedSort !== 'featured') {
+          params.set('sortBy', selectedSort)
+        }
+
+        const response = await fetch(`/api/products?${params.toString()}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch products')
+        }
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          setProducts(data.data || [])
+        } else {
+          throw new Error(data.error || 'Failed to fetch products')
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load products')
+        setProducts([]) // Set empty array on error
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [selectedCategory, selectedPriceRange, selectedSort])
+
+  // Handle filter changes
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value)
+  }
+
+  const handlePriceRangeChange = (value: string) => {
+    setSelectedPriceRange(value)
+  }
+
+  const handleSortChange = (value: string) => {
+    setSelectedSort(value)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
@@ -234,7 +253,7 @@ export default function JuttiPage() {
               <span className="font-medium text-red-900">Filter by:</span>
             </div>
 
-            <Select>
+            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
@@ -246,19 +265,19 @@ export default function JuttiPage() {
               </SelectContent>
             </Select>
 
-            <Select>
+            <Select value={selectedPriceRange} onValueChange={handlePriceRangeChange}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="under-2000">Under ₹2,000</SelectItem>
+                <SelectItem value="0-2000">Under ₹2,000</SelectItem>
                 <SelectItem value="2000-3000">₹2,000 - ₹3,000</SelectItem>
-                <SelectItem value="above-3000">Above ₹3,000</SelectItem>
+                <SelectItem value="3000+">Above ₹3,000</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select>
+            <Select value={selectedSort} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -266,86 +285,144 @@ export default function JuttiPage() {
                 <SelectItem value="featured">Featured</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="popular">Most Popular</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Products Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Card
-                key={product.id}
-                className="group cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-red-200"
+          {loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-4">
+                    <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+                    <div className="space-y-2">
+                      <div className="bg-gray-200 h-4 rounded w-3/4"></div>
+                      <div className="bg-gray-200 h-3 rounded w-1/2"></div>
+                      <div className="bg-gray-200 h-6 rounded w-1/3"></div>
+                      <div className="bg-gray-200 h-10 rounded"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-600 text-lg font-semibold mb-2">Error loading products</div>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
-                <CardContent className="p-4">
-                  <div className="relative mb-4">
-                    <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      width={300}
-                      height={300}
-                      className="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-600"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Badge className="absolute top-2 left-2 bg-red-600 text-white">{product.category}</Badge>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-red-900 group-hover:text-red-700 transition-colors">
-                      {product.name}
-                    </h3>
-
-                    <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                      <span className="text-sm text-gray-600">({product.reviews})</span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1">
-                      {product.colors.map((color, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {color}
+                Try Again
+              </Button>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-600 text-lg font-semibold mb-2">No products found</div>
+              <p className="text-gray-500">Try adjusting your filters or check back later.</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <Card
+                  key={product._id}
+                  className="group cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-red-200"
+                >
+                  <CardContent className="p-4">
+                    <div className="relative mb-4">
+                      <Image
+                        src={product.images?.[0] || "/placeholder.svg"}
+                        alt={product.name}
+                        width={300}
+                        height={300}
+                        className="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-600"
+                      >
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                      <Badge className="absolute top-2 left-2 bg-red-600 text-white">
+                        {product.subcategory || product.category}
+                      </Badge>
+                      {product.badge && (
+                        <Badge className="absolute bottom-2 left-2 bg-amber-500 text-white">
+                          {product.badge}
                         </Badge>
-                      ))}
+                      )}
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold text-red-800">{product.price}</span>
-                      <span className="text-sm text-gray-500 line-through">{product.originalPrice}</span>
-                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-red-900 group-hover:text-red-700 transition-colors">
+                        {product.name}
+                      </h3>
+                      {product.punjabiName && product.punjabiName !== product.name && (
+                        <p className="text-sm text-amber-700 font-medium">{product.punjabiName}</p>
+                      )}
 
-                    <AuthGuardedCart
-                      product={{
-                        _id: product.id.toString(),
-                        name: product.name,
-                        punjabiName: product.name, // Add punjabi name
-                        price: parseFloat(product.price.replace('₹', '').replace(',', '')),
-                        images: [product.image || '/placeholder.jpg'],
-                        stock: 10, // Default stock
-                        sizes: ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10'], // Default sizes
-                        colors: product.colors || ['Default']
-                      }}
-                      variant="add-to-cart"
-                      className="w-full bg-red-600 hover:bg-red-700 text-white"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <div className="flex items-center space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < Math.floor(product.rating || 4.5) ? "text-yellow-400 fill-current" : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                        <span className="text-sm text-gray-600">({product.reviews || 0})</span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1">
+                        {product.colors?.slice(0, 3).map((color, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {color}
+                          </Badge>
+                        ))}
+                        {product.colors?.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{product.colors.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-bold text-red-800">₹{product.price.toLocaleString()}</span>
+                        {product.originalPrice && product.originalPrice > product.price && (
+                          <span className="text-sm text-gray-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                        )}
+                      </div>
+
+                      {product.stock > 0 ? (
+                        <AuthGuardedCart
+                          product={{
+                            _id: product._id,
+                            name: product.name,
+                            punjabiName: product.punjabiName || product.name,
+                            price: product.price,
+                            images: product.images,
+                            stock: product.stock,
+                            sizes: product.sizes,
+                            colors: product.colors
+                          }}
+                          variant="add-to-cart"
+                          className="w-full bg-red-600 hover:bg-red-700 text-white"
+                        />
+                      ) : (
+                        <Button disabled className="w-full bg-gray-400 text-white cursor-not-allowed">
+                          Out of Stock
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
