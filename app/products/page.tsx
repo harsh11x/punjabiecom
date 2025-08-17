@@ -285,7 +285,6 @@ export default function ProductsPage() {
                     subcategory: product.subcategory,
                     tags: product.tags
                   }}
-                  className={viewMode === 'list' ? 'flex flex-row' : ''}
                 />
               </div>
             ))}
