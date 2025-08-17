@@ -213,7 +213,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCartInitialized(true)
     
     // Only try to load server cart if authenticated and socket is connected
-    if (isAuthenticated && socket?.socket?.connected) {
+    if (isAuthenticated && socket?.connected) {
       if (process.env.NODE_ENV === 'development') {
         console.log('[CartProvider] Requesting cart from server for authenticated user');
       }
