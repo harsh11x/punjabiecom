@@ -176,7 +176,16 @@ export default function MenPage() {
 
           <div className="space-y-2">
             <AuthGuardedCart
-              product={{...product, _id: product.id}}
+              product={{
+                _id: product.id,
+                name: product.name,
+                punjabiName: product.punjabiName || product.name,
+                price: product.price,
+                images: product.images,
+                stock: product.stock || product.stockQuantity || 0,
+                sizes: product.sizes,
+                colors: product.colors
+              }}
               variant="add-to-cart"
               className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm"
             />
