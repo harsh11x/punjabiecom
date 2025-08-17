@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useCart } from '@/contexts/CartContext'
+import { useCart } from '@/components/providers/CartProvider'
 import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { 
@@ -21,21 +21,21 @@ import {
 import { toast } from 'sonner'
 
 export default function CartPage() {
-  const { state, updateQuantity, removeItem, clearCart } = useCart()
+  const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart, isLoading } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
-  const handleQuantityChange = (id: string, size: string, color: string, newQuantity: number) => {
+  const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(id, size, color)
+      removeItem(itemId)
       toast.success('Item removed from cart')
     } else {
-      updateQuantity(id, size, color, newQuantity)
+      updateQuantity(itemId, newQuantity)
     }
   }
 
-  const handleRemoveItem = (id: string, size: string, color: string) => {
-    removeItem(id, size, color)
+  const handleRemoveItem = (itemId: string) => {
+    removeItem(itemId)
     toast.success('Item removed from cart')
   }
 
@@ -54,7 +54,18 @@ export default function CartPage() {
     toast.success('Cart cleared')
   }
 
-  if (state.items.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-red-900 font-medium">Loading cart...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
         {/* Header */}
@@ -146,8 +157,10 @@ export default function CartPage() {
               </Button>
             </div>
 
-            {state.items.map((item) => (
-              <Card key={`${item.id}-${item.size}-${item.color}`} className="overflow-hidden">
+            {items.map((item) => {
+              const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`
+              return (
+              <Card key={itemKey} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-4">
                     <div className="relative w-20 h-20 flex-shrink-0">
@@ -173,7 +186,7 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity - 1)}
+                        onClick={() => handleQuantityChange(itemKey, item.quantity - 1)}
                       >
                         <Minus className="h-3 w-3" />
                       </Button>
@@ -182,7 +195,7 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity + 1)}
+                        onClick={() => handleQuantityChange(itemKey, item.quantity + 1)}
                         disabled={item.quantity >= item.stock}
                       >
                         <Plus className="h-3 w-3" />
@@ -198,7 +211,7 @@ export default function CartPage() {
                       variant="ghost"
                       size="icon"
                       className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleRemoveItem(item.id, item.size, item.color)}
+                      onClick={() => handleRemoveItem(itemKey)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
