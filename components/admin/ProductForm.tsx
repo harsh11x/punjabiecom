@@ -95,12 +95,12 @@ export default function ProductForm({
     console.log('Saving product with data:', formData)
     setIsSaving(true)
     try {
-      const url = '/api/admin/products'
       const method = initialData?.id ? 'PUT' : 'POST'
+      const url = initialData?.id 
+        ? `/api/admin/products?id=${initialData.id}`
+        : '/api/admin/products'
       
-      const payload = initialData?.id 
-        ? { ...formData, _id: initialData.id }
-        : formData
+      const payload = formData // Don't include _id in body for PUT requests
 
       console.log('Sending request:', { method, url, payload })
 

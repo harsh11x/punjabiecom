@@ -168,16 +168,52 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData = await request.json()
-    console.log('Update data received:', { id: productId, name: updateData.name })
+    console.log('Update data received:', { id: productId, name: updateData.name, price: updateData.price })
+
+    // Validate required fields
+    if (!updateData.name || updateData.price === undefined || updateData.price < 0) {
+      return NextResponse.json(
+        { success: false, error: 'Name and valid price are required' },
+        { status: 400 }
+      )
+    }
+
+    // Clean the update data
+    const cleanUpdateData = {
+      name: String(updateData.name),
+      description: String(updateData.description || ''),
+      price: Number(updateData.price),
+      originalPrice: updateData.originalPrice ? Number(updateData.originalPrice) : undefined,
+      category: String(updateData.category || 'general'),
+      subcategory: updateData.subcategory ? String(updateData.subcategory) : undefined,
+      images: Array.isArray(updateData.images) ? updateData.images : [],
+      sizes: Array.isArray(updateData.sizes) ? updateData.sizes : [],
+      colors: Array.isArray(updateData.colors) ? updateData.colors : [],
+      inStock: updateData.inStock !== false,
+      isActive: updateData.isActive !== false,
+      stockQuantity: Number(updateData.stockQuantity) || 1,
+      featured: updateData.featured === true,
+      tags: Array.isArray(updateData.tags) ? updateData.tags : []
+    }
 
     // Update product in local storage (primary)
-    const updatedProduct = await updateProduct(productId, updateData)
+    const updatedProduct = await updateProduct(productId, cleanUpdateData)
     console.log('✅ Product updated in local storage:', productId)
 
-    // Sync to AWS (secondary)
-    const syncResult = await syncToAWS('update', updatedProduct, productId)
+    // Try to sync to AWS (optional)
+    try {
+      console.log('🔄 Attempting to sync to AWS...')
+      const syncResult = await syncToAWS('update', updatedProduct, productId)
+      console.log('📡 AWS sync result:', syncResult)
+    } catch (syncError) {
+      console.log('⚠️ AWS sync failed, but product updated locally:', syncError)
+    }
     
     return NextResponse.json({
+      success: true,
+      product: updatedProduct,
+      message: 'Product updated successfully'
+    })
       success: true,
       product: updatedProduct,
       message: 'Product updated successfully',
