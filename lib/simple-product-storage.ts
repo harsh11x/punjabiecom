@@ -23,6 +23,41 @@ interface SimpleProduct {
 
 // In-memory storage (will reset on each deployment)
 let products: SimpleProduct[] = []
+let isInitialized = false
+
+// Load products from AWS on startup
+async function initializeFromAWS() {
+  if (isInitialized) return
+  
+  try {
+    console.log('🔄 Loading products from AWS...')
+    const response = await fetch(`${process.env.AWS_SYNC_SERVER_URL}/api/sync/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.AWS_SYNC_SECRET}`
+      },
+      body: JSON.stringify({ action: 'get' })
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      if (data.success && data.products) {
+        products = data.products.map((p: any) => ({
+          ...p,
+          id: p.id || p._id || generateId()
+        }))
+        console.log(`✅ Loaded ${products.length} products from AWS`)
+      }
+    } else {
+      console.log('⚠️ Could not load from AWS, starting with empty products')
+    }
+  } catch (error) {
+    console.log('⚠️ AWS not available, starting with empty products:', error)
+  }
+  
+  isInitialized = true
+}
 
 // Generate unique ID
 function generateId(): string {
@@ -30,7 +65,8 @@ function generateId(): string {
 }
 
 // Get all products
-export function getAllProducts(): SimpleProduct[] {
+export async function getAllProducts(): Promise<SimpleProduct[]> {
+  await initializeFromAWS()
   console.log(`📦 Retrieved ${products.length} products from memory`)
   return [...products]
 }
@@ -99,7 +135,8 @@ export function getProductById(id: string): SimpleProduct | null {
 }
 
 // Search products
-export function searchProducts(query: string): SimpleProduct[] {
+export async function searchProducts(query: string): Promise<SimpleProduct[]> {
+  await initializeFromAWS()
   const searchTerm = query.toLowerCase()
   return products.filter(product => 
     product.name.toLowerCase().includes(searchTerm) ||
@@ -110,7 +147,8 @@ export function searchProducts(query: string): SimpleProduct[] {
 }
 
 // Get products by category
-export function getProductsByCategory(category: string): SimpleProduct[] {
+export async function getProductsByCategory(category: string): Promise<SimpleProduct[]> {
+  await initializeFromAWS()
   return products.filter(p => p.category.toLowerCase() === category.toLowerCase())
 }
 

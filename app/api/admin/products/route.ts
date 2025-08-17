@@ -121,13 +121,16 @@ export async function POST(request: NextRequest) {
     const newProduct = await addProduct(simpleProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
 
-    // Skip AWS sync for now to isolate the issue
-    console.log('⏭️ Skipping AWS sync for debugging')
+    // Sync to AWS (secondary)
+    console.log('🔄 Syncing to AWS...')
+    const syncResult = await syncToAWS('add', newProduct)
+    console.log('📡 AWS sync result:', syncResult)
     
     return NextResponse.json({
       success: true,
       product: newProduct,
-      message: 'Product added successfully (AWS sync skipped for debugging)'
+      message: 'Product added successfully',
+      awsSync: syncResult
     })
   } catch (error: any) {
     console.error('❌ Error adding product:', error)
