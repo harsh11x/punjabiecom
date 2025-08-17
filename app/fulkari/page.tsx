@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Filter, Heart, ShoppingBag, Star, Search, Sparkles, Package, Grid3X3, List } from "lucide-react"
+import { Filter, Heart, ShoppingBag, Star, Search, Sparkles, Package, Grid3X3, List, Menu } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { AuthGuardedCart } from "@/components/AuthGuardedCart"
 import { CartIcon } from "@/components/cart/CartIcon"
 import { useSocket } from "@/hooks/useSocket"
@@ -270,6 +271,56 @@ export default function FulkariPage() {
               >
                 {viewMode === 'grid' ? <List className="h-5 w-5" /> : <Grid3X3 className="h-5 w-5" />}
               </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden text-amber-100 hover:text-amber-300 hover:bg-red-700/50"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="bg-red-900 text-white">
+                  <SheetHeader>
+                    <SheetTitle className="text-amber-100">Menu</SheetTitle>
+                    <SheetDescription className="text-amber-200">Explore our site.</SheetDescription>
+                  </SheetHeader>
+                  <nav className="flex flex-col space-y-4 py-4">
+                    <Link
+                      href="/"
+                      className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
+                    >
+                      ਘਰ • Home
+                    </Link>
+                    <div className="space-y-2">
+                      <Link href="/jutti" className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors block">
+                        ਜੁੱਤੀ • Jutti
+                      </Link>
+                      <div className="pl-4 space-y-2">
+                        <Link href="/men" className="block text-amber-200 hover:text-amber-300 text-base">
+                          ਮਰਦਾਂ ਲਈ • Men's Jutti
+                        </Link>
+                        <Link href="/women" className="block text-amber-200 hover:text-amber-300 text-base">
+                          ਔਰਤਾਂ ਲਈ • Women's Jutti
+                        </Link>
+                        <Link href="/kids" className="block text-amber-200 hover:text-amber-300 text-base">
+                          ਬੱਚਿਆਂ ਲਈ • Kids' Jutti
+                        </Link>
+                      </div>
+                    </div>
+                    <Link href="/fulkari" className="text-amber-300 font-bold text-lg border-b-2 border-amber-400">
+                      ਫੁਲਕਾਰੀ • Fulkari
+                    </Link>
+                    <Link
+                      href="/about"
+                      className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
+                    >
+                      ਸਾਡੇ ਬਾਰੇ • About
+                    </Link>
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
