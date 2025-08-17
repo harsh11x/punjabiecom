@@ -53,7 +53,7 @@ export default function ProductDetailPage() {
   const [isWishlisted, setIsWishlisted] = useState(false)
 
   const socket = useSocket({
-    onProductUpdate: (data) => {
+    onProductUpdate: (data: any) => {
       if (data.productId === product?.id) {
         // Update product stock in real-time
         setProduct(prev => prev ? { ...prev, stock: data.stock } : null)
