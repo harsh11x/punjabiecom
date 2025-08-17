@@ -228,6 +228,9 @@ export default function FulkariPage() {
               <Link href="/" className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors">
                 ਘਰ • Home
               </Link>
+              <Link href="/products" className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors">
+                ਸਾਰੇ ਉਤਪਾਦ • All Products
+              </Link>
               <div className="relative group">
                 <Link href="/jutti" className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors">
                   ਜੁੱਤੀ • Jutti
@@ -292,6 +295,12 @@ export default function FulkariPage() {
                       className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
                     >
                       ਘਰ • Home
+                    </Link>
+                    <Link
+                      href="/products"
+                      className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors"
+                    >
+                      ਸਾਰੇ ਉਤਪਾਦ • All Products
                     </Link>
                     <div className="space-y-2">
                       <Link href="/jutti" className="text-amber-100 hover:text-amber-300 font-semibold text-lg transition-colors block">
