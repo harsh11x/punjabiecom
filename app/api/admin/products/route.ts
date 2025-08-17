@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     console.log('➕ Adding new product...')
     
     const productData = await request.json()
-    console.log('Product data received:', { name: productData.name, category: productData.category })
+    console.log('Product data received:', productData)
 
     // Validate required fields
     if (!productData.name || !productData.price) {
@@ -91,8 +91,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Transform the product data to match our Product interface
+    const transformedProduct = {
+      name: productData.name,
+      description: productData.description || '',
+      price: Number(productData.price),
+      originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
+      category: productData.category || 'general',
+      subcategory: productData.subcategory,
+      images: productData.images || [],
+      sizes: productData.sizes || [],
+      colors: productData.colors || [],
+      inStock: productData.inStock !== false,
+      stockQuantity: Number(productData.stockQuantity) || 1,
+      featured: productData.featured === true,
+      tags: productData.tags || []
+    }
+
+    console.log('Transformed product data:', transformedProduct)
+
     // Add product to local storage (primary)
-    const newProduct = await addProduct(productData)
+    const newProduct = await addProduct(transformedProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
 
     // Sync to AWS (secondary) - don't fail if this fails
@@ -106,6 +125,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('❌ Error adding product:', error)
+    console.error('❌ Error stack:', error.stack)
     return NextResponse.json(
       { 
         success: false, 
