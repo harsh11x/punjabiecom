@@ -25,12 +25,12 @@ interface RazorpayCheckoutProps {
 
 export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: RazorpayCheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const { state, clearCart } = useCart()
+  const { items, clearCart } = useCart()
   const { user } = useFirebaseAuth()
 
   // Helper function to get total price
   const getTotalPrice = () => {
-    return state.items.reduce((total, item) => total + (item.price * item.quantity), 0)
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0)
   }
 
   const handlePayment = async () => {
@@ -39,7 +39,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
       return
     }
 
-    if (state.items.length === 0) {
+    if (items.length === 0) {
       onError('Your cart is empty')
       return
     }
@@ -60,7 +60,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: state.items.map(item => ({
+          items: items.map(item => ({
             productId: item.id,
             name: item.name,
             punjabiName: item.punjabiName || item.name,

@@ -6,8 +6,8 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useCart } from '@/contexts/CartContext'
-import { useFirebaseAuth } from '@/components/providers/SimpleAuthProvider'
+import { useCart } from '@/components/providers/CartProvider'
+import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { 
   ShoppingCart, 
@@ -21,21 +21,21 @@ import {
 import { toast } from 'sonner'
 
 export default function CartPage() {
-  const { state, updateQuantity, removeItem, clearCart } = useCart()
+  const { items, updateQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
-  const handleQuantityChange = (id: string, size: string, color: string, newQuantity: number) => {
+  const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(id, size, color)
+      removeItem(id)
       toast.success('Item removed from cart')
     } else {
-      updateQuantity(id, size, color, newQuantity)
+      updateQuantity(id, newQuantity)
     }
   }
 
-  const handleRemoveItem = (id: string, size: string, color: string) => {
-    removeItem(id, size, color)
+  const handleRemoveItem = (id: string) => {
+    removeItem(id)
     toast.success('Item removed from cart')
   }
 
@@ -54,7 +54,7 @@ export default function CartPage() {
     toast.success('Cart cleared')
   }
 
-  if (state.items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50">
         {/* Header */}
@@ -115,7 +115,7 @@ export default function CartPage() {
               <ShoppingCart className="h-8 w-8 text-amber-300" />
               <div>
                 <h1 className="text-2xl font-bold text-amber-100">Shopping Cart</h1>
-                <p className="text-amber-200">ਖਰੀਦਦਾਰੀ ਦੀ ਟੋਕਰੀ • {state.itemCount} items</p>
+                <p className="text-amber-200">ਖਰੀਦਦਾਰੀ ਦੀ ਟੋਕਰੀ • Your selected items</p>
               </div>
             </div>
             <Link href="/">
@@ -129,79 +129,77 @@ export default function CartPage() {
         <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500"></div>
       </header>
 
+      {/* Cart Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Cart Items ({state.itemCount})</h2>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleClearCart}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear Cart
-              </Button>
-            </div>
-
-            {state.items.map((item) => (
-              <Card key={`${item.id}-${item.size}-${item.color}`} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative w-20 h-20 flex-shrink-0">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="object-cover rounded-md"
-                      />
+            {items.map((item) => (
+              <Card key={item.id} className="border-2 border-amber-100 hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex gap-4">
+                    {/* Item Image */}
+                    <div className="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={96}
+                          height={96}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Package className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
                     </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
-                      <p className="text-sm text-gray-600 truncate">{item.punjabiName}</p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <Badge variant="outline" className="text-xs">Size: {item.size}</Badge>
-                        <Badge variant="outline" className="text-xs">Color: {item.color}</Badge>
+
+                    {/* Item Details */}
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-900 mb-2">{item.name}</h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+                        {item.size && (
+                          <span>Size: {item.size}</span>
+                        )}
+                        {item.color && (
+                          <span>Color: {item.color}</span>
+                        )}
                       </div>
+                      <p className="text-lg font-bold text-red-900">₹{item.price.toLocaleString()}</p>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    {/* Quantity Controls */}
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          className="w-8 h-8 p-0"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-12 text-center font-medium">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          className="w-8 h-8 p-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity - 1)}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveItem(item.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity + 1)}
-                        disabled={item.quantity >= item.stock}
-                      >
-                        <Plus className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remove
                       </Button>
                     </div>
-
-                    <div className="text-right">
-                      <p className="font-bold text-lg text-red-600">₹{(item.price * item.quantity).toLocaleString()}</p>
-                      <p className="text-sm text-gray-500">₹{item.price.toLocaleString()} each</p>
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleRemoveItem(item.id, item.size, item.color)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -210,47 +208,45 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24">
+            <Card className="border-2 border-amber-100 sticky top-32">
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
                 
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal ({state.itemCount} items)</span>
-                    <span className="font-medium">₹{state.total.toLocaleString()}</span>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Items ({totalItems})</span>
+                    <span>₹{totalPrice.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium text-green-600">Free</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="font-medium">Included</span>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Shipping</span>
+                    <span className="text-green-600">Free</span>
                   </div>
                   <div className="border-t pt-3">
-                    <div className="flex justify-between">
-                      <span className="text-lg font-bold">Total</span>
-                      <span className="text-lg font-bold text-red-600">₹{state.total.toLocaleString()}</span>
+                    <div className="flex justify-between text-lg font-bold text-gray-900">
+                      <span>Total</span>
+                      <span>₹{totalPrice.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
-                <Button 
-                  onClick={handleCheckout}
-                  className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-lg py-3"
-                  size="lg"
-                >
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  Proceed to Checkout
-                </Button>
-
-                <div className="mt-4 text-center">
-                  <Link href="/products">
-                    <Button variant="ghost" className="text-red-600 hover:text-red-700">
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Continue Shopping
-                    </Button>
-                  </Link>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleCheckout}
+                    className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white py-3"
+                    size="lg"
+                  >
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Proceed to Checkout
+                  </Button>
+                  
+                  <Button
+                    onClick={handleClearCart}
+                    variant="outline"
+                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Cart
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -258,15 +254,17 @@ export default function CartPage() {
         </div>
       </div>
 
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        defaultMode="login"
-        onSuccess={() => {
-          setShowAuthModal(false)
-          handleCheckout()
-        }}
-      />
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={() => {
+            setShowAuthModal(false)
+            handleCheckout()
+          }}
+        />
+      )}
     </div>
   )
 }

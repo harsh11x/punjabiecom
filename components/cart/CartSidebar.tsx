@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { useCart } from '@/contexts/CartContext'
+import { useCart } from '@/components/providers/CartProvider'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { 
@@ -25,22 +25,22 @@ interface CartSidebarProps {
 }
 
 export function CartSidebar({ children }: CartSidebarProps) {
-  const { state, updateQuantity, removeItem } = useCart()
+  const { items, updateQuantity, removeItem, totalItems } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
-  const handleQuantityChange = (id: string, size: string, color: string, newQuantity: number) => {
+  const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(id, size, color)
+      removeItem(id)
       toast.success('Item removed from cart')
     } else {
-      updateQuantity(id, size, color, newQuantity)
+      updateQuantity(id, newQuantity)
     }
   }
 
-  const handleRemoveItem = (id: string, size: string, color: string) => {
-    removeItem(id, size, color)
+  const handleRemoveItem = (id: string) => {
+    removeItem(id)
     toast.success('Item removed from cart')
   }
 
@@ -64,12 +64,12 @@ export function CartSidebar({ children }: CartSidebarProps) {
           <SheetHeader>
             <SheetTitle className="flex items-center space-x-2">
               <ShoppingBag className="h-5 w-5" />
-              <span>Shopping Cart ({state.itemCount})</span>
+              <span>Shopping Cart ({totalItems})</span>
             </SheetTitle>
           </SheetHeader>
 
           <div className="flex flex-col h-full">
-            {state.items.length === 0 ? (
+            {items.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
                 <Package className="h-16 w-16 text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
@@ -85,7 +85,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
               <>
                 {/* Cart Items */}
                 <div className="flex-1 overflow-y-auto py-4 space-y-4">
-                  {state.items.map((item) => (
+                  {items.map((item) => (
                     <div key={`${item.id}-${item.size}-${item.color}`} className="flex items-center space-x-3 p-3 border rounded-lg">
                       <div className="relative w-16 h-16 flex-shrink-0">
                         <Image

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useCart } from '@/contexts/CartContext'
+import { useCart } from '@/components/providers/CartProvider'
 import { ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,15 +24,15 @@ export function CartIcon({ className, variant = 'ghost', size = 'icon' }: CartIc
   // Safely get cart state
   let cartState = null
   try {
-    const { state } = useCart()
-    cartState = state
+    const { totalItems } = useCart()
+    cartState = { totalItems }
   } catch (error) {
     console.warn('Cart context not available:', error)
   }
 
   useEffect(() => {
     if (mounted && cartState) {
-      setItemCount(cartState.itemCount || 0)
+      setItemCount(cartState.totalItems || 0)
     }
   }, [mounted, cartState])
 

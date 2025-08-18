@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCart } from '@/contexts/CartContext'
+import { useCart } from '@/components/providers/CartProvider'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -11,14 +11,14 @@ import { Separator } from '@/components/ui/separator'
 import { ShoppingBag, Plus, Minus, Trash2, ShoppingCart as ShoppingCartIcon } from 'lucide-react'
 
 export function ShoppingCart() {
-  const { state, updateQuantity, removeItem } = useCart()
+  const { items, updateQuantity, removeItem, totalItems } = useCart()
   const [isOpen, setIsOpen] = useState(false)
 
-  const handleQuantityChange = (id: string, size: string, color: string, newQuantity: number) => {
+  const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeItem(id, size, color)
+      removeItem(id)
     } else {
-      updateQuantity(id, size, color, newQuantity)
+      updateQuantity(id, newQuantity)
     }
   }
 
@@ -31,9 +31,9 @@ export function ShoppingCart() {
         >
           <ShoppingBag className="h-5 lg:h-6 w-5 lg:w-6" />
           <span className="hidden sm:inline font-medium">Check Cart</span>
-          {state.itemCount > 0 && (
+          {totalItems > 0 && (
             <Badge className="absolute -top-1 lg:-top-2 -right-1 lg:-right-2 h-5 lg:h-6 w-5 lg:w-6 rounded-full p-0 flex items-center justify-center bg-amber-500 text-red-900 font-bold text-xs">
-              {state.itemCount}
+              {totalItems}
             </Badge>
           )}
         </Button>
@@ -42,7 +42,7 @@ export function ShoppingCart() {
         <SheetHeader>
           <SheetTitle className="flex items-center space-x-2">
             <ShoppingCartIcon className="h-5 w-5" />
-            <span>Shopping Cart ({state.itemCount})</span>
+            <span>Shopping Cart ({totalItems})</span>
           </SheetTitle>
           <SheetDescription>
             Review your items before checkout
@@ -50,7 +50,7 @@ export function ShoppingCart() {
         </SheetHeader>
 
         <div className="flex flex-col h-full">
-          {state.items.length === 0 ? (
+          {items.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
               <ShoppingBag className="h-16 w-16 text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
@@ -67,7 +67,7 @@ export function ShoppingCart() {
               {/* Cart Items */}
               <div className="flex-1 overflow-y-auto py-6">
                 <div className="space-y-4">
-                  {state.items.map((item) => {
+                  {items.map((item) => {
                     const itemKey = `${item.id}-${item.size}-${item.color}`
                     return (
                       <div key={itemKey} className="flex items-center space-x-4 p-4 border rounded-lg">
@@ -97,7 +97,7 @@ export function ShoppingCart() {
                               variant="outline"
                               size="sm"
                               className="h-8 w-8 p-0"
-                              onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity - 1)}
+                              onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -106,7 +106,7 @@ export function ShoppingCart() {
                               variant="outline"
                               size="sm"
                               className="h-8 w-8 p-0"
-                              onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity + 1)}
+                              onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                               disabled={item.quantity >= item.stock}
                             >
                               <Plus className="h-3 w-3" />

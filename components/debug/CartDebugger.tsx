@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useCart } from '@/contexts/CartContext'
+import { useCart } from '@/components/providers/CartProvider'
 import { Trash2, RefreshCw, Eye } from 'lucide-react'
 
 export function CartDebugger() {
-  const { state, clearCart } = useCart()
+  const { items, clearCart, totalItems, totalPrice, isLoading } = useCart()
   const [localStorageData, setLocalStorageData] = useState<string | null>(null)
   const [isVisible, setIsVisible] = useState(false)
 
@@ -65,10 +65,10 @@ export function CartDebugger() {
         <div>
           <h4 className="font-semibold mb-2">Current Cart State:</h4>
           <div className="space-y-1 text-sm">
-            <div>Items: <Badge variant="outline">{state.items.length}</Badge></div>
-            <div>Item Count: <Badge variant="outline">{state.itemCount}</Badge></div>
-            <div>Total: <Badge variant="outline">₹{state.total.toLocaleString()}</Badge></div>
-            <div>Loading: <Badge variant={state.loading ? "destructive" : "secondary"}>{state.loading ? "Yes" : "No"}</Badge></div>
+            <div>Items: <Badge variant="outline">{items.length}</Badge></div>
+            <div>Item Count: <Badge variant="outline">{totalItems}</Badge></div>
+            <div>Total: <Badge variant="outline">₹{totalPrice.toLocaleString()}</Badge></div>
+            <div>Loading: <Badge variant={isLoading ? "destructive" : "secondary"}>{isLoading ? "Yes" : "No"}</Badge></div>
           </div>
         </div>
 
