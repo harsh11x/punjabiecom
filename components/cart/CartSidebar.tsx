@@ -25,7 +25,7 @@ interface CartSidebarProps {
 }
 
 export function CartSidebar({ children }: CartSidebarProps) {
-  const { items, updateQuantity, removeItem, totalItems } = useCart()
+  const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -88,17 +88,23 @@ export function CartSidebar({ children }: CartSidebarProps) {
                   {items.map((item) => (
                     <div key={`${item.id}-${item.size}-${item.color}`} className="flex items-center space-x-3 p-3 border rounded-lg">
                       <div className="relative w-16 h-16 flex-shrink-0">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover rounded-md"
-                        />
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover rounded-md"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
+                            <Package className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm text-gray-900 truncate">{item.name}</h4>
-                        <p className="text-xs text-gray-600 truncate">{item.punjabiName}</p>
+
                         <div className="flex items-center space-x-2 mt-1">
                           <Badge variant="outline" className="text-xs px-1 py-0">
                             {item.size}
@@ -117,7 +123,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 text-red-500 hover:text-red-700"
-                          onClick={() => handleRemoveItem(item.id, item.size, item.color)}
+                          onClick={() => handleRemoveItem(item.id)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -127,7 +133,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
                             variant="outline"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity - 1)}
+                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                           >
                             <Minus className="h-2 w-2" />
                           </Button>
@@ -136,8 +142,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
                             variant="outline"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => handleQuantityChange(item.id, item.size, item.color, item.quantity + 1)}
-                            disabled={item.quantity >= item.stock}
+                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                           >
                             <Plus className="h-2 w-2" />
                           </Button>
@@ -150,8 +155,8 @@ export function CartSidebar({ children }: CartSidebarProps) {
                 {/* Cart Summary */}
                 <div className="border-t pt-4 space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total ({state.itemCount} items)</span>
-                    <span className="font-bold text-lg text-red-600">₹{state.total.toLocaleString()}</span>
+                    <span className="font-semibold">Total ({totalItems} items)</span>
+                    <span className="font-bold text-lg text-red-600">₹{totalPrice.toLocaleString()}</span>
                   </div>
                   
                   <div className="space-y-2">

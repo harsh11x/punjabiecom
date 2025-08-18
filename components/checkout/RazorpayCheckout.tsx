@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useCart } from '@/contexts/CartContext'
+import { useCart } from '@/components/providers/CartProvider'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 
 // Razorpay types are defined in types/global.d.ts
@@ -25,12 +25,12 @@ interface RazorpayCheckoutProps {
 
 export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: RazorpayCheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const { items, clearCart } = useCart()
+  const { items, clearCart, totalItems, totalPrice } = useCart()
   const { user } = useFirebaseAuth()
 
   // Helper function to get total price
   const getTotalPrice = () => {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0)
+    return items.reduce((total: number, item: any) => total + (item.price * item.quantity), 0)
   }
 
   const handlePayment = async () => {
@@ -60,7 +60,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: items.map(item => ({
+          items: items.map((item: any) => ({
             productId: item.id,
             name: item.name,
             punjabiName: item.punjabiName || item.name,
@@ -181,7 +181,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
         <h3 className="font-semibold mb-3">Order Summary</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Subtotal ({state.items.length} items)</span>
+            <span>Subtotal ({totalItems} items)</span>
             <span>₹{subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
@@ -202,7 +202,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
       {/* Payment Button */}
       <Button
         onClick={handlePayment}
-        disabled={isProcessing || state.items.length === 0}
+        disabled={isProcessing || items.length === 0}
         className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white py-3 text-lg"
         size="lg"
       >

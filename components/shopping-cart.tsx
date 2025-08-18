@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
-import { ShoppingBag, Plus, Minus, Trash2, ShoppingCart as ShoppingCartIcon } from 'lucide-react'
+import { ShoppingBag, Plus, Minus, Trash2, ShoppingCart as ShoppingCartIcon, Package } from 'lucide-react'
 
 export function ShoppingCart() {
-  const { items, updateQuantity, removeItem, totalItems } = useCart()
+  const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart()
   const [isOpen, setIsOpen] = useState(false)
 
   const handleQuantityChange = (id: string, newQuantity: number) => {
@@ -72,17 +72,23 @@ export function ShoppingCart() {
                     return (
                       <div key={itemKey} className="flex items-center space-x-4 p-4 border rounded-lg">
                         <div className="relative w-16 h-16 flex-shrink-0">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            className="object-cover rounded"
-                          />
+                                                      {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                fill
+                                className="object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center">
+                                <Package className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
-                          <p className="text-sm text-gray-600 truncate">{item.punjabiName}</p>
+
                           <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
                             <span>Size: {item.size}</span>
                             <span>•</span>
@@ -107,7 +113,7 @@ export function ShoppingCart() {
                               size="sm"
                               className="h-8 w-8 p-0"
                               onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                              disabled={item.quantity >= item.stock}
+                              disabled={false}
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -116,7 +122,7 @@ export function ShoppingCart() {
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
-                            onClick={() => removeItem(item.id, item.size, item.color)}
+                            onClick={() => removeItem(item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -131,7 +137,7 @@ export function ShoppingCart() {
               <div className="border-t pt-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-900">Total</span>
-                  <span className="text-xl font-bold text-red-600">₹{state.total.toLocaleString()}</span>
+                  <span className="text-xl font-bold text-red-600">₹{totalPrice.toLocaleString()}</span>
                 </div>
                 
                 <Separator />
