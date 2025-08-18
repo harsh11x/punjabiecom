@@ -25,14 +25,54 @@ import {
   Shield,
   ShoppingBag,
   Heart,
-  Settings
+  LogOut,
+  Package,
+  Truck,
+  CheckCircle,
+  Clock,
+  AlertCircle
 } from 'lucide-react'
 
+interface Order {
+  _id: string
+  orderNumber: string
+  status: string
+  paymentStatus: string
+  paymentMethod: string
+  total: number
+  items: Array<{
+    productId: string
+    name: string
+    price: number
+    quantity: number
+    size: string
+    color: string
+    image: string
+  }>
+  shippingAddress: {
+    fullName: string
+    addressLine1: string
+    city: string
+    state: string
+    pincode: string
+    phone: string
+  }
+  trackingNumber?: string
+  estimatedDelivery?: string
+  deliveredAt?: string
+  createdAt: string
+  updatedAt: string
+  trackingStatus: string
+  trackingColor: string
+}
+
 export default function ProfilePage() {
-  const { user, updateUserProfile, isAuthenticated } = useFirebaseAuth()
+  const { user, updateUserProfile, isAuthenticated, signOut } = useFirebaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -65,8 +105,38 @@ export default function ProfilePage() {
           pincode: ''
         }
       })
+      loadUserOrders()
     }
   }, [user, isAuthenticated, router])
+
+  const loadUserOrders = async () => {
+    if (!user) return
+    
+    try {
+      setOrdersLoading(true)
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setOrders(data.orders)
+        } else {
+          console.error('Failed to load orders:', data.error)
+        }
+      } else {
+        console.error('Failed to load orders:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error)
+    } finally {
+      setOrdersLoading(false)
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     if (field.includes('.')) {
@@ -113,6 +183,33 @@ export default function ProfilePage() {
       }
     })
     setIsEditing(false)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Failed to logout')
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-4 w-4" />
+      case 'processing':
+        return <Package className="h-4 w-4" />
+      case 'shipped':
+        return <Truck className="h-4 w-4" />
+      case 'delivered':
+        return <CheckCircle className="h-4 w-4" />
+      case 'cancelled':
+        return <AlertCircle className="h-4 w-4" />
+      default:
+        return <Clock className="h-4 w-4" />
+    }
   }
 
   if (!isAuthenticated) {
@@ -163,11 +260,11 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Shield className="h-4 w-4" />
-                    <span>Member since Invalid Date</span>
+                    <span>Member since {user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'Recently'}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Badge variant="secondary">
-                      Unverified
+                      {user?.emailVerified ? 'Verified' : 'Unverified'}
                     </Badge>
                   </div>
                 </div>
@@ -183,9 +280,13 @@ export default function ProfilePage() {
                     <Heart className="h-4 w-4 mr-2" />
                     Wishlist
                   </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
                   </Button>
                 </div>
               </CardContent>
@@ -338,6 +439,85 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
+            {/* Recent Orders */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <ShoppingBag className="h-5 w-5" />
+                  <span>Recent Orders</span>
+                </CardTitle>
+                <CardDescription>Your latest order updates and tracking information</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading orders...</p>
+                  </div>
+                ) : orders.length > 0 ? (
+                  <div className="space-y-4">
+                    {orders.slice(0, 3).map((order) => (
+                      <div key={order._id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">Order #{order.orderNumber}</h4>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge className={order.trackingColor}>
+                            <div className="flex items-center space-x-1">
+                              {getStatusIcon(order.status)}
+                              <span>{order.trackingStatus}</span>
+                            </div>
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <p><span className="font-medium">Total:</span> ₹{order.total.toLocaleString()}</p>
+                          <p><span className="font-medium">Payment:</span> {order.paymentMethod.toUpperCase()} - {order.paymentStatus}</p>
+                          {order.trackingNumber && (
+                            <p><span className="font-medium">Tracking:</span> {order.trackingNumber}</p>
+                          )}
+                          <p><span className="font-medium">Items:</span> {order.items.length} item(s)</p>
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => router.push(`/orders`)}
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {orders.length > 3 && (
+                      <div className="text-center pt-4">
+                        <Button 
+                          variant="outline"
+                          onClick={() => router.push('/orders')}
+                        >
+                          View All Orders ({orders.length})
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">No orders yet</p>
+                    <p className="text-sm text-gray-500 mb-4">Start shopping to see your orders here!</p>
+                    <Button onClick={() => router.push('/products')}>
+                      Start Shopping
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Account Security */}
             <Card>
               <CardHeader>
@@ -372,11 +552,11 @@ export default function ProfilePage() {
                   <div>
                     <p className="font-medium">Account Verification</p>
                     <p className="text-sm text-gray-500">
-                      Verify your account
+                      {user?.emailVerified ? 'Your email is verified' : 'Verify your account'}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    Verify
+                  <Button variant="outline" size="sm" disabled={user?.emailVerified}>
+                    {user?.emailVerified ? 'Verified' : 'Verify'}
                   </Button>
                 </div>
               </CardContent>
