@@ -48,10 +48,10 @@ export default function JuttiPage() {
         setLoading(true)
         setError(null)
         
-        // Build query parameters
+        // Build query parameters - get all juttis by default
         const params = new URLSearchParams({
           category: 'jutti',
-          limit: '50' // Get more products for jutti section
+          limit: '100' // Get more products for jutti section
         })
         
         if (selectedCategory !== 'all') {
@@ -75,7 +75,18 @@ export default function JuttiPage() {
         const data = await response.json()
         
         if (data.success) {
-          setProducts(data.data || [])
+          // Filter to show only juttis from all categories
+          let juttiProducts = data.data || []
+          
+          // If no specific subcategory is selected, show all juttis
+          if (selectedCategory === 'all') {
+            juttiProducts = juttiProducts.filter((product: Product) => 
+              product.category === 'jutti' || 
+              (product.subcategory && ['men', 'women', 'kids'].includes(product.subcategory))
+            )
+          }
+          
+          setProducts(juttiProducts)
         } else {
           throw new Error(data.error || 'Failed to fetch products')
         }

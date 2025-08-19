@@ -52,6 +52,7 @@ export default function ProductsPage() {
           throw new Error('Failed to fetch products')
         }
         const data = await response.json()
+        // Show all active products from all categories
         const activeProducts = data.products.filter((product: Product) => product.isActive && product.inStock)
         setProducts(activeProducts)
         setFilteredProducts(activeProducts)

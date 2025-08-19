@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,8 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
+
+
 
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {

@@ -58,13 +58,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         try {
           const parsedCart = JSON.parse(savedCart)
           setItems(parsedCart)
-          console.log('✅ Cart loaded from localStorage:', parsedCart.length, 'items')
         } catch (parseError) {
           console.error('Error parsing cart from localStorage:', parseError)
           setItems([])
         }
       } else {
-        console.log('📭 No cart found in localStorage')
         setItems([])
       }
       
@@ -87,10 +85,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               setItems(data.items)
               // Also update localStorage
               localStorage.setItem('punjabi-heritage-cart', JSON.stringify(data.items))
-              console.log('✅ Cart synced from server:', data.items.length, 'items')
             }
-          } else {
-            console.log('⚠️ Server cart not available, using localStorage')
           }
         } catch (serverError) {
           console.log('⚠️ Server sync failed, using localStorage:', serverError)
@@ -144,12 +139,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
     const quantity = item.quantity || 1
-    const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`
     
     setItems(prevItems => {
-      const existingItemIndex = prevItems.findIndex(
-        cartItem => `${cartItem.id}-${cartItem.size || ''}-${cartItem.color || ''}` === itemKey
-      )
+      const existingItemIndex = prevItems.findIndex(cartItem => cartItem.id === item.id)
       
       let newItems: CartItem[]
       
@@ -174,12 +166,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = (id: string) => {
     setItems(prevItems => {
-      const newItems = prevItems.filter(item => {
-        const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`
-        return itemKey !== id
-      })
+      const newItems = prevItems.filter(item => item.id !== id)
       saveCart(newItems)
-      toast.success('Item removed from cart')
       return newItems
     })
   }
@@ -191,10 +179,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     
     setItems(prevItems => {
-      const newItems = prevItems.map(item => {
-        const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`
-        return itemKey === id ? { ...item, quantity } : item
-      })
+      const newItems = prevItems.map(item => 
+        item.id === id ? { ...item, quantity } : item
+      )
       saveCart(newItems)
       return newItems
     })
