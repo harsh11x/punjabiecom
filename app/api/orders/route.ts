@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createOrder, getOrder, getOrderByNumber, getOrdersByEmail, getAllOrders, updateOrderStatus } from '@/lib/aws-order-storage'
 import { connectDB } from '@/lib/mongodb'
 import Order from '@/models/Order'
 import fs from 'fs'
@@ -168,51 +169,12 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Required fields validation passed')
     
-    let savedOrder: any = null
-    
-    // Try to save to MongoDB first
+    // Try AWS storage first (primary)
     try {
-      console.log('🔄 Attempting to connect to MongoDB...')
-      await connectDB()
-      console.log('✅ MongoDB connected successfully')
+      console.log('🔄 Attempting to save order to AWS...')
       
-      const order = new Order({
-        customerEmail: orderData.customerEmail,
-        items: orderData.items,
-        subtotal: orderData.subtotal || 0,
-        shippingCost: orderData.shippingCost || 0,
-        tax: orderData.tax || 0,
-        total: orderData.total || orderData.subtotal || 0,
-        status: orderData.status || 'pending',
-        paymentStatus: orderData.paymentStatus || 'pending',
-        paymentMethod: orderData.paymentMethod || 'razorpay',
-        shippingAddress: orderData.shippingAddress,
-        billingAddress: orderData.billingAddress || orderData.shippingAddress,
-        notes: orderData.notes || ''
-      })
-      
-      console.log('🔄 Saving order to MongoDB...')
-      const mongoOrder = await order.save()
-      savedOrder = {
-        _id: mongoOrder._id.toString(),
-        orderNumber: mongoOrder.orderNumber,
-        ...mongoOrder.toObject()
-      }
-      
-      console.log('✅ Order saved to MongoDB:', savedOrder.orderNumber)
-      
-    } catch (error) {
-      console.warn('⚠️ Failed to save to MongoDB:', error)
-      console.error('MongoDB Error Details:', error)
-    }
-    
-    // Save to file storage as backup
-    try {
-      console.log('🔄 Attempting to save to file storage...')
-      const fileOrders = getOrdersFromFile()
-      
-      const fileOrder = savedOrder || {
-        _id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      // Transform data to match AWS interface
+      const awsOrderData = {
         orderNumber: `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`,
         customerEmail: orderData.customerEmail,
         items: orderData.items,
@@ -225,39 +187,102 @@ export async function POST(request: NextRequest) {
         paymentMethod: orderData.paymentMethod || 'razorpay',
         shippingAddress: orderData.shippingAddress,
         billingAddress: orderData.billingAddress || orderData.shippingAddress,
-        notes: orderData.notes || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        notes: orderData.notes || ''
       }
       
-      console.log('🔄 File order created:', fileOrder._id)
-      fileOrders.push(fileOrder)
-      saveOrdersToFile(fileOrders)
-      
-      console.log('✅ Order saved to file storage')
+      const savedOrder = await createOrder(awsOrderData)
+      console.log('✅ Order saved to AWS successfully:', savedOrder._id)
       
       return NextResponse.json({
         success: true,
-        data: savedOrder || fileOrder
+        data: savedOrder
       })
       
-    } catch (error) {
-      console.error('❌ Failed to save to file storage:', error)
-      console.error('File Storage Error Details:', error)
+    } catch (awsError) {
+      console.warn('⚠️ AWS storage failed, falling back to local storage:', awsError)
       
-      if (savedOrder) {
-        console.log('✅ Returning MongoDB order as fallback')
-        return NextResponse.json({
-          success: true,
-          data: savedOrder
+      // Fallback to local storage
+      let savedOrder: any = null
+      
+      // Try MongoDB as fallback
+      try {
+        console.log('🔄 Attempting to connect to MongoDB...')
+        await connectDB()
+        console.log('✅ MongoDB connected successfully')
+        
+        const order = new Order({
+          customerEmail: orderData.customerEmail,
+          items: orderData.items,
+          subtotal: orderData.subtotal || 0,
+          shippingCost: orderData.shippingCost || 0,
+          tax: orderData.tax || 0,
+          total: orderData.total || orderData.subtotal || 0,
+          status: orderData.status || 'pending',
+          paymentStatus: orderData.paymentStatus || 'pending',
+          paymentMethod: orderData.paymentMethod || 'razorpay',
+          shippingAddress: orderData.shippingAddress,
+          billingAddress: orderData.billingAddress || orderData.shippingAddress,
+          notes: orderData.notes || ''
         })
+        
+        console.log('🔄 Saving order to MongoDB...')
+        const mongoOrder = await order.save()
+        savedOrder = {
+          _id: mongoOrder._id.toString(),
+          orderNumber: mongoOrder.orderNumber,
+          ...mongoOrder.toObject()
+        }
+        
+        console.log('✅ Order saved to MongoDB:', savedOrder.orderNumber)
+        
+      } catch (mongoError) {
+        console.warn('⚠️ MongoDB also failed:', mongoError)
       }
       
-      throw new Error('Failed to save order to any storage')
+      // Final fallback to file storage
+      try {
+        console.log('🔄 Attempting to save to file storage...')
+        const fileOrders = getOrdersFromFile()
+        
+        const fileOrder = savedOrder || {
+          _id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          orderNumber: `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`,
+          customerEmail: orderData.customerEmail,
+          items: orderData.items,
+          subtotal: orderData.subtotal || 0,
+          shippingCost: orderData.shippingCost || 0,
+          tax: orderData.tax || 0,
+          total: orderData.total || orderData.subtotal || 0,
+          status: orderData.status || 'pending',
+          paymentStatus: orderData.paymentStatus || 'pending',
+          paymentMethod: orderData.paymentMethod || 'razorpay',
+          shippingAddress: orderData.shippingAddress,
+          billingAddress: orderData.billingAddress || orderData.shippingAddress,
+          notes: orderData.notes || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        
+        console.log('🔄 File order created:', fileOrder._id)
+        fileOrders.push(fileOrder)
+        saveOrdersToFile(fileOrders)
+        
+        console.log('✅ Order saved to file storage')
+        
+        return NextResponse.json({
+          success: true,
+          data: savedOrder || fileOrder
+        })
+        
+      } catch (fileError) {
+        console.error('❌ All storage methods failed:', fileError)
+        throw new Error('Failed to save order to any storage system')
+      }
     }
     
   } catch (error: any) {
     console.error('❌ Error creating order:', error)
+    
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create order' },
       { status: 500 }

@@ -1,129 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
-import Order from '@/models/Order'
-import { verifyAdminAuth } from '@/lib/admin-auth'
+import { getAllOrders, getOrder, updateOrderStatus } from '@/lib/aws-order-storage'
+import { verifyAdminToken } from '@/lib/admin-auth'
 
+// GET - Get all orders (admin only)
 export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication
-    const authResult = await verifyAdminAuth(request)
-    if (!authResult.success) {
-      return NextResponse.json({ error: authResult.error }, { status: 401 })
+    const admin = await verifyAdminToken(request)
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    await connectDB()
-
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const status = searchParams.get('status')
-    const paymentStatus = searchParams.get('paymentStatus')
-    const search = searchParams.get('search')
-    const sortBy = searchParams.get('sortBy') || 'createdAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
-
-    // Build query
-    const query: any = {}
+    console.log('🔄 Admin fetching all orders...')
     
-    if (status && status !== 'all') {
-      query.status = status
-    }
+    // Get orders from AWS
+    const orders = await getAllOrders()
     
-    if (paymentStatus && paymentStatus !== 'all') {
-      query.paymentStatus = paymentStatus
-    }
+    console.log(`✅ Retrieved ${orders.length} orders from AWS`)
     
-    if (search) {
-      query.$or = [
-        { orderNumber: { $regex: search, $options: 'i' } },
-        { customerEmail: { $regex: search, $options: 'i' } },
-        { 'shippingAddress.fullName': { $regex: search, $options: 'i' } },
-        { trackingNumber: { $regex: search, $options: 'i' } }
-      ]
-    }
-
-    // Build sort object
-    const sortObj: any = {}
-    sortObj[sortBy] = sortOrder === 'desc' ? -1 : 1
-
-    // Get total count
-    const total = await Order.countDocuments(query)
-
-    // Get orders with pagination
-    const orders = await Order.find(query)
-      .sort(sortObj)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean()
-
-    // Transform orders for frontend
-    const transformedOrders = orders.map((order: any) => ({
-      _id: order._id?.toString(),
-      orderNumber: order.orderNumber,
-      customerEmail: order.customerEmail,
-      customerName: order.shippingAddress?.fullName || 'N/A',
-      items: order.items || [],
-      subtotal: order.subtotal || 0,
-      shippingCost: order.shippingCost || 0,
-      tax: order.tax || 0,
-      total: order.total || 0,
-      status: order.status || 'pending',
-      paymentStatus: order.paymentStatus || 'pending',
-      paymentMethod: order.paymentMethod || 'razorpay',
-      shippingAddress: order.shippingAddress,
-      trackingNumber: order.trackingNumber || '',
-      estimatedDelivery: order.estimatedDelivery,
-      deliveredAt: order.deliveredAt,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt
-    }))
-
     return NextResponse.json({
       success: true,
-      data: transformedOrders,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
+      data: orders,
+      total: orders.length
     })
 
-  } catch (error) {
-    console.error('Error fetching orders:', error)
+  } catch (error: any) {
+    console.error('❌ Error fetching orders:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch orders' },
+      { success: false, error: error.message || 'Failed to fetch orders' },
       { status: 500 }
     )
   }
 }
 
-export async function POST(request: NextRequest) {
+// PUT - Update order status (admin only)
+export async function PUT(request: NextRequest) {
   try {
     // Verify admin authentication
-    const authResult = await verifyAdminAuth(request)
-    if (!authResult.success) {
-      return NextResponse.json({ error: authResult.error }, { status: 401 })
+    const admin = await verifyAdminToken(request)
+    if (!admin) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    await connectDB()
-
     const body = await request.json()
-    
-    // Create new order
-    const order = new Order(body)
-    await order.save()
+    const { orderId, updates } = body
 
+    if (!orderId || !updates) {
+      return NextResponse.json(
+        { success: false, error: 'Missing orderId or updates' },
+        { status: 400 }
+      )
+    }
+
+    console.log('🔄 Admin updating order:', orderId, updates)
+
+    // Validate update fields
+    const allowedUpdates = ['status', 'paymentStatus', 'trackingNumber', 'estimatedDelivery', 'notes']
+    const validUpdates: any = {}
+    
+    for (const [key, value] of Object.entries(updates)) {
+      if (allowedUpdates.includes(key)) {
+        validUpdates[key] = value
+      }
+    }
+
+    if (Object.keys(validUpdates).length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No valid update fields provided' },
+        { status: 400 }
+      )
+    }
+
+    // Update order in AWS
+    const updatedOrder = await updateOrderStatus(orderId, validUpdates)
+    
+    if (!updatedOrder) {
+      return NextResponse.json(
+        { success: false, error: 'Order not found or update failed' },
+        { status: 404 }
+      )
+    }
+
+    console.log('✅ Order updated successfully:', orderId)
+    
     return NextResponse.json({
       success: true,
-      data: order,
-      message: 'Order created successfully'
+      data: updatedOrder,
+      message: 'Order updated successfully'
     })
 
-  } catch (error) {
-    console.error('Error creating order:', error)
+  } catch (error: any) {
+    console.error('❌ Error updating order:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to create order' },
+      { success: false, error: error.message || 'Failed to update order' },
       { status: 500 }
     )
   }
