@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+import { User } from 'firebase/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -47,7 +48,8 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  const { user, loading: authLoading } = useFirebaseAuth()
+  const { user: firebaseUser, loading: authLoading } = useFirebaseAuth()
+  const user = firebaseUser as User | null
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [searchOrderNumber, setSearchOrderNumber] = useState('')

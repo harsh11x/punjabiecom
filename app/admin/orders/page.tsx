@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { useAuth } from '@/contexts/AdminAuthContext'
+import { useAdminAuth } from '@/contexts/AdminAuthContext'
 
 interface OrderItem {
   productId: string
@@ -56,7 +56,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAdminAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)

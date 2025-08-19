@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
+import { NextRequest } from 'next/server'
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -30,3 +31,28 @@ if (!getApps().length) {
 }
 
 export const auth = getAuth()
+
+export async function verifyFirebaseToken(request: NextRequest): Promise<any> {
+  try {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.split('Bearer ')[1]
+    
+    // Verify the Firebase token
+    const decodedToken = await auth.verifyIdToken(token)
+    
+    if (!decodedToken || !decodedToken.email) {
+      return null
+    }
+
+    return decodedToken
+
+  } catch (error) {
+    console.error('Firebase token verification error:', error)
+    return null
+  }
+}

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOrdersByEmail, getOrderByNumber } from '@/lib/aws-order-storage'
+import { getOrdersByEmail, getOrderByNumber, AWSOrder } from '@/lib/aws-order-storage'
 import { verifyFirebaseToken } from '@/lib/firebase-admin'
+
+// Use AWSOrder type for consistency
+type Order = AWSOrder
 
 // GET - Get user's orders
 export async function GET(request: NextRequest) {
@@ -27,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔄 User fetching orders for:', customerEmail)
 
-    let orders = []
+    let orders: Order[] = []
 
     if (orderNumber) {
       // Get specific order by order number

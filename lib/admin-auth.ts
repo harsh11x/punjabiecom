@@ -67,6 +67,46 @@ export function generateAdminToken(user: AdminUser): string {
   )
 }
 
+export async function verifyAdminToken(request: NextRequest): Promise<AdminUser | null> {
+  try {
+    // First try to get token from cookies
+    let token = request.cookies.get('admin-token')?.value
+
+    // If no cookie, try Authorization header
+    if (!token) {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7) // Remove 'Bearer ' prefix
+      }
+    }
+
+    if (!token) {
+      return null
+    }
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    
+    if (!decoded || !decoded.id || !decoded.email) {
+      return null
+    }
+
+    // Return admin user
+    const adminUser: AdminUser = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role || 'admin',
+      isActive: true
+    }
+
+    return adminUser
+
+  } catch (error) {
+    console.error('Admin token verification error:', error)
+    return null
+  }
+}
+
 // Default admin credentials for initial setup
 export const DEFAULT_ADMIN = {
   email: 'harshdevsingh2004@gmail.com',
