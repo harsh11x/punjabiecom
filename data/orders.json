@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "_id": "order_1755600490076_lck8258",
+    "orderNumber": "PH1755600490076IK",
+    "customerEmail": "test@test.com",
+    "items": [
+      {
+        "productId": "test",
+        "name": "Test Product",
+        "price": 100,
+        "quantity": 1
+      }
+    ],
+    "subtotal": 0,
+    "shippingCost": 0,
+    "tax": 0,
+    "total": 100,
+    "status": "confirmed",
+    "paymentStatus": "pending",
+    "paymentMethod": "cod",
+    "shippingAddress": {
+      "firstName": "Test",
+      "lastName": "User",
+      "address": "Test Address",
+      "city": "Test City",
+      "state": "Test State",
+      "zipCode": "12345",
+      "phone": "1234567890"
+    },
+    "billingAddress": {
+      "firstName": "Test",
+      "lastName": "User",
+      "address": "Test Address",
+      "city": "Test City",
+      "state": "Test State",
+      "zipCode": "12345",
+      "phone": "1234567890"
+    },
+    "notes": "",
+    "createdAt": "2025-08-19T10:48:10.076Z",
+    "updatedAt": "2025-08-19T10:48:10.076Z"
+  }
+]

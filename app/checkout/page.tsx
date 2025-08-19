@@ -28,6 +28,7 @@ export default function CheckoutPage() {
     pincode: '',
     phone: ''
   })
+  const [paymentMethod, setPaymentMethod] = useState('cod')
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -49,6 +50,10 @@ export default function CheckoutPage() {
         lastName: user.displayName?.split(' ')[1] || ''
       }))
     }
+
+    // Log the current form state
+    console.log('Checkout page mounted, user:', user)
+    console.log('Initial form data:', formData)
   }, [user, router])
 
   // Redirect if cart is empty
@@ -65,6 +70,18 @@ export default function CheckoutPage() {
     }))
   }
 
+  const debugFormData = () => {
+    console.log('=== DEBUG FORM DATA ===')
+    console.log('Form Data:', formData)
+    console.log('Cart Items:', items)
+    console.log('Total Price:', totalPrice)
+    console.log('User:', user)
+    console.log('Is Authenticated:', !!user)
+    console.log('========================')
+    
+    toast.info('Check console for debug information')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsProcessing(true)
@@ -77,7 +94,118 @@ export default function CheckoutPage() {
         return
       }
 
-      // Prepare order data
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        toast.error('Please enter a valid email address')
+        setIsProcessing(false)
+        return
+      }
+
+      // Validate phone number (basic validation)
+      if (formData.phone && formData.phone.length < 10) {
+        toast.error('Please enter a valid phone number')
+        setIsProcessing(false)
+        return
+      }
+
+      // Validate cart items
+      if (!items || items.length === 0) {
+        toast.error('Your cart is empty')
+        setIsProcessing(false)
+        return
+      }
+
+      // Validate each cart item
+      for (const item of items) {
+        if (!item.id || !item.name || !item.price || !item.quantity) {
+          toast.error('Invalid cart item data')
+          setIsProcessing(false)
+          return
+        }
+      }
+
+      console.log('Form validation passed, cart items:', items)
+      console.log('Selected payment method:', paymentMethod)
+
+      // Handle Cash on Delivery orders
+      if (paymentMethod === 'cod') {
+        console.log('Processing Cash on Delivery order...')
+        
+        // For COD orders, we create the order directly without payment processing
+        const codOrderData = {
+          items: items.map(item => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color,
+            image: item.image
+          })),
+          shippingAddress: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.pincode,
+            phone: formData.phone
+          },
+          billingAddress: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.pincode,
+            phone: formData.phone
+          },
+          customerEmail: formData.email,
+          subtotal: totalPrice,
+          shippingCost: 0,
+          tax: 0,
+          total: totalPrice,
+          paymentMethod: 'cod',
+          paymentStatus: 'pending',
+          status: 'confirmed'
+        }
+
+        try {
+          const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(codOrderData)
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to create COD order')
+          }
+
+          const orderResult = await response.json()
+          
+          if (orderResult.success) {
+            // Clear cart after successful order creation
+            clearCart()
+            
+            // Redirect to success page
+            router.push(`/order-success?orderId=${orderResult.data._id}&orderNumber=${orderResult.data.orderNumber}`)
+            toast.success('Order placed successfully! You will pay on delivery.')
+            return
+          } else {
+            throw new Error(orderResult.error || 'Failed to create COD order')
+          }
+        } catch (error: any) {
+          console.error('COD order creation failed:', error)
+          toast.error('Failed to create order. Please try again.')
+          setIsProcessing(false)
+          return
+        }
+      }
+
+      // Prepare order data for online payment
       const orderData = {
         items: items.map(item => ({
           productId: item.id, // Use id instead of productId
@@ -113,6 +241,13 @@ export default function CheckoutPage() {
       }
 
       console.log('Creating payment order...', orderData)
+      toast.info('Creating your order...')
+
+      // Log the request details
+      console.log('Request URL:', '/api/payment/create-order')
+      console.log('Request method:', 'POST')
+      console.log('Request headers:', { 'Content-Type': 'application/json' })
+      console.log('Request body:', JSON.stringify(orderData, null, 2))
 
       // Create Razorpay order
       const response = await fetch('/api/payment/create-order', {
@@ -123,6 +258,15 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderData)
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Error response data:', errorData)
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
       console.log('Payment order response:', data)
 
@@ -130,7 +274,23 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to create payment order')
       }
 
-      // Initialize Razorpay payment
+      // Check if this is a mock payment
+      if (data.order.isMockPayment) {
+        console.log('Using mock payment system')
+        
+        // For mock payments, we can simulate success immediately
+        // or show a different flow
+        toast.success('Mock payment order created successfully!')
+        
+        // Clear cart after successful mock payment
+        clearCart()
+        
+        // Redirect to success page
+        router.push(`/order-success?orderId=${data.order.id}&orderNumber=${data.order.orderNumber}`)
+        return
+      }
+
+      // Initialize Razorpay payment for real payments
       const options = {
         key: data.order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.order.razorpayAmount,
@@ -211,7 +371,21 @@ export default function CheckoutPage() {
 
     } catch (error: any) {
       console.error('Order processing failed:', error)
-      toast.error(error.message || 'Failed to process order')
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to process order'
+      
+      if (error.message.includes('Failed to create payment order')) {
+        errorMessage = 'Payment order creation failed. Please try again.'
+      } else if (error.message.includes('HTTP error')) {
+        errorMessage = 'Server error. Please try again later.'
+      } else if (error.message.includes('Network')) {
+        errorMessage = 'Network error. Please check your connection and try again.'
+      } else {
+        errorMessage = error.message || 'An unexpected error occurred. Please try again.'
+      }
+      
+      toast.error(errorMessage)
       setIsProcessing(false)
     }
   }
@@ -379,11 +553,25 @@ export default function CheckoutPage() {
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
-                      <input type="radio" id="cod" name="payment" value="cod" defaultChecked />
+                      <input 
+                        type="radio" 
+                        id="cod" 
+                        name="payment" 
+                        value="cod" 
+                        checked={paymentMethod === 'cod'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
                       <Label htmlFor="cod">Cash on Delivery</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <input type="radio" id="razorpay" name="payment" value="razorpay" />
+                      <input 
+                        type="radio" 
+                        id="razorpay" 
+                        name="payment" 
+                        value="razorpay" 
+                        checked={paymentMethod === 'razorpay'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
                       <Label htmlFor="razorpay">Online Payment (Razorpay)</Label>
                     </div>
                   </div>
@@ -447,6 +635,18 @@ export default function CheckoutPage() {
                 >
                   {isProcessing ? 'Processing...' : 'Place Order'}
                 </Button>
+
+                {/* Debug Button - Development Only */}
+                {process.env.NODE_ENV === 'development' && (
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full border-dashed" 
+                    onClick={debugFormData}
+                  >
+                    🐛 Debug Form Data
+                  </Button>
+                )}
 
                 <Link href="/cart">
                   <Button variant="outline" className="w-full">
