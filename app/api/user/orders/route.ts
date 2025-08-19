@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOrdersByEmail, getOrderByNumber, AWSOrder } from '@/lib/aws-order-storage'
+import { getOrdersByEmail, getOrderByNumber, AWSOrder } from '@/lib/order-storage'
 import { verifyFirebaseToken } from '@/lib/firebase-admin'
 
 // Use AWSOrder type for consistency

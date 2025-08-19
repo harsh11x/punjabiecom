@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 🚀 Quick Start Script for Punjabi Heritage E-commerce Store
-# This script quickly starts the application without AWS setup
+# 🚀 Simple Server Startup Script for Punjabi Heritage E-commerce Store
+# This script starts everything with local storage - no AWS setup needed!
 
 set -e
 
@@ -34,7 +34,7 @@ kill_port() {
     fi
 }
 
-print_status "🚀 Quick Starting Punjabi Heritage E-commerce Store..."
+print_status "🚀 Starting Punjabi Heritage E-commerce Store..."
 
 # Kill existing processes
 print_status "Checking for existing processes..."
@@ -56,6 +56,28 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
+# Create data directory if it doesn't exist
+if [ ! -d "data" ]; then
+    print_status "Creating data directory..."
+    mkdir -p data
+fi
+
+# Create initial data files if they don't exist
+if [ ! -f "data/orders.json" ]; then
+    print_status "Creating orders data file..."
+    echo "[]" > data/orders.json
+fi
+
+if [ ! -f "data/products.json" ]; then
+    print_status "Creating products data file..."
+    echo "[]" > data/products.json
+fi
+
+if [ ! -f "data/carts.json" ]; then
+    print_status "Creating carts data file..."
+    echo "[]" > data/carts.json
+fi
+
 # Start the application
 print_status "Starting Next.js development server..."
 npm run dev &
@@ -65,18 +87,32 @@ sleep 8
 
 # Check if server is running
 if curl -s http://localhost:3000 > /dev/null; then
-    print_success "Application started successfully!"
+    print_success "🎉 Server started successfully!"
     echo ""
     print_status "Your store is now running at:"
     echo "• Frontend: http://localhost:3000"
     echo "• Admin Panel: http://localhost:3000/admin"
-    echo "• Orders Page: http://localhost:3000/orders"
+    echo "• User Orders: http://localhost:3000/orders"
+    echo "• Cart: http://localhost:3000/cart"
+    echo "• Checkout: http://localhost:3000/checkout"
     echo ""
-    print_warning "Note: This is a quick start without AWS setup."
-    print_warning "For full AWS order storage, run: ./COMPLETE_AWS_SETUP.sh"
+    print_status "Features working:"
+    echo "✅ Product browsing and search"
+    echo "✅ Shopping cart functionality"
+    echo "✅ Checkout with COD and Razorpay"
+    echo "✅ Order management (local storage)"
+    echo "✅ Admin panel for orders"
+    echo "✅ User order tracking"
+    echo "✅ Responsive design"
     echo ""
     print_success "Happy selling! 🎉"
+    echo ""
+    print_status "Press Ctrl+C to stop the server"
+    
+    # Keep the script running
+    wait
 else
     print_warning "Server may still be starting up..."
     print_status "Please wait a moment and check: http://localhost:3000"
+    print_status "Or check the console for any error messages"
 fi

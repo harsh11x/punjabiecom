@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllOrders, getOrder, updateOrderStatus } from '@/lib/aws-order-storage'
+import { getAllOrders, getOrder, updateOrderStatus } from '@/lib/order-storage'
 import { verifyAdminToken } from '@/lib/admin-auth'
 
 // GET - Get all orders (admin only)
