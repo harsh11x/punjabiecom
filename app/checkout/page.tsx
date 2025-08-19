@@ -137,28 +137,27 @@ export default function CheckoutPage() {
           items: items.map(item => ({
             productId: item.id,
             name: item.name,
+            punjabiName: item.name, // Add required punjabiName field
             price: item.price,
             quantity: item.quantity,
-            size: item.size,
-            color: item.color,
-            image: item.image
+            size: item.size || 'Standard',
+            color: item.color || 'Default',
+            image: item.image || ''
           })),
           shippingAddress: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            address: formData.address,
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            addressLine1: formData.address,
             city: formData.city,
             state: formData.state,
-            zipCode: formData.pincode,
+            pincode: formData.pincode,
             phone: formData.phone
           },
           billingAddress: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            address: formData.address,
+            fullName: `${formData.firstName} ${formData.lastName}`,
+            addressLine1: formData.address,
             city: formData.city,
             state: formData.state,
-            zipCode: formData.pincode,
+            pincode: formData.pincode,
             phone: formData.phone
           },
           customerEmail: formData.email,
@@ -171,7 +170,11 @@ export default function CheckoutPage() {
           status: 'confirmed'
         }
 
+        console.log('COD Order Data:', JSON.stringify(codOrderData, null, 2))
+
         try {
+          console.log('Sending COD order to API...')
+          
           const response = await fetch('/api/orders', {
             method: 'POST',
             headers: {
@@ -180,11 +183,17 @@ export default function CheckoutPage() {
             body: JSON.stringify(codOrderData)
           })
 
+          console.log('COD API Response Status:', response.status)
+          console.log('COD API Response Headers:', Object.fromEntries(response.headers.entries()))
+
           if (!response.ok) {
-            throw new Error('Failed to create COD order')
+            const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }))
+            console.error('COD API Error Response:', errorData)
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
           }
 
           const orderResult = await response.json()
+          console.log('COD API Success Response:', orderResult)
           
           if (orderResult.success) {
             // Clear cart after successful order creation
@@ -195,11 +204,12 @@ export default function CheckoutPage() {
             toast.success('Order placed successfully! You will pay on delivery.')
             return
           } else {
+            console.error('COD API returned success: false:', orderResult)
             throw new Error(orderResult.error || 'Failed to create COD order')
           }
         } catch (error: any) {
           console.error('COD order creation failed:', error)
-          toast.error('Failed to create order. Please try again.')
+          toast.error(`Failed to create order: ${error.message}`)
           setIsProcessing(false)
           return
         }
@@ -212,9 +222,9 @@ export default function CheckoutPage() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-          image: item.image
+          size: item.size || 'Standard',
+          color: item.color || 'Default',
+          image: item.image || ''
         })),
         shippingAddress: {
           firstName: formData.firstName,
@@ -239,6 +249,8 @@ export default function CheckoutPage() {
         shippingCost: 0,
         tax: 0
       }
+
+      console.log('Online Payment Order Data:', JSON.stringify(orderData, null, 2))
 
       console.log('Creating payment order...', orderData)
       toast.info('Creating your order...')

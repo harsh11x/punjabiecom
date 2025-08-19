@@ -1,0 +1,41 @@
+{
+  "_id": "order-1755607133535-355",
+  "orderNumber": "ORD-1755607133535-394",
+  "customerEmail": "test@test.com",
+  "items": [
+    {
+      "productId": "test",
+      "name": "Test Product",
+      "price": 100,
+      "quantity": 1
+    }
+  ],
+  "subtotal": 100,
+  "shippingCost": 0,
+  "tax": 0,
+  "total": 100,
+  "status": "pending",
+  "paymentStatus": "pending",
+  "paymentMethod": "razorpay",
+  "shippingAddress": {
+    "firstName": "Test",
+    "lastName": "User",
+    "address": "Test Address",
+    "city": "Test City",
+    "state": "Test State",
+    "zipCode": "12345",
+    "phone": "1234567890"
+  },
+  "billingAddress": {
+    "firstName": "Test",
+    "lastName": "User",
+    "address": "Test Address",
+    "city": "Test City",
+    "state": "Test State",
+    "zipCode": "12345",
+    "phone": "1234567890"
+  },
+  "createdAt": "2025-08-19T12:38:53.535Z",
+  "updatedAt": "2025-08-19T12:38:53.535Z",
+  "razorpayOrderId": "order_R7CDMOZ7HERap3"
+}

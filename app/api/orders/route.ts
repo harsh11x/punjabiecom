@@ -149,21 +149,32 @@ export async function GET(request: NextRequest) {
 // POST - Create new order (used by payment system)
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔥 Creating new order...')
     const orderData = await request.json()
+    console.log('Order data received:', JSON.stringify(orderData, null, 2))
     
     // Validate required fields
     if (!orderData.customerEmail || !orderData.items || !orderData.shippingAddress) {
+      console.error('❌ Missing required fields:', {
+        customerEmail: !!orderData.customerEmail,
+        items: !!orderData.items,
+        shippingAddress: !!orderData.shippingAddress
+      })
       return NextResponse.json(
         { success: false, error: 'Missing required fields: customerEmail, items, shippingAddress' },
         { status: 400 }
       )
     }
     
+    console.log('✅ Required fields validation passed')
+    
     let savedOrder: any = null
     
     // Try to save to MongoDB first
     try {
+      console.log('🔄 Attempting to connect to MongoDB...')
       await connectDB()
+      console.log('✅ MongoDB connected successfully')
       
       const order = new Order({
         customerEmail: orderData.customerEmail,
@@ -180,6 +191,7 @@ export async function POST(request: NextRequest) {
         notes: orderData.notes || ''
       })
       
+      console.log('🔄 Saving order to MongoDB...')
       const mongoOrder = await order.save()
       savedOrder = {
         _id: mongoOrder._id.toString(),
@@ -191,10 +203,12 @@ export async function POST(request: NextRequest) {
       
     } catch (error) {
       console.warn('⚠️ Failed to save to MongoDB:', error)
+      console.error('MongoDB Error Details:', error)
     }
     
     // Save to file storage as backup
     try {
+      console.log('🔄 Attempting to save to file storage...')
       const fileOrders = getOrdersFromFile()
       
       const fileOrder = savedOrder || {
@@ -216,6 +230,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString()
       }
       
+      console.log('🔄 File order created:', fileOrder._id)
       fileOrders.push(fileOrder)
       saveOrdersToFile(fileOrders)
       
@@ -228,8 +243,10 @@ export async function POST(request: NextRequest) {
       
     } catch (error) {
       console.error('❌ Failed to save to file storage:', error)
+      console.error('File Storage Error Details:', error)
       
       if (savedOrder) {
+        console.log('✅ Returning MongoDB order as fallback')
         return NextResponse.json({
           success: true,
           data: savedOrder
