@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 🚀 Simple Server Startup Script for Punjabi Heritage E-commerce Store
-# This script starts everything with local storage - no AWS setup needed!
+# 🚀 AWS Server Startup Script for Punjabi Heritage E-commerce Store
+# This script is specifically designed for AWS/Lightsail instances
 
 set -e
 
@@ -9,6 +9,7 @@ set -e
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
 NC='\033[0m'
 
 print_status() {
@@ -23,6 +24,16 @@ print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_header() {
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}================================${NC}"
+}
+
 # Function to kill process on port
 kill_port() {
     local port=$1
@@ -34,7 +45,13 @@ kill_port() {
     fi
 }
 
-print_status "🚀 Starting Punjabi Heritage E-commerce Store..."
+print_header "🚀 Starting Punjabi Heritage E-commerce Store on AWS"
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    print_error "package.json not found. Please run this script from the project root"
+    exit 1
+fi
 
 # Kill existing processes
 print_status "Checking for existing processes..."
@@ -50,48 +67,72 @@ if pgrep -f "node.*dev" > /dev/null; then
     sleep 2
 fi
 
-# Install dependencies if needed
-if [ ! -d "node_modules" ]; then
-    print_status "Installing dependencies..."
-    npm install
-else
-    print_status "Dependencies already installed"
+# Check Node.js installation
+print_status "Checking Node.js installation..."
+if ! command -v node > /dev/null 2>&1; then
+    print_error "Node.js not found. Please install Node.js 18+ first"
+    print_status "On Ubuntu/Debian: curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt-get install -y nodejs"
+    exit 1
 fi
 
-# Check if next command exists
-if ! command -v npx > /dev/null 2>&1; then
-    print_error "npx not found. Installing Node.js dependencies..."
-    npm install
+NODE_VERSION=$(node --version)
+print_success "Node.js found: $NODE_VERSION"
+
+# Check npm installation
+print_status "Checking npm installation..."
+if ! command -v npm > /dev/null 2>&1; then
+    print_error "npm not found. Please install npm"
+    exit 1
 fi
 
-# Create data directory if it doesn't exist
-if [ ! -d "data" ]; then
-    print_status "Creating data directory..."
-    mkdir -p data
+NPM_VERSION=$(npm --version)
+print_success "npm found: $NPM_VERSION"
+
+# Install dependencies
+print_status "Installing/updating dependencies..."
+npm install
+
+# Check if next is available
+print_status "Checking Next.js availability..."
+if ! npx next --version > /dev/null 2>&1; then
+    print_warning "Next.js not available. Installing..."
+    npm install next@latest
 fi
 
-# Create initial data files if they don't exist
+# Create data directory and files
+print_status "Setting up data storage..."
+mkdir -p data
+
 if [ ! -f "data/orders.json" ]; then
-    print_status "Creating orders data file..."
     echo "[]" > data/orders.json
+    print_success "Created orders.json"
 fi
 
 if [ ! -f "data/products.json" ]; then
-    print_status "Creating products data file..."
     echo "[]" > data/products.json
+    print_success "Created products.json"
 fi
 
 if [ ! -f "data/carts.json" ]; then
-    print_status "Creating carts data file..."
     echo "[]" > data/carts.json
+    print_success "Created carts.json"
+fi
+
+# Test build
+print_status "Testing build..."
+if npm run build > /dev/null 2>&1; then
+    print_success "Build successful!"
+else
+    print_warning "Build may have issues, but continuing..."
 fi
 
 # Start the application
 print_status "Starting Next.js development server..."
+print_status "Using: npx next dev"
 npx next dev &
 
 # Wait for server to start
-sleep 8
+sleep 10
 
 # Check if server is running
 if curl -s http://localhost:3000 > /dev/null; then
@@ -123,4 +164,8 @@ else
     print_warning "Server may still be starting up..."
     print_status "Please wait a moment and check: http://localhost:3000"
     print_status "Or check the console for any error messages"
+    
+    # Show server logs
+    print_status "Server logs:"
+    jobs
 fi
