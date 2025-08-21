@@ -1,27 +1,96 @@
 import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
 
-const AWS_BACKEND_URL = 'http://3.111.208.77:3001'
+// Local file storage for orders
+const DATA_DIR = path.resolve(process.cwd(), 'data')
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json')
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+}
+
+function getOrdersFromFile() {
+  if (!fs.existsSync(ORDERS_FILE)) {
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2), 'utf8')
+    return []
+  }
+  try {
+    const data = fs.readFileSync(ORDERS_FILE, 'utf8')
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Error reading orders from file:', error)
+    return []
+  }
+}
+
+function saveOrdersToFile(orders: any[]) {
+  try {
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2))
+  } catch (error) {
+    console.error('Error saving orders to file:', error)
+    throw error
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    console.log('🔥 Creating new order...')
+    const orderData = await request.json()
+    console.log('Order data received:', JSON.stringify(orderData, null, 2))
     
-    // Forward the request to AWS backend
-    const response = await fetch(`${AWS_BACKEND_URL}/api/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body)
+    // Validate required fields
+    if (!orderData.customerEmail || !orderData.items || !orderData.shippingAddress) {
+      console.error('❌ Missing required fields:', {
+        customerEmail: !!orderData.customerEmail,
+        items: !!orderData.items,
+        shippingAddress: !!orderData.shippingAddress
+      })
+      return NextResponse.json(
+        { success: false, error: 'Missing required fields: customerEmail, items, shippingAddress' },
+        { status: 400 }
+      )
+    }
+    
+    console.log('✅ Required fields validation passed')
+    
+    // Create order object
+    const newOrder = {
+      _id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      orderNumber: `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`,
+      customerEmail: orderData.customerEmail,
+      items: orderData.items,
+      subtotal: orderData.subtotal || 0,
+      shippingCost: orderData.shippingCost || 0,
+      tax: orderData.tax || 0,
+      total: orderData.total || orderData.subtotal || 0,
+      status: orderData.status || 'pending',
+      paymentStatus: orderData.paymentStatus || 'pending',
+      paymentMethod: orderData.paymentMethod || 'razorpay',
+      shippingAddress: orderData.shippingAddress,
+      billingAddress: orderData.billingAddress || orderData.shippingAddress,
+      notes: orderData.notes || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    
+    // Save to local file
+    const orders = getOrdersFromFile()
+    orders.push(newOrder)
+    saveOrdersToFile(orders)
+    
+    console.log('✅ Order saved successfully:', newOrder._id)
+    
+    return NextResponse.json({
+      success: true,
+      data: newOrder
     })
     
-    const data = await response.json()
-    
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    console.error('Error forwarding to AWS backend:', error)
+  } catch (error: any) {
+    console.error('❌ Error creating order:', error)
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { success: false, error: error.message || 'Failed to create order' },
       { status: 500 }
     )
   }
@@ -29,15 +98,84 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Forward the request to AWS backend
-    const response = await fetch(`${AWS_BACKEND_URL}/api/orders`)
-    const data = await response.json()
+    const { searchParams } = new URL(request.url)
+    const orderId = searchParams.get('id')
+    const orderNumber = searchParams.get('orderNumber')
+    const customerEmail = searchParams.get('email') || 
+                         request.headers.get('x-user-email')
     
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    console.error('Error forwarding to AWS backend:', error)
+    const orders = getOrdersFromFile()
+    let filteredOrders = orders
+    
+    if (orderId) {
+      filteredOrders = orders.filter((order: any) => order._id === orderId)
+    } else if (orderNumber) {
+      filteredOrders = orders.filter((order: any) => order.orderNumber === orderNumber)
+    } else if (customerEmail) {
+      filteredOrders = orders.filter((order: any) => 
+        order.customerEmail.toLowerCase() === customerEmail.toLowerCase()
+      )
+    }
+    
+    console.log(`✅ Retrieved ${filteredOrders.length} orders from local storage`)
+    
+    return NextResponse.json({
+      success: true,
+      data: filteredOrders
+    })
+    
+  } catch (error: any) {
+    console.error('❌ Error fetching orders:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
+      { success: false, error: error.message || 'Failed to fetch orders' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const orderId = searchParams.get('id')
+    
+    if (!orderId) {
+      return NextResponse.json(
+        { success: false, error: 'Order ID is required' },
+        { status: 400 }
+      )
+    }
+    
+    const updateData = await request.json()
+    const orders = getOrdersFromFile()
+    const orderIndex = orders.findIndex((order: any) => order._id === orderId)
+    
+    if (orderIndex === -1) {
+      return NextResponse.json(
+        { success: false, error: 'Order not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Update order
+    orders[orderIndex] = {
+      ...orders[orderIndex],
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    }
+    
+    saveOrdersToFile(orders)
+    
+    console.log('✅ Order updated successfully:', orderId)
+    
+    return NextResponse.json({
+      success: true,
+      data: orders[orderIndex]
+    })
+    
+  } catch (error: any) {
+    console.error('❌ Error updating order:', error)
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update order' },
       { status: 500 }
     )
   }
