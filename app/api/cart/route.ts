@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
         { error: 'Request timeout - AWS backend not responding' },
         { status: 504 }
       )
-      )
     }
     
     return NextResponse.json(
@@ -181,7 +180,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: `AWS backend error: ${response.status}` },
         { status: response.status }
-      )
       )
     }
     
