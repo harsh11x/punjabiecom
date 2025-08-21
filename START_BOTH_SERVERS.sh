@@ -79,11 +79,11 @@ if [ ! -f "data/carts.json" ]; then
     print_success "Created carts.json"
 fi
 
-# Start Express server first (backend)
-print_status "Starting Express server (backend) on port 3001..."
-print_status "Using: NODE_OPTIONS='--max-old-space-size=64' node simple-server.js"
-export NODE_OPTIONS="--max-old-space-size=64"
-node simple-server.js &
+  # Start Express server first (backend)
+  print_status "Starting Express server (backend) on port 3001..."
+  print_status "Using: NODE_OPTIONS='--max-old-space-size=64' node simple-server-no-deps.js"
+  export NODE_OPTIONS="--max-old-space-size=64"
+  node simple-server-no-deps.js &
 
 # Wait for Express server to start
 sleep 5

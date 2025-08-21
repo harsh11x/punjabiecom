@@ -1,55 +1,60 @@
-// API Configuration for connecting to AWS server
-const isProduction = process.env.NODE_ENV === 'production'
-
-// AWS Server Configuration
-const AWS_SERVER_IP = '3.111.208.77'
-const AWS_SERVER_PORT = '3003'
-
-// Local Development Configuration
-const LOCAL_SERVER_PORT = '3003'
-
-// Socket.IO Configuration - Disabled for simple file-based deployment
-export const SOCKET_CONFIG = {
-  // Completely disabled for file-based storage deployment
-  url: null,
+// API Configuration for different environments
+export const API_CONFIG = {
+  // Development (localhost)
+  development: {
+    backendUrl: 'http://localhost:3001',
+    frontendUrl: 'http://localhost:3000'
+  },
   
-  options: {
-    transports: ['websocket', 'polling'],
-    autoConnect: false, // Always disabled for this deployment
-    reconnection: false,
-    reconnectionAttempts: 0,
-    reconnectionDelay: 1000,
-    timeout: 20000,
-    forceNew: true
+  // Production (Vercel)
+  production: {
+    backendUrl: 'https://your-backend-domain.com', // Replace with your backend domain
+    frontendUrl: 'https://your-project.vercel.app'  // Replace with your Vercel domain
   }
+};
+
+// Auto-detect environment
+export const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           typeof window !== 'undefined' && window.location.hostname === 'localhost';
+
+export const isProduction = !isDevelopment;
+
+// Get current API configuration
+export function getApiConfig() {
+  return isDevelopment ? API_CONFIG.development : API_CONFIG.production;
 }
 
-// API Base URLs
-export const API_CONFIG = {
-  // Production: Use production deployment URL
-  // Development: Use local Next.js API routes
-  baseURL: isProduction 
-    ? 'https://punjabijuttiandfulkari.com/api'
-    : 'http://localhost:3000/api',
-  
-  // Socket server URL for API calls
-  socketURL: isProduction 
-    ? `http://${AWS_SERVER_IP}:${AWS_SERVER_PORT}`
-    : `http://localhost:${LOCAL_SERVER_PORT}`,
-  
-  // CORS origins
-  corsOrigins: isProduction 
-    ? [
-        'https://your-vercel-domain.vercel.app',
-        'https://punjabijuttiandfulkari.com',
-        'https://www.punjabijuttiandfulkari.com'
-      ]
-    : [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-        'http://localhost:3003'
-      ]
+// Get backend URL for API calls
+export function getBackendUrl() {
+  const config = getApiConfig();
+  return config.backendUrl;
+}
+
+// Get frontend URL
+export function getFrontendUrl() {
+  const config = getApiConfig();
+  return config.frontendUrl;
+}
+
+// Build full API endpoint URL
+export function getApiEndpoint(endpoint: string) {
+  const backendUrl = getBackendUrl();
+  return `${backendUrl}${endpoint}`;
+}
+
+// Common API endpoints
+export const API_ENDPOINTS = {
+  orders: '/api/orders',
+  products: '/api/products',
+  health: '/health',
+  admin: {
+    orders: '/api/admin/orders'
+  }
+};
+
+// Helper function to get full URL for any endpoint
+export function getFullApiUrl(endpoint: string) {
+  return getApiEndpoint(endpoint);
 }
 
 // Database Configuration

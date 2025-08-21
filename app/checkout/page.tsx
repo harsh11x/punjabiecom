@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { getApiUrl } from '@/config/environment'
 
 export default function CheckoutPage() {
   const { items, totalPrice, totalItems, clearCart } = useCart()
@@ -175,8 +176,8 @@ export default function CheckoutPage() {
         try {
           console.log('Sending COD order to API...')
           
-          // Use Express server for orders
-          const response = await fetch('http://localhost:3001/api/orders', {
+          // Use environment-based backend URL
+          const response = await fetch(getApiUrl('/api/orders'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
