@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 const https = require('https');
@@ -61,7 +62,7 @@ const SYNC_LOG_FILE = path.join(SYNC_DATA_DIR, 'sync-log.json');
 // Initialize sync directory
 const initializeSyncDirectory = async () => {
   try {
-    await fs.mkdir(SYNC_DATA_DIR, { recursive: true });
+    await fsPromises.mkdir(SYNC_DATA_DIR, { recursive: true });
     
     // Initialize files if they don't exist
     const files = [
@@ -73,9 +74,9 @@ const initializeSyncDirectory = async () => {
     
     for (const file of files) {
       try {
-        await fs.access(file.path);
+        await fsPromises.access(file.path);
       } catch {
-        await fs.writeFile(file.path, JSON.stringify(file.default, null, 2));
+        await fsPromises.writeFile(file.path, JSON.stringify(file.default, null, 2));
         console.log(`📁 Created ${path.basename(file.path)}`);
       }
     }
