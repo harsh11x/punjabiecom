@@ -100,11 +100,11 @@ export function MobileNav() {
               </div>
 
               <Link
-                href="/phulkari"
+                href="/fulkari"
                 className="block text-amber-100 hover:text-amber-300 font-semibold text-lg py-3 px-4 rounded-lg hover:bg-red-800/50 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                ਫੁਲਕਾਰੀ • Phulkari
+                ਫੁਲਕਾਰੀ • Fulkari
               </Link>
 
               <Link

@@ -51,7 +51,7 @@ export default function ProductsManagement() {
     { value: 'men', label: 'Men\'s Jutti' },
     { value: 'women', label: 'Women\'s Jutti' },
     { value: 'kids', label: 'Kids\' Jutti' },
-    { value: 'phulkari', label: 'Phulkari' },
+            { value: 'fulkari', label: 'Fulkari' },
     { value: 'accessories', label: 'Accessories' }
   ]
 

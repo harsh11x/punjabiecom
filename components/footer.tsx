@@ -62,9 +62,9 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/phulkari" className="text-amber-100 hover:text-amber-300 transition-colors flex items-center">
+                  <Link href="/fulkari" className="text-amber-100 hover:text-amber-300 transition-colors flex items-center">
                     <span className="mr-2">ਫੁਲਕਾਰੀ ਸੰਗ੍ਰਹਿ</span>
-                    <span>• Phulkari Collection</span>
+                    <span>• Fulkari Collection</span>
                   </Link>
                 </li>
                 <li>
@@ -114,13 +114,13 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy-policy" className="text-amber-100 hover:text-amber-300 transition-colors flex items-center">
+                  <Link href="/privacy" className="text-amber-100 hover:text-amber-300 transition-colors flex items-center">
                     <span className="mr-2">ਪ੍ਰਾਈਵੇਸੀ ਨੀਤੀ</span>
                     <span>• Privacy Policy</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms-conditions" className="text-amber-100 hover:text-amber-300 transition-colors flex items-center">
+                  <Link href="/terms" className="text-amber-100 hover:text-amber-300 transition-colors flex items-center">
                     <span className="mr-2">ਨਿਯਮ ਤੇ ਸ਼ਰਤਾਂ</span>
                     <span>• Terms & Conditions</span>
                   </Link>

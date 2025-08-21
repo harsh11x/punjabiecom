@@ -7,7 +7,7 @@ export interface IProduct extends mongoose.Document {
   punjabiDescription: string
   price: number
   originalPrice: number
-  category: 'men' | 'women' | 'kids' | 'phulkari'
+  category: 'men' | 'women' | 'kids' | 'fulkari'
   subcategory?: string
   images: string[]
   colors: string[]
@@ -58,7 +58,7 @@ const ProductSchema = new mongoose.Schema<IProduct>({
   category: {
     type: String,
     required: [true, 'Product category is required'],
-    enum: ['men', 'women', 'kids', 'phulkari']
+    enum: ['men', 'women', 'kids', 'fulkari']
   },
   subcategory: {
     type: String,

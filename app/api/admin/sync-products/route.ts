@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       revalidatePath('/men')
       revalidatePath('/women')
       revalidatePath('/kids')
-      revalidatePath('/phulkari')
+      revalidatePath('/fulkari')
       revalidatePath('/jutti')
       console.log('🔄 All product pages revalidated')
     } catch (revalidateError) {
