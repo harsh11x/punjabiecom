@@ -6,7 +6,7 @@ export const ENV_CONFIG = {
   // Backend URLs - Now using Vercel API routes (same domain as frontend)
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'https://punjabijuttiandfulkari.com' // Your own domain - no more external URLs!
+    production: '' // Empty string means same domain (relative URLs)
   },
   
   // Frontend URLs

@@ -6,48 +6,10 @@ import {
   deleteProduct 
 } from '@/lib/simple-product-storage'
 
-// AWS Sync Configuration
-const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3000'
-const AWS_SYNC_SECRET = process.env.AWS_SYNC_SECRET || 'punjabi-heritage-sync-secret-2024'
-
-// AWS Sync Function
+// AWS Sync Function (Disabled for now - using local storage only)
 async function syncToAWS(action: string, product: any, productId?: string) {
-  try {
-    console.log(`🔄 Syncing to AWS: ${action}`, { productId, productName: product?.name })
-    
-    const syncData = {
-      action,
-      product,
-      productId,
-      timestamp: new Date().toISOString(),
-      source: 'admin-panel'
-    }
-
-    const response = await fetch(`${AWS_SYNC_SERVER_URL}/api/sync/products`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AWS_SYNC_SECRET}`,
-        'User-Agent': 'Punjabi-Heritage-Admin/1.0'
-      },
-      body: JSON.stringify(syncData),
-      // Add timeout
-      signal: AbortSignal.timeout(10000) // 10 second timeout
-    })
-
-    if (response.ok) {
-      const result = await response.json()
-      console.log('✅ AWS sync successful:', action, result)
-      return { success: true, result }
-    } else {
-      const errorText = await response.text()
-      console.error('❌ AWS sync failed:', response.status, errorText)
-      return { success: false, error: `HTTP ${response.status}: ${errorText}` }
-    }
-  } catch (error: any) {
-    console.error('❌ AWS sync error:', error.message)
-    return { success: false, error: error.message }
-  }
+  console.log(`🔄 AWS sync disabled - using local storage only: ${action}`)
+  return { success: true, result: 'Local storage only' }
 }
 
 // GET - Fetch all products

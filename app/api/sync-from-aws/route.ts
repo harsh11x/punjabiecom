@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 
-// AWS Sync Configuration
-const AWS_SYNC_SERVER_URL = process.env.AWS_SYNC_SERVER_URL || 'http://3.111.208.77:3000';
-const WEBSITE_SYNC_TOKEN = process.env.WEBSITE_SYNC_TOKEN || 'punjabi-heritage-website-sync-token-2024';
+// AWS Sync Configuration (Disabled for now)
+const AWS_SYNC_SERVER_URL = 'http://localhost:3000'; // Disabled
+const WEBSITE_SYNC_TOKEN = 'disabled';
 
 // Function to update website's product storage
 async function updateWebsiteProducts(products: any[]) {
