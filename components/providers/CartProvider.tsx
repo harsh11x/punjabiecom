@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
+import { getApiUrl } from '@/config/environment'
 import { toast } from 'sonner'
 
 // Cart Item Interface
@@ -70,11 +71,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (isAuthenticated && user?.uid) {
         try {
           console.log('🔄 Syncing cart with server for user:', user.email)
-          const response = await fetch('/api/cart', {
+          const response = await fetch(getApiUrl('/api/cart'), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': user.uid,
               'x-user-email': user.email || '',
             },
           })
@@ -110,11 +110,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Try to save to server if user is authenticated (but don't block)
       if (isAuthenticated && user?.uid) {
         try {
-          const response = await fetch('/api/cart', {
+          const response = await fetch(getApiUrl('/api/cart'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-user-id': user.uid,
               'x-user-email': user.email || '',
             },
             body: JSON.stringify({ items: newItems }),

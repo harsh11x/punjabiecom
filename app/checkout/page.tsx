@@ -177,7 +177,7 @@ export default function CheckoutPage() {
           console.log('Sending COD order to API...')
           
           // Use environment-based backend URL
-          const response = await fetch(getApiUrl('/api/orders'), {
+          const response = await fetch('http://3.111.208.77:3001/api/orders', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
