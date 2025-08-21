@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
+const http = require('http');
 require('dotenv').config();
 
 const app = express();
@@ -665,12 +667,54 @@ const startServer = async () => {
   await initializeSyncDirectory();
   await connectMongoDB();
   
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 AWS Sync Server running on port ${PORT}`);
-    console.log(`📁 Sync data directory: ${SYNC_DATA_DIR}`);
-    console.log(`🔐 Authentication required for all sync endpoints`);
-    console.log(`🌐 CORS enabled for admin panel and website`);
-  });
+  // ===== SERVER INITIALIZATION =====
+  const PORT = process.env.PORT || 3001;
+  const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
+
+  // Check if SSL certificates exist
+  const hasSSL = fs.existsSync('./ssl/cert.pem') && fs.existsSync('./ssl/key.pem');
+
+  if (hasSSL) {
+    console.log('🔒 SSL certificates found - starting HTTPS server...');
+    
+    const httpsOptions = {
+      cert: fs.readFileSync('./ssl/cert.pem'),
+      key: fs.readFileSync('./ssl/key.pem')
+    };
+    
+    // Create HTTPS server
+    const httpsServer = https.createServer(httpsOptions, app);
+    httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
+      console.log(`🎉 ================================`);
+      console.log(`🚀 Punjabi Heritage Sync Server READY!`);
+      console.log(`🌐 HTTP Server: http://0.0.0.0:${PORT}`);
+      console.log(`🔒 HTTPS Server: https://0.0.0.0:${HTTPS_PORT}`);
+      console.log(`📁 Sync data directory: ${SYNC_DATA_DIR}`);
+      console.log(`🔐 Authentication: Bearer token required`);
+      console.log(`📊 Health check: https://localhost:${HTTPS_PORT}/api/health`);
+      console.log(`🎉 ================================`);
+    });
+    
+    // Also start HTTP server for fallback
+    http.createServer(app).listen(PORT, '0.0.0.0', () => {
+      console.log(`📡 HTTP server running on port ${PORT} (fallback)`);
+    });
+    
+  } else {
+    console.log('⚠️ No SSL certificates found - starting HTTP server only...');
+    console.log('💡 To enable HTTPS, create SSL certificates in ./ssl/ directory');
+    
+    // Start HTTP server only
+    http.createServer(app).listen(PORT, '0.0.0.0', () => {
+      console.log(`🎉 ================================`);
+      console.log(`🚀 Punjabi Heritage Sync Server READY!`);
+      console.log(`🌐 Server running on: http://0.0.0.0:${PORT}`);
+      console.log(`📁 Sync data directory: ${SYNC_DATA_DIR}`);
+      console.log(`🔐 Authentication: Bearer token required`);
+      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`🎉 ================================`);
+    });
+  }
 };
 
 startServer().catch(console.error);
