@@ -6,10 +6,10 @@ export const API_CONFIG = {
     frontendUrl: 'http://localhost:3000'
   },
   
-  // Production (Vercel)
+  // Production (AWS server)
   production: {
-    backendUrl: 'https://your-backend-domain.com', // Replace with your backend domain
-    frontendUrl: 'https://your-project.vercel.app'  // Replace with your Vercel domain
+    backendUrl: 'http://3.111.208.77:3001',
+    frontendUrl: 'https://punjabijuttiandfulkari.com'  // Your custom domain
   }
 };
 
@@ -59,8 +59,7 @@ export function getFullApiUrl(endpoint: string) {
 
 // Database Configuration
 export const DB_CONFIG = {
-  // MongoDB connection string
-  // In production, this should be your MongoDB Atlas or AWS MongoDB instance
+  // MongoDB connection string (if you want to use MongoDB later)
   uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/punjabi-heritage',
   
   // Connection options
@@ -85,8 +84,6 @@ export const PAYMENT_CONFIG = {
 // Environment Variables Check
 export const validateEnvironment = () => {
   const required = [
-    'MONGODB_URI',
-    'JWT_SECRET',
     'NEXT_PUBLIC_RAZORPAY_KEY_ID',
     'RAZORPAY_KEY_SECRET'
   ]
@@ -103,35 +100,35 @@ export const validateEnvironment = () => {
 
 // Server Status Check
 export const checkServerStatus = async () => {
-  // Skip status check if Socket URL is null (production)
-  if (!SOCKET_CONFIG.url) {
-    return false
-  }
-  
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const backendUrl = getBackendUrl();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const response = await fetch(`${SOCKET_CONFIG.url}/health`, {
+    const response = await fetch(`${backendUrl}/health`, {
       method: 'GET',
       signal: controller.signal
-    })
+    });
     
-    clearTimeout(timeoutId)
-    return response.ok
+    clearTimeout(timeoutId);
+    return response.ok;
   } catch (error) {
-    console.warn('Server status check failed (this is optional):', error)
-    return false
+    console.warn('Server status check failed (this is optional):', error);
+    return false;
   }
 }
 
 // Export configuration
 export default {
   isProduction,
-  socket: SOCKET_CONFIG,
+  isDevelopment,
   api: API_CONFIG,
   db: DB_CONFIG,
   payment: PAYMENT_CONFIG,
   validateEnvironment,
-  checkServerStatus
+  checkServerStatus,
+  getBackendUrl,
+  getFrontendUrl,
+  getApiEndpoint,
+  getFullApiUrl
 }

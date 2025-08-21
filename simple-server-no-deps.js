@@ -10,10 +10,9 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://your-project.vercel.app', // Replace with your actual Vercel domain
-    'https://your-custom-domain.com',   // Replace with your custom domain if you have one
-    'https://punjabi-heritage-store.vercel.app', // Example domain
-    'https://punjabi-ecom.vercel.app'  // Another example
+    'https://punjabijuttiandfulkari.com',        // Your custom domain
+    'https://punjabiecom.vercel.app',            // Your Vercel domain
+    'https://punjabiecom-rexasms-projects.vercel.app' // Your Vercel project domain
   ];
   
   const origin = req.headers.origin;

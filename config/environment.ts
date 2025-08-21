@@ -6,13 +6,13 @@ export const ENV_CONFIG = {
   // Backend URLs
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'https://your-backend-domain.com' // Replace with your actual backend domain
+    production: 'http://3.111.208.77:3001' // Your AWS server IP and port
   },
   
   // Frontend URLs
   FRONTEND_URL: {
     development: 'http://localhost:3000',
-    production: 'https://your-project.vercel.app' // Replace with your actual Vercel domain
+    production: 'https://punjabijuttiandfulkari.com' // Your custom domain
   },
   
   // API Endpoints
