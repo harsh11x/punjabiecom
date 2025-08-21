@@ -1,7 +1,7 @@
 // Environment Configuration
 export const ENV_CONFIG = {
   // Environment
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NODE_ENV: process.env.NODE_ENV || 'production',
   
   // Backend URLs
   BACKEND_URL: {
