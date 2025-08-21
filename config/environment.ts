@@ -6,7 +6,7 @@ export const ENV_CONFIG = {
   // Backend URLs
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'https://abc123.trycloudflare.com' // Replace with your HTTPS tunnel URL
+    production: 'https://bfc217a92e4a.ngrok-free.app' // Your ngrok HTTPS tunnel
   },
   
   // Frontend URLs
