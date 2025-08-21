@@ -13,6 +13,8 @@ const PORT = process.env.AWS_SERVER_PORT || 3001;
 app.use(cors({
   origin: [
     'https://punjabijuttiandfulkari.com',
+    'https://punjabiecom.vercel.app',
+    'https://punjabiecom-rexasms-projects.vercel.app',
     'http://localhost:3000',
     process.env.ADMIN_PANEL_URL
   ],
