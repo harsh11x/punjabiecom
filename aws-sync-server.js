@@ -499,6 +499,167 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+// ===== CART ENDPOINTS =====
+
+// Get user cart
+app.get('/api/cart', async (req, res) => {
+  try {
+    const userEmail = req.headers['x-user-email'];
+    
+    if (!userEmail) {
+      return res.status(400).json({ error: 'User email required' });
+    }
+    
+    let currentCarts = [];
+    try {
+      const data = await fs.readFile(CARTS_FILE, 'utf8');
+      currentCarts = JSON.parse(data);
+    } catch {
+      currentCarts = [];
+    }
+    
+    const userCart = currentCarts.find(cart => cart.userEmail === userEmail);
+    
+    res.json({
+      success: true,
+      data: userCart ? userCart.items : [],
+      count: userCart ? userCart.items.length : 0
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add item to cart
+app.post('/api/cart', async (req, res) => {
+  try {
+    const { userEmail, item } = req.body;
+    
+    if (!userEmail || !item) {
+      return res.status(400).json({ error: 'User email and item required' });
+    }
+    
+    let currentCarts = [];
+    try {
+      const data = await fs.readFile(CARTS_FILE, 'utf8');
+      currentCarts = JSON.parse(data);
+    } catch {
+      currentCarts = [];
+    }
+    
+    let userCart = currentCarts.find(cart => cart.userEmail === userEmail);
+    
+    if (!userCart) {
+      userCart = { userEmail, items: [] };
+      currentCarts.push(userCart);
+    }
+    
+    // Check if item already exists
+    const existingItemIndex = userCart.items.findIndex(
+      cartItem => cartItem.productId === item.productId && 
+                  cartItem.size === item.size && 
+                  cartItem.color === item.color
+    );
+    
+    if (existingItemIndex !== -1) {
+      // Update quantity
+      userCart.items[existingItemIndex].quantity += item.quantity;
+    } else {
+      // Add new item
+      userCart.items.push(item);
+    }
+    
+    await fs.writeFile(CARTS_FILE, JSON.stringify(currentCarts, null, 2));
+    await logSync('cart_updated', { userEmail, action: 'add_item', item });
+    
+    res.json({
+      success: true,
+      message: 'Item added to cart',
+      data: userCart.items
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update cart item
+app.put('/api/cart', async (req, res) => {
+  try {
+    const { userEmail, itemId, updates } = req.body;
+    
+    let currentCarts = [];
+    try {
+      const data = await fs.readFile(CARTS_FILE, 'utf8');
+      currentCarts = JSON.parse(data);
+    } catch {
+      currentCarts = [];
+    }
+    
+    const userCart = currentCarts.find(cart => cart.userEmail === userEmail);
+    
+    if (!userCart) {
+      return res.status(404).json({ error: 'Cart not found' });
+    }
+    
+    const itemIndex = userCart.items.findIndex(item => item.id === itemId);
+    
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    
+    userCart.items[itemIndex] = { ...userCart.items[itemIndex], ...updates };
+    
+    await fs.writeFile(CARTS_FILE, JSON.stringify(currentCarts, null, 2));
+    await logSync('cart_updated', { userEmail, action: 'update_item', itemId, updates });
+    
+    res.json({
+      success: true,
+      message: 'Cart item updated',
+      data: userCart.items
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Remove item from cart
+app.delete('/api/cart', async (req, res) => {
+  try {
+    const { userEmail, itemId } = req.body;
+    
+    let currentCarts = [];
+    try {
+      const data = await fs.readFile(CARTS_FILE, 'utf8');
+      currentCarts = JSON.parse(data);
+    } catch {
+      currentCarts = [];
+    }
+    
+    const userCart = currentCarts.find(cart => cart.userEmail === userEmail);
+    
+    if (!userCart) {
+      return res.status(404).json({ error: 'Cart not found' });
+    }
+    
+    userCart.items = userCart.items.filter(item => item.id !== itemId);
+    
+    await fs.writeFile(CARTS_FILE, JSON.stringify(currentCarts, null, 2));
+    await logSync('cart_updated', { userEmail, action: 'remove_item', itemId });
+    
+    res.json({
+      success: true,
+      message: 'Item removed from cart',
+      data: userCart.items
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize and start server
 const startServer = async () => {
   await initializeSyncDirectory();
