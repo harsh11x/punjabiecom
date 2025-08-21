@@ -3,10 +3,10 @@ export const ENV_CONFIG = {
   // Environment
   NODE_ENV: process.env.NODE_ENV || 'production',
   
-  // Backend URLs
+  // Backend URLs - Now using Vercel API routes (same domain as frontend)
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'https://bfc217a92e4a.ngrok-free.app' // Your ngrok HTTPS tunnel
+    production: 'https://punjabijuttiandfulkari.com' // Your own domain - no more external URLs!
   },
   
   // Frontend URLs
