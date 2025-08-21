@@ -1,104 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const AWS_BACKEND_URL = 'http://3.111.208.77:3001'
+// Simple in-memory storage for carts (resets on Vercel function restart, but works for demo)
+let carts: any[] = []
+
+// Generate unique cart ID
+const generateCartId = () => `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
 export async function GET(request: NextRequest) {
   try {
     const userEmail = request.headers.get('x-user-email')
     
     if (!userEmail) {
-      return NextResponse.json({ error: 'User email required' }, { status: 400 })
+      return NextResponse.json({ items: [] }, { status: 200 })
     }
     
-    console.log(`🔄 Forwarding cart request to AWS backend: ${AWS_BACKEND_URL}/api/cart`)
+    console.log(`🔄 Fetching cart for user: ${userEmail}`)
     
-    // Forward the request to AWS backend with timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    // Find user's cart
+    const userCart = carts.find(cart => cart.userEmail === userEmail)
     
-    const response = await fetch(`${AWS_BACKEND_URL}/api/cart`, {
-      headers: {
-        'x-user-email': userEmail
-      },
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      console.error(`❌ AWS backend returned error: ${response.status} ${response.statusText}`)
-      return NextResponse.json(
-        { error: `AWS backend error: ${response.status}` },
-        { status: response.status }
-      )
+    if (!userCart) {
+      console.log(`✅ No cart found for user: ${userEmail}`)
+      return NextResponse.json({ items: [] }, { status: 200 })
     }
     
-    const data = await response.json()
-    console.log(`✅ Successfully forwarded cart request to AWS backend`)
-    return NextResponse.json(data, { status: response.status })
+    console.log(`✅ Retrieved cart with ${userCart.items?.length || 0} items`)
+    return NextResponse.json({ items: userCart.items || [] }, { status: 200 })
     
   } catch (error: any) {
-    console.error('❌ Error forwarding to AWS backend:', error)
-    
-    if (error.name === 'AbortError') {
-      return NextResponse.json(
-        { error: 'Request timeout - AWS backend not responding' },
-        { status: 504 }
-      )
-    }
-    
-    return NextResponse.json(
-      { error: `Failed to fetch cart: ${error.message}` },
-      { status: 500 }
-    )
+    console.error('❌ Error fetching cart:', error)
+    return NextResponse.json({ items: [] }, { status: 200 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const userEmail = request.headers.get('x-user-email')
     
-    console.log(`🔄 Forwarding cart POST request to AWS backend`)
-    
-    // Forward the request to AWS backend with timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-    
-    const response = await fetch(`${AWS_BACKEND_URL}/api/cart`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      console.error(`❌ AWS backend returned error: ${response.status} ${response.statusText}`)
+    if (!userEmail) {
       return NextResponse.json(
-        { error: `AWS backend error: ${response.status}` },
-        { status: response.status }
+        { success: false, error: 'User email required' },
+        { status: 400 }
       )
     }
     
-    const data = await response.json()
-    console.log(`✅ Successfully forwarded cart POST request to AWS backend`)
-    return NextResponse.json(data, { status: response.status })
+    console.log(`🔄 Updating cart for user: ${userEmail}`)
+    
+    // Find existing cart or create new one
+    let userCart = carts.find(cart => cart.userEmail === userEmail)
+    
+    if (!userCart) {
+      userCart = {
+        _id: generateCartId(),
+        userEmail,
+        items: [],
+        updatedAt: new Date().toISOString()
+      }
+      carts.push(userCart)
+    }
+    
+    // Update cart items
+    userCart.items = body.items || []
+    userCart.updatedAt = new Date().toISOString()
+    
+    console.log(`✅ Cart updated successfully with ${userCart.items.length} items`)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Cart updated successfully',
+      itemCount: userCart.items.length
+    }, { status: 200 })
     
   } catch (error: any) {
-    console.error('❌ Error forwarding to AWS backend:', error)
-    
-    if (error.name === 'AbortError') {
-      return NextResponse.json(
-        { error: 'Request timeout - AWS backend not responding' },
-        { status: 504 }
-      )
-    }
-    
+    console.error('❌ Error updating cart:', error)
     return NextResponse.json(
-      { error: `Failed to update cart: ${error.message}` },
+      { success: false, error: error.message || 'Failed to update cart' },
       { status: 500 }
     )
   }
@@ -107,48 +84,52 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
+    const userEmail = request.headers.get('x-user-email')
     
-    console.log(`🔄 Forwarding cart PUT request to AWS backend`)
-    
-    // Forward the request to AWS backend with timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-    
-    const response = await fetch(`${AWS_BACKEND_URL}/api/cart`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      console.error(`❌ AWS backend returned error: ${response.status} ${response.statusText}`)
+    if (!userEmail) {
       return NextResponse.json(
-        { error: `AWS backend error: ${response.status}` },
-        { status: response.status }
+        { success: false, error: 'User email required' },
+        { status: 400 }
       )
     }
     
-    const data = await response.json()
-    console.log(`✅ Successfully forwarded cart PUT request to AWS backend`)
-    return NextResponse.json(data, { status: response.status })
+    console.log(`🔄 Updating cart item for user: ${userEmail}`)
+    
+    // Find user's cart
+    let userCart = carts.find(cart => cart.userEmail === userEmail)
+    
+    if (!userCart) {
+      return NextResponse.json(
+        { success: false, error: 'Cart not found' },
+        { status: 404 }
+      )
+    }
+    
+    // Update specific item
+    const { itemId, updates } = body
+    const itemIndex = userCart.items.findIndex((item: any) => item.id === itemId)
+    
+    if (itemIndex === -1) {
+      return NextResponse.json(
+        { success: false, error: 'Item not found in cart' },
+        { status: 404 }
+      )
+    }
+    
+    userCart.items[itemIndex] = { ...userCart.items[itemIndex], ...updates }
+    userCart.updatedAt = new Date().toISOString()
+    
+    console.log(`✅ Cart item updated successfully`)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Cart item updated successfully'
+    }, { status: 200 })
     
   } catch (error: any) {
-    console.error('❌ Error forwarding to AWS backend:', error)
-    
-    if (error.name === 'AbortError') {
-      return NextResponse.json(
-        { error: 'Request timeout - AWS backend not responding' },
-        { status: 504 }
-      )
-    }
-    
+    console.error('❌ Error updating cart item:', error)
     return NextResponse.json(
-      { error: `Failed to update cart: ${error.message}` },
+      { success: false, error: error.message || 'Failed to update cart item' },
       { status: 500 }
     )
   }
@@ -157,48 +138,42 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json()
+    const userEmail = request.headers.get('x-user-email')
     
-    console.log(`🔄 Forwarding cart DELETE request to AWS backend`)
-    
-    // Forward the request to AWS backend with timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-    
-    const response = await fetch(`${AWS_BACKEND_URL}/api/cart`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      console.error(`❌ AWS backend returned error: ${response.status} ${response.statusText}`)
+    if (!userEmail) {
       return NextResponse.json(
-        { error: `AWS backend error: ${response.status}` },
-        { status: response.status }
+        { success: false, error: 'User email required' },
+        { status: 400 }
       )
     }
     
-    const data = await response.json()
-    console.log(`✅ Successfully forwarded cart DELETE request to AWS backend`)
-    return NextResponse.json(data, { status: response.status })
+    console.log(`🔄 Processing cart deletion for user: ${userEmail}`)
+    
+    // Find user's cart
+    const userCart = carts.find(cart => cart.userEmail === userEmail)
+    
+    if (!userCart) {
+      return NextResponse.json(
+        { success: true, message: 'Cart already empty' },
+        { status: 200 }
+      )
+    }
+    
+    // Clear cart items
+    userCart.items = []
+    userCart.updatedAt = new Date().toISOString()
+    
+    console.log(`✅ Cart cleared successfully for user: ${userEmail}`)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Cart cleared successfully'
+    }, { status: 200 })
     
   } catch (error: any) {
-    console.error('❌ Error forwarding to AWS backend:', error)
-    
-    if (error.name === 'AbortError') {
-      return NextResponse.json(
-        { error: 'Request timeout - AWS backend not responding' },
-        { status: 504 }
-      )
-    }
-    
+    console.error('❌ Error clearing cart:', error)
     return NextResponse.json(
-      { error: `Failed to remove cart item: ${error.message}` },
+      { success: false, error: error.message || 'Failed to clear cart' },
       { status: 500 }
     )
   }
