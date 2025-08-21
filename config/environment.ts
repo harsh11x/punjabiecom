@@ -6,13 +6,13 @@ export const ENV_CONFIG = {
   // Backend URLs
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'http://3.111.208.77:3001' // Your AWS server IP and port
+    production: 'http://3.111.208.77:3001' // Your AWS server runs on port 3001
   },
   
   // Frontend URLs
   FRONTEND_URL: {
     development: 'http://localhost:3000',
-    production: 'https://punjabijuttiandfulkari.com' // Your custom domain
+    production: 'https://punjabijuttiandfulkari.com/' // Your custom domain
   },
   
   // API Endpoints

@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
+import { getApiUrl } from '@/config/environment'
+
 
 interface OrderItem {
   productId: string
@@ -73,7 +75,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/orders', {
+      const response = await fetch(getApiUrl('/api/admin/orders'), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -103,7 +105,7 @@ export default function AdminOrdersPage() {
     if (!selectedOrder) return
 
     try {
-      const response = await fetch('/api/admin/orders', {
+      const response = await fetch(getApiUrl('/api/admin/orders'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

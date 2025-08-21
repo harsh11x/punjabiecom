@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { User } from 'firebase/auth'
+import { getApiUrl } from '@/config/environment'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,7 @@ export default function OrdersPage() {
 
     try {
       setLoading(true)
-      const response = await fetch('/api/user/orders', {
+      const response = await fetch(getApiUrl('/api/user/orders'), {
         headers: {
           'Authorization': `Bearer ${await user.getIdToken()}`
         }
@@ -95,7 +96,7 @@ export default function OrdersPage() {
 
     try {
       setLoading(true)
-      const response = await fetch(`/api/user/orders?orderNumber=${searchOrderNumber.trim()}`, {
+      const response = await fetch(`${getApiUrl('/api/user/orders')}?orderNumber=${searchOrderNumber.trim()}`, {
         headers: {
           'Authorization': `Bearer ${await user?.getIdToken()}`
         }

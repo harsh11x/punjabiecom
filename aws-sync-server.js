@@ -350,6 +350,153 @@ app.get('/api/sync/pull/:type', async (req, res) => {
   }
 });
 
+// ===== E-COMMERCE ENDPOINTS =====
+
+// Create new order (for checkout)
+app.post('/api/orders', async (req, res) => {
+  try {
+    const orderData = req.body;
+    
+    let currentOrders = [];
+    try {
+      const data = await fs.readFile(ORDERS_FILE, 'utf8');
+      currentOrders = JSON.parse(data);
+    } catch {
+      currentOrders = [];
+    }
+    
+    // Generate order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    const newOrder = {
+      _id: crypto.randomUUID(),
+      orderNumber,
+      ...orderData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    currentOrders.push(newOrder);
+    await fs.writeFile(ORDERS_FILE, JSON.stringify(currentOrders, null, 2));
+    
+    await logSync('order_created', newOrder);
+    
+    res.json({
+      success: true,
+      message: 'Order created successfully',
+      order: newOrder
+    });
+    
+  } catch (error) {
+    await logSync('order_creation', req.body, 'error');
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all orders (admin)
+app.get('/api/admin/orders', async (req, res) => {
+  try {
+    const data = await fs.readFile(ORDERS_FILE, 'utf8');
+    const orders = JSON.parse(data);
+    
+    res.json({
+      success: true,
+      data: orders,
+      count: orders.length
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update order (admin)
+app.put('/api/admin/orders', async (req, res) => {
+  try {
+    const { orderId, updates } = req.body;
+    
+    let currentOrders = [];
+    try {
+      const data = await fs.readFile(ORDERS_FILE, 'utf8');
+      currentOrders = JSON.parse(data);
+    } catch {
+      currentOrders = [];
+    }
+    
+    const orderIndex = currentOrders.findIndex(o => o._id === orderId);
+    if (orderIndex === -1) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    currentOrders[orderIndex] = {
+      ...currentOrders[orderIndex],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    
+    await fs.writeFile(ORDERS_FILE, JSON.stringify(currentOrders, null, 2));
+    await logSync('order_updated', { orderId, updates });
+    
+    res.json({
+      success: true,
+      message: 'Order updated successfully',
+      order: currentOrders[orderIndex]
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user orders
+app.get('/api/user/orders', async (req, res) => {
+  try {
+    const { orderNumber } = req.query;
+    const userEmail = req.headers['x-user-email']; // Frontend should send this
+    
+    let currentOrders = [];
+    try {
+      const data = await fs.readFile(ORDERS_FILE, 'utf8');
+      currentOrders = JSON.parse(data);
+    } catch {
+      currentOrders = [];
+    }
+    
+    if (orderNumber) {
+      // Search by order number
+      const order = currentOrders.find(o => o.orderNumber === orderNumber);
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      res.json({ success: true, data: [order] });
+    } else {
+      // Get all orders for user
+      const userOrders = currentOrders.filter(o => o.customerEmail === userEmail);
+      res.json({ success: true, data: userOrders });
+    }
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all products (for frontend)
+app.get('/api/products', async (req, res) => {
+  try {
+    const data = await fs.readFile(PRODUCTS_FILE, 'utf8');
+    const products = JSON.parse(data);
+    
+    res.json({
+      success: true,
+      data: products,
+      count: products.length
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize and start server
 const startServer = async () => {
   await initializeSyncDirectory();
