@@ -1,38 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
 
-// Local file storage for orders
-const DATA_DIR = path.resolve(process.cwd(), 'data')
-const ORDERS_FILE = path.join(DATA_DIR, 'orders.json')
+// Simple in-memory storage for orders (resets on Vercel function restart, but works for demo)
+let orders: any[] = []
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true })
-}
+// Generate unique order ID
+const generateOrderId = () => `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 
-function getOrdersFromFile() {
-  if (!fs.existsSync(ORDERS_FILE)) {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2), 'utf8')
-    return []
-  }
-  try {
-    const data = fs.readFileSync(ORDERS_FILE, 'utf8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error reading orders from file:', error)
-    return []
-  }
-}
-
-function saveOrdersToFile(orders: any[]) {
-  try {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2))
-  } catch (error) {
-    console.error('Error saving orders to file:', error)
-    throw error
-  }
-}
+// Generate unique order number
+const generateOrderNumber = () => `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,8 +32,8 @@ export async function POST(request: NextRequest) {
     
     // Create order object
     const newOrder = {
-      _id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      orderNumber: `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`,
+      _id: generateOrderId(),
+      orderNumber: generateOrderNumber(),
       customerEmail: orderData.customerEmail,
       items: orderData.items,
       subtotal: orderData.subtotal || 0,
@@ -75,12 +50,11 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString()
     }
     
-    // Save to local file
-    const orders = getOrdersFromFile()
+    // Save to in-memory array
     orders.push(newOrder)
-    saveOrdersToFile(orders)
     
-    console.log('✅ Order saved successfully:', newOrder._id)
+    console.log('✅ Order created successfully:', newOrder._id)
+    console.log('📊 Total orders in memory:', orders.length)
     
     return NextResponse.json({
       success: true,
@@ -104,7 +78,6 @@ export async function GET(request: NextRequest) {
     const customerEmail = searchParams.get('email') || 
                          request.headers.get('x-user-email')
     
-    const orders = getOrdersFromFile()
     let filteredOrders = orders
     
     if (orderId) {
@@ -117,7 +90,7 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    console.log(`✅ Retrieved ${filteredOrders.length} orders from local storage`)
+    console.log(`✅ Retrieved ${filteredOrders.length} orders from memory`)
     
     return NextResponse.json({
       success: true,
@@ -146,7 +119,6 @@ export async function PUT(request: NextRequest) {
     }
     
     const updateData = await request.json()
-    const orders = getOrdersFromFile()
     const orderIndex = orders.findIndex((order: any) => order._id === orderId)
     
     if (orderIndex === -1) {
@@ -163,8 +135,6 @@ export async function PUT(request: NextRequest) {
       updatedAt: new Date().toISOString()
     }
     
-    saveOrdersToFile(orders)
-    
     console.log('✅ Order updated successfully:', orderId)
     
     return NextResponse.json({
@@ -179,4 +149,13 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Health check endpoint
+export async function HEAD() {
+  return NextResponse.json({ 
+    status: 'healthy', 
+    ordersCount: orders.length,
+    timestamp: new Date().toISOString()
+  })
 }
