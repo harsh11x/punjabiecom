@@ -176,8 +176,8 @@ export default function CheckoutPage() {
         try {
           console.log('Sending COD order to API...')
           
-          // Use environment-based backend URL
-          const response = await fetch('http://3.111.208.77:3001/api/orders', {
+          // Use local Vercel API route
+          const response = await fetch('/api/orders', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
