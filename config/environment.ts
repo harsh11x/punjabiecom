@@ -6,7 +6,7 @@ export const ENV_CONFIG = {
   // Backend URLs
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'http://3.111.208.77:3001' // Your AWS server runs on port 3001
+    production: 'http://3.111.208.77:3001' // Keep HTTP for now
   },
   
   // Frontend URLs
