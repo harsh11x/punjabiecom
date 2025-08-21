@@ -6,7 +6,7 @@ export const ENV_CONFIG = {
   // Backend URLs
   BACKEND_URL: {
     development: 'http://localhost:3001',
-    production: 'http://3.111.208.77:3001' // Keep HTTP for now
+    production: 'https://abc123.trycloudflare.com' // Replace with your HTTPS tunnel URL
   },
   
   // Frontend URLs
