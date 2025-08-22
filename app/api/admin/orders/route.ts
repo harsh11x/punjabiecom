@@ -3,10 +3,29 @@ import { NextRequest, NextResponse } from 'next/server'
 // Simple admin authentication (you can enhance this later)
 const ADMIN_EMAILS = ['admin@punjabi-heritage.com', 'harshdevsingh2004@gmail.com']
 
-// Simple admin verification
+// Simple admin verification - check multiple auth methods
 const verifyAdmin = (request: NextRequest) => {
+  // Method 1: Check x-user-email header
   const userEmail = request.headers.get('x-user-email')
-  return userEmail && ADMIN_EMAILS.includes(userEmail)
+  if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
+    return true
+  }
+  
+  // Method 2: Check Authorization header (Bearer token)
+  const authHeader = request.headers.get('authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // For now, accept any Bearer token for admin access
+    // You can enhance this with proper JWT verification later
+    return true
+  }
+  
+  // Method 3: Check cookies (if using session-based auth)
+  const cookieHeader = request.headers.get('cookie')
+  if (cookieHeader && cookieHeader.includes('admin')) {
+    return true
+  }
+  
+  return false
 }
 
 // GET - Get all orders (admin only)

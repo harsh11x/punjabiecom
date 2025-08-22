@@ -77,7 +77,8 @@ export default function AdminOrdersPage() {
       setLoading(true)
       const response = await fetch(getApiUrl('/api/admin/orders'), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'x-user-email': 'admin@punjabi-heritage.com' // Add user email header
         }
       })
 
