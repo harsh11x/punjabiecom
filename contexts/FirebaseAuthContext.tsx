@@ -18,6 +18,10 @@ interface FirebaseUser {
   displayName: string | null
   photoURL: string | null
   phoneNumber: string | null
+  metadata: {
+    creationTime: string
+    lastSignInTime: string
+  }
   getIdToken: () => Promise<string>
 }
 
@@ -48,6 +52,10 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     displayName: firebaseUser.displayName,
     photoURL: firebaseUser.photoURL,
     phoneNumber: firebaseUser.phoneNumber,
+    metadata: {
+      creationTime: firebaseUser.metadata.creationTime || new Date().toISOString(),
+      lastSignInTime: firebaseUser.metadata.lastSignInTime || new Date().toISOString()
+    },
     getIdToken: () => firebaseUser.getIdToken()
   })
 
