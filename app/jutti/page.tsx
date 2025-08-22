@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { CartIcon } from "@/components/cart/CartIcon"
 import { AuthGuardedCart } from "@/components/AuthGuardedCart"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 
 interface Product {
   _id: string
@@ -42,20 +42,22 @@ export default function JuttiPage() {
   const [open, setOpen] = useState(false)
 
   // Fetch products from API
-  const fetchProducts = useCallback(async () => {
+  useEffect(() => {
+    const fetchProducts = async () => {
       try {
         setLoading(true)
         setError(null)
         
-        // Build query parameters - get all juttis by filtering by subcategory
+        // Build query parameters - get all juttis by default
         const params = new URLSearchParams({
-          subcategory: 'jutti',
+          category: 'jutti', // This will now filter by subcategory 'jutti'
           limit: '100' // Get more products for jutti section
         })
         
-        // If a specific category is selected, filter by main category as well
         if (selectedCategory !== 'all') {
+          // If specific category selected, filter by both main category and jutti subcategory
           params.set('category', selectedCategory)
+          params.set('subcategory', 'jutti')
         }
         
         if (selectedPriceRange !== 'all') {
@@ -75,8 +77,18 @@ export default function JuttiPage() {
         const data = await response.json()
         
         if (data.success) {
-          // All products returned should be juttis since we filter by subcategory=jutti
-          setProducts(data.data || [])
+          // Products are already filtered by the API based on category parameter
+          let juttiProducts = data.data || []
+          
+          // Additional client-side filtering if needed
+          if (selectedCategory !== 'all') {
+            // Filter by main category (men, women, kids) while keeping jutti subcategory
+            juttiProducts = juttiProducts.filter((product: Product) => 
+              product.category === selectedCategory && product.subcategory === 'jutti'
+            )
+          }
+          
+          setProducts(juttiProducts)
         } else {
           throw new Error(data.error || 'Failed to fetch products')
         }
@@ -87,11 +99,10 @@ export default function JuttiPage() {
       } finally {
         setLoading(false)
       }
-  }, [selectedCategory, selectedPriceRange, selectedSort])
+    }
 
-  useEffect(() => {
     fetchProducts()
-  }, [fetchProducts])
+  }, [selectedCategory, selectedPriceRange, selectedSort])
 
   // Handle filter changes
   const handleCategoryChange = (value: string) => {

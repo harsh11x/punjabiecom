@@ -57,7 +57,7 @@ export default function KidsPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
-        category: 'kids', // Only fetch kids' products
+        category: 'kids', // Fetch kids' products (both juttis and other products)
         ...(searchTerm && { search: searchTerm }),
         ...(subcategoryFilter !== 'all' && { subcategory: subcategoryFilter }),
         ...(sortBy && { sort: sortBy }),
@@ -67,7 +67,18 @@ export default function KidsPage() {
       const response = await fetch(`/api/products?${params}`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data.data || [])
+        
+        // Filter to show kids' juttis and any other kids' products
+        let kidsProducts = data.data || []
+        
+        // If no specific subcategory filter, show all kids' products
+        if (subcategoryFilter === 'all') {
+          kidsProducts = kidsProducts.filter((product: Product) => 
+            product.category === 'kids'
+          )
+        }
+        
+        setProducts(kidsProducts)
         setTotalPages(data.pagination?.pages || 1)
       } else {
         toast.error('Failed to fetch kids\' products')

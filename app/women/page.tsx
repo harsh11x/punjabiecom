@@ -58,7 +58,7 @@ export default function WomenPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
-        category: 'women', // Only fetch women's products
+        category: 'women', // Fetch women's products (both juttis and fulkari)
         ...(searchTerm && { search: searchTerm }),
         ...(subcategoryFilter !== 'all' && { subcategory: subcategoryFilter }),
         ...(sortBy && { sort: sortBy }),
@@ -73,7 +73,19 @@ export default function WomenPage() {
         const data = await response.json()
         console.log('🔍 API response data:', data)
         console.log('🔍 Products count:', data.data?.length || 0)
-        setProducts(data.data || [])
+        
+        // Filter to show women's juttis and women's fulkari products
+        let womenProducts = data.data || []
+        
+        // If no specific subcategory filter, show both juttis and fulkari for women
+        if (subcategoryFilter === 'all') {
+          womenProducts = womenProducts.filter((product: Product) => 
+            product.category === 'women' && 
+            (product.subcategory === 'jutti' || product.subcategory === 'dupatta' || product.subcategory === 'bagh')
+          )
+        }
+        
+        setProducts(womenProducts)
         setTotalPages(data.pagination?.pages || 1)
       } else {
         console.error('❌ API response not ok:', response.status)
@@ -350,8 +362,9 @@ export default function WomenPage() {
               <SelectContent>
                 <SelectItem value="all">All Subcategories</SelectItem>
                 <SelectItem value="jutti">Jutti</SelectItem>
-                <SelectItem value="suit">Suit</SelectItem>
                 <SelectItem value="dupatta">Dupatta</SelectItem>
+                <SelectItem value="bagh">Bagh</SelectItem>
+                <SelectItem value="suit">Suit</SelectItem>
                 <SelectItem value="jewelry">Jewelry</SelectItem>
                 <SelectItem value="accessories">Accessories</SelectItem>
                 <SelectItem value="bridal">Bridal Wear</SelectItem>

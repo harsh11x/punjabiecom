@@ -21,10 +21,17 @@ export async function GET(request: NextRequest) {
     // Filter by active products only
     products = products.filter((p: any) => p.isActive !== false)
     
-    // Category filter
+    // Category filter - Handle special cases for jutti and fulkari
     if (category && category !== 'all') {
-      products = products.filter((p: any) => p.category === category)
-      console.log(`🔍 Filtered by category: ${category}, found ${products.length} products`)
+      if (category === 'jutti') {
+        // For jutti category, show all products with subcategory 'jutti' from any main category
+        products = products.filter((p: any) => p.subcategory === 'jutti')
+        console.log(`🔍 Filtered by jutti subcategory, found ${products.length} products`)
+      } else {
+        // For other categories (men, women, kids, fulkari), filter by main category
+        products = products.filter((p: any) => p.category === category)
+        console.log(`🔍 Filtered by category: ${category}, found ${products.length} products`)
+      }
     }
     
     // Subcategory filter
