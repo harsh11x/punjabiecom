@@ -50,14 +50,12 @@ export default function JuttiPage() {
         
         // Build query parameters - get all juttis by default
         const params = new URLSearchParams({
-          category: 'jutti', // This will now filter by subcategory 'jutti'
+          category: 'jutti',
           limit: '100' // Get more products for jutti section
         })
         
         if (selectedCategory !== 'all') {
-          // If specific category selected, filter by both main category and jutti subcategory
-          params.set('category', selectedCategory)
-          params.set('subcategory', 'jutti')
+          params.set('subcategory', selectedCategory)
         }
         
         if (selectedPriceRange !== 'all') {
@@ -77,14 +75,14 @@ export default function JuttiPage() {
         const data = await response.json()
         
         if (data.success) {
-          // Products are already filtered by the API based on category parameter
+          // Filter to show only juttis from all categories
           let juttiProducts = data.data || []
           
-          // Additional client-side filtering if needed
-          if (selectedCategory !== 'all') {
-            // Filter by main category (men, women, kids) while keeping jutti subcategory
+          // If no specific subcategory is selected, show all juttis
+          if (selectedCategory === 'all') {
             juttiProducts = juttiProducts.filter((product: Product) => 
-              product.category === selectedCategory && product.subcategory === 'jutti'
+              product.category === 'jutti' || 
+              (product.subcategory && ['men', 'women', 'kids'].includes(product.subcategory))
             )
           }
           

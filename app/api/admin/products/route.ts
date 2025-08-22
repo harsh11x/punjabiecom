@@ -3,8 +3,7 @@ import {
   getAllProducts, 
   addProduct, 
   updateProduct, 
-  deleteProduct,
-  refreshProductsFromFile
+  deleteProduct 
 } from '@/lib/simple-product-storage'
 
 // AWS Sync Function (Disabled for now - using local storage only)
@@ -49,7 +48,6 @@ export async function POST(request: NextRequest) {
     
     const productData = await request.json()
     console.log('Product data received:', productData)
-    console.log('Mapping: category =', productData.category, 'productType =', productData.productType, 'subcategory =', productData.subcategory)
 
     // Validate required fields
     if (!productData.name || !productData.price) {
@@ -67,7 +65,7 @@ export async function POST(request: NextRequest) {
       price: Number(productData.price),
       originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
       category: String(productData.category || 'general'),
-      subcategory: productData.subcategory || productData.productType, // Map productType to subcategory
+      subcategory: productData.subcategory ? String(productData.subcategory) : undefined,
       images: Array.isArray(productData.images) ? productData.images : [],
       sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
       colors: Array.isArray(productData.colors) ? productData.colors : [],
@@ -75,27 +73,15 @@ export async function POST(request: NextRequest) {
       isActive: productData.isActive !== false, // Default to true (active)
       stockQuantity: Number(productData.stockQuantity) || 1,
       featured: productData.featured === true,
-      tags: Array.isArray(productData.tags) ? productData.tags : [],
-      // Add missing fields to match existing product structure
-      punjabiName: productData.punjabiName || productData.name,
-      punjabiDescription: productData.punjabiDescription || productData.description || '',
-      rating: productData.rating || 0,
-      reviews: productData.reviews || 0,
-      badge: productData.badge || '',
-      stock: Number(productData.stockQuantity) || 1 // Map stockQuantity to stock for consistency
+      tags: Array.isArray(productData.tags) ? productData.tags : []
     }
 
     console.log('Simple product data:', simpleProduct)
-    console.log('Final mapping: category =', simpleProduct.category, 'subcategory =', simpleProduct.subcategory)
 
     // Try to add product to local storage
     console.log('📁 Attempting to add product to local storage...')
     const newProduct = await addProduct(simpleProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
-
-    // Force refresh storage from file to ensure consistency
-    refreshProductsFromFile()
-    console.log('🔄 Storage refreshed from file after adding product')
 
     // Try to sync to AWS (optional - don't fail if it doesn't work)
     try {
@@ -161,7 +147,7 @@ export async function PUT(request: NextRequest) {
       price: Number(updateData.price),
       originalPrice: updateData.originalPrice ? Number(updateData.originalPrice) : undefined,
       category: String(updateData.category || 'general'),
-      subcategory: updateData.subcategory || updateData.productType, // Map productType to subcategory
+      subcategory: updateData.subcategory ? String(updateData.subcategory) : undefined,
       images: Array.isArray(updateData.images) ? updateData.images : [],
       sizes: Array.isArray(updateData.sizes) ? updateData.sizes : [],
       colors: Array.isArray(updateData.colors) ? updateData.colors : [],
@@ -169,23 +155,12 @@ export async function PUT(request: NextRequest) {
       isActive: updateData.isActive !== false,
       stockQuantity: Number(updateData.stockQuantity) || 1,
       featured: updateData.featured === true,
-      tags: Array.isArray(updateData.tags) ? updateData.tags : [],
-      // Add missing fields to match existing product structure
-      punjabiName: updateData.punjabiName || updateData.name,
-      punjabiDescription: updateData.punjabiDescription || updateData.description || '',
-      rating: updateData.rating || 0,
-      reviews: updateData.reviews || 0,
-      badge: updateData.badge || '',
-      stock: Number(updateData.stockQuantity) || 1 // Map stockQuantity to stock for consistency
+      tags: Array.isArray(updateData.tags) ? updateData.tags : []
     }
 
     // Update product in local storage (primary)
     const updatedProduct = await updateProduct(productId, cleanUpdateData)
     console.log('✅ Product updated in local storage:', productId)
-
-    // Force refresh storage from file to ensure consistency
-    refreshProductsFromFile()
-    console.log('🔄 Storage refreshed from file after update')
 
     // Try to sync to AWS (optional)
     try {
@@ -217,36 +192,23 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remove product
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🗑️ DELETE request received for admin products')
+    console.log('🗑️ Deleting product...')
     
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('id')
     
     if (!productId) {
-      console.log('❌ No product ID provided in DELETE request')
       return NextResponse.json(
         { success: false, error: 'Product ID is required' },
         { status: 400 }
       )
     }
 
-    console.log('🗑️ Deleting product with ID:', productId)
-
-    // Get current products count before deletion
-    const currentProducts = await getAllProducts()
-    console.log(`📊 Current products count: ${currentProducts.length}`)
+    console.log('Deleting product:', productId)
 
     // Delete from local storage (primary)
     await deleteProduct(productId)
     console.log('✅ Product deleted from local storage:', productId)
-
-    // Force refresh storage from file to ensure consistency
-    refreshProductsFromFile()
-    console.log('🔄 Storage refreshed from file after deletion')
-
-    // Verify deletion by getting products again
-    const productsAfterDeletion = await getAllProducts()
-    console.log(`📊 Products count after deletion: ${productsAfterDeletion.length}`)
 
     // Try to sync to AWS (optional)
     try {
@@ -260,8 +222,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Product deleted successfully',
-      productId,
-      productsCount: productsAfterDeletion.length
+      productId
     })
   } catch (error: any) {
     console.error('❌ Error deleting product:', error)

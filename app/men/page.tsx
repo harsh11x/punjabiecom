@@ -67,7 +67,7 @@ export default function MenPage() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
-        category: 'men', // Fetch men's products (both juttis and other products)
+        category: 'men', // Only fetch men's products
         ...(searchTerm && { search: searchTerm }),
         ...(subcategoryFilter !== 'all' && { subcategory: subcategoryFilter }),
         ...(sortBy && { sort: sortBy }),
@@ -78,18 +78,7 @@ export default function MenPage() {
       if (response.ok) {
         const data = await response.json()
         console.log('API Response:', data) // Debug log
-        
-        // Filter to show men's juttis and any other men's products
-        let mensProducts = data.products || data.data || []
-        
-        // If no specific subcategory filter, show all men's products
-        if (subcategoryFilter === 'all') {
-          mensProducts = mensProducts.filter((product: Product) => 
-            product.category === 'men'
-          )
-        }
-        
-        setProducts(mensProducts)
+        setProducts(data.products || data.data || [])
         setTotalPages(data.pagination?.pages || 1)
       } else {
         console.error('API Error:', response.status, response.statusText)

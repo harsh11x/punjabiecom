@@ -33,83 +33,49 @@ interface SimpleProduct {
   updatedAt: string
 }
 
-// In-memory storage (will be populated from file)
-let products: SimpleProduct[] = []
+// In-memory storage (will reset on each deployment)
+let products: SimpleProduct[] = [
+  // Sample product to prevent empty state
+  {
+    id: 'sample_1',
+    name: 'Traditional Punjabi Jutti',
+    description: 'Handcrafted leather jutti with traditional embroidery',
+    price: 1500,
+    originalPrice: 2000,
+    category: 'men',
+    subcategory: 'traditional',
+    images: ['/placeholder.jpg'],
+    sizes: ['7', '8', '9', '10'],
+    colors: ['Brown', 'Black'],
+    inStock: true,
+    isActive: true,
+    stockQuantity: 10,
+    featured: true,
+    tags: ['traditional', 'handmade'],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+]
 
 // Save products to file
 function saveProductsToFile() {
   try {
-    // Ensure the data directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true })
-    }
-    
-    // Convert the in-memory products back to the original JSON structure
-    const productsToSave = products.map(p => ({
-      id: p.id,
-      name: p.name,
-      punjabiName: p.name, // Map back to original structure
-      description: p.description,
-      punjabiDescription: p.description, // Map back to original structure
-      price: p.price,
-      originalPrice: p.originalPrice,
-      category: p.category,
-      subcategory: p.subcategory,
-      images: p.images,
-      colors: p.colors,
-      sizes: p.sizes,
-      stock: p.stockQuantity, // Map back to original structure
-      rating: 0, // Default rating
-      reviews: 0, // Default reviews
-      badge: '', // Default badge
-      isActive: p.isActive,
-      createdAt: p.createdAt,
-      updatedAt: p.updatedAt
-    }))
-    
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(productsToSave, null, 2))
-    console.log(`💾 Saved ${products.length} products to file: ${PRODUCTS_FILE}`)
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2))
+    console.log(`💾 Saved ${products.length} products to file`)
   } catch (error) {
     console.error('❌ Failed to save products to file:', error)
   }
 }
 
-// Load products from file and map to correct structure
+// Load products from file
 function loadProductsFromFile() {
   try {
     if (fs.existsSync(PRODUCTS_FILE)) {
       const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
       const fileProducts = JSON.parse(data)
       if (Array.isArray(fileProducts) && fileProducts.length > 0) {
-        // Map the existing data structure to our expected interface
-        const mappedProducts = fileProducts.map((p: any) => ({
-          id: p.id || p._id || `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: p.name || '',
-          description: p.description || '',
-          price: p.price || 0,
-          originalPrice: p.originalPrice,
-          category: p.category || 'general',
-          subcategory: p.subcategory,
-          images: Array.isArray(p.images) ? p.images : [],
-          sizes: Array.isArray(p.sizes) ? p.sizes : [],
-          colors: Array.isArray(p.colors) ? p.colors : [],
-          inStock: p.stock ? p.stock > 0 : (p.inStock !== false), // Map stock to inStock
-          isActive: p.isActive !== false, // Default to true (active)
-          stockQuantity: p.stock || p.stockQuantity || 1, // Map stock to stockQuantity
-          featured: p.featured === true,
-          tags: Array.isArray(p.tags) ? p.tags : [],
-          createdAt: p.createdAt || new Date().toISOString(),
-          updatedAt: p.updatedAt || new Date().toISOString()
-        }))
-        
-        products.splice(0, products.length, ...mappedProducts)
-        console.log(`📁 Loaded ${products.length} products from file with proper mapping`)
-        console.log('📁 Sample mapped products:', mappedProducts.slice(0, 2).map(p => ({ 
-          id: p.id, 
-          name: p.name, 
-          category: p.category, 
-          subcategory: p.subcategory 
-        })))
+        products.splice(0, products.length, ...fileProducts)
+        console.log(`📁 Loaded ${products.length} products from file`)
         return true
       }
     }
@@ -130,7 +96,7 @@ async function initializeFromAWS() {
     
     // Check if AWS environment variables are available
     if (!process.env.AWS_SYNC_SERVER_URL || !process.env.AWS_SYNC_SECRET) {
-      console.log('⚠️ AWS environment variables not set, keeping file products')
+      console.log('⚠️ AWS environment variables not set, skipping AWS sync')
       isInitialized = true
       return
     }
@@ -148,42 +114,26 @@ async function initializeFromAWS() {
     if (response.ok) {
       const data = await response.json()
       if (data.success && data.products && data.products.length > 0) {
-        // Map AWS products to our interface
-        const mappedProducts = data.products.map((p: any) => ({
-          id: p.id || p._id || generateId(),
-          name: p.name || '',
-          description: p.description || '',
-          price: p.price || 0,
-          originalPrice: p.originalPrice,
-          category: p.category || 'general',
-          subcategory: p.subcategory,
-          images: Array.isArray(p.images) ? p.images : [],
-          sizes: Array.isArray(p.sizes) ? p.sizes : [],
-          colors: Array.isArray(p.colors) ? p.colors : [],
-          inStock: p.stock ? p.stock > 0 : (p.inStock !== false),
-          isActive: p.isActive !== false,
-          stockQuantity: p.stock || p.stockQuantity || 1,
-          featured: p.featured === true,
-          tags: Array.isArray(p.tags) ? p.tags : [],
-          createdAt: p.createdAt || new Date().toISOString(),
-          updatedAt: p.updatedAt || new Date().toISOString()
-        }))
-        
         // Only replace products if we got actual products from AWS
-        if (mappedProducts.length > 0) {
-          products = mappedProducts
-          console.log(`✅ Loaded ${products.length} products from AWS with proper mapping`)
-        } else {
-          console.log('⚠️ No products returned from AWS, keeping file products')
-        }
+        products = data.products.map((p: any) => ({
+          ...p,
+          id: p.id || p._id || generateId()
+        }))
+        console.log(`✅ Loaded ${products.length} products from AWS`)
       } else {
-        console.log('⚠️ No products returned from AWS, keeping file products')
+        console.log('⚠️ No products returned from AWS, keeping demo products')
       }
     } else {
-      console.log('⚠️ Could not load from AWS, keeping file products')
+      console.log('⚠️ Could not load from AWS, keeping demo products')
     }
   } catch (error) {
-    console.log('⚠️ AWS not available, keeping file products:', error)
+    console.log('⚠️ AWS not available, keeping demo products:', error)
+  }
+  
+  // Ensure we always have at least demo products
+  if (products.length === 0) {
+    console.log('🔄 No products found, ensuring demo products are available')
+    // Demo products should already be in the array from initialization
   }
   
   isInitialized = true
@@ -194,36 +144,19 @@ function generateId(): string {
   return `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
-// Force refresh products from file
-export function refreshProductsFromFile(): void {
-  console.log('🔄 Forcing refresh of products from file...')
-  const loaded = loadProductsFromFile()
-  if (loaded) {
-    console.log(`✅ Refreshed ${products.length} products from file`)
-  } else {
-    console.log('❌ Failed to refresh products from file')
-  }
-}
-
 // Get all products
 export async function getAllProducts(): Promise<SimpleProduct[]> {
-  // Always reload from file to get fresh data
+  // Always try to load from file first
   const loaded = loadProductsFromFile()
   if (!loaded) {
-    console.log('📦 No products found in file, products array is empty')
-    // Don't add any demo products - keep array empty
+    // If no products in file, initialize with demo products
+    console.log('📦 No products found in file, initializing with demo products...')
+    // Save demo products to file
+    saveProductsToFile()
   }
   
-  // Don't initialize from AWS on every call to avoid overwriting file data
-  // await initializeFromAWS()
-  
+  await initializeFromAWS()
   console.log(`📦 Retrieved ${products.length} products from memory`)
-  console.log('📦 Products in memory:', products.map(p => ({ 
-    id: p.id, 
-    name: p.name, 
-    category: p.category, 
-    subcategory: p.subcategory 
-  })))
   return [...products]
 }
 
@@ -261,60 +194,40 @@ export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' |
 
 // Update product
 export function updateProduct(id: string, updates: Partial<Omit<SimpleProduct, 'id' | 'createdAt'>>): SimpleProduct | null {
-  try {
-    console.log(`✏️ Attempting to update product: ${id}`)
-    console.log(`📝 Updates to apply:`, updates)
-    
-    const index = products.findIndex(p => p.id === id)
-    if (index === -1) {
-      throw new Error(`Product not found with ID: ${id}`)
-    }
-    
-    // Update the product
-    products[index] = {
-      ...products[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    }
-    
-    console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id})`)
-    
-    // Save to file immediately
-    saveProductsToFile()
-    
-    console.log(`💾 Changes saved to file after update`)
-    return products[index]
-  } catch (error) {
-    console.error(`❌ Error updating product ${id}:`, error)
-    throw error
+  const index = products.findIndex(p => p.id === id)
+  if (index === -1) {
+    throw new Error('Product not found')
   }
+  
+  products[index] = {
+    ...products[index],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  }
+  
+  console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id})`)
+  
+  // Save to file
+  saveProductsToFile()
+  
+  return products[index]
 }
 
 // Delete product
 export async function deleteProduct(id: string): Promise<void> {
-  try {
-    console.log(`🗑️ Attempting to delete product: ${id}`)
-    console.log(`📊 Products before deletion: ${products.length}`)
-    
-    const index = products.findIndex(p => p.id === id)
-    if (index === -1) {
-      throw new Error(`Product not found with ID: ${id}`)
-    }
-    
-    const deletedProduct = products[index]
-    products.splice(index, 1)
-    
-    console.log(`✅ Deleted product from memory: ${deletedProduct.name} (ID: ${id})`)
-    console.log(`📊 Total products remaining: ${products.length}`)
-    
-    // Save to file immediately
-    saveProductsToFile()
-    
-    console.log(`💾 Changes saved to file after deletion`)
-  } catch (error) {
-    console.error(`❌ Error deleting product ${id}:`, error)
-    throw error
+  await initializeFromAWS() // Ensure we have latest data
+  const index = products.findIndex(p => p.id === id)
+  if (index === -1) {
+    throw new Error('Product not found')
   }
+  
+  const deletedProduct = products[index]
+  products.splice(index, 1)
+  console.log(`✅ Deleted product from memory: ${deletedProduct.name} (ID: ${id})`)
+  console.log(`📊 Total products remaining: ${products.length}`)
+  
+  // Save to file
+  saveProductsToFile()
 }
 
 // Get product by ID
