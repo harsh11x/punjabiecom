@@ -47,6 +47,12 @@ export async function GET(request: NextRequest) {
     const orders = orderStorage.getAllOrders()
     
     console.log(`✅ Retrieved ${orders.length} orders for admin`)
+    console.log('📋 Orders in storage:', orders.map(o => ({ 
+      id: o._id, 
+      orderNumber: o.orderNumber, 
+      status: o.status,
+      customerEmail: o.customerEmail 
+    })))
     
     return NextResponse.json({
       success: true,
@@ -88,9 +94,16 @@ export async function PUT(request: NextRequest) {
 
     // Get order storage and update the order
     const { orderStorage } = await import('@/lib/shared-storage')
+    
+    // Debug: Check what orders exist
+    const allOrders = orderStorage.getAllOrders()
+    console.log('📋 All orders in storage:', allOrders.map(o => ({ id: o._id, orderNumber: o.orderNumber })))
+    console.log('🔍 Looking for order ID:', orderId)
+    
     const updatedOrder = orderStorage.updateOrder(orderId, updates)
     
     if (!updatedOrder) {
+      console.log('❌ Order not found in storage')
       return NextResponse.json(
         { success: false, error: 'Order not found' },
         { status: 404 }

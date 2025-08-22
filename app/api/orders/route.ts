@@ -22,32 +22,32 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Required fields validation passed')
     
-                    // Create order object
-                const newOrder = {
-                  customerEmail: orderData.customerEmail,
-                  items: orderData.items,
-                  subtotal: orderData.subtotal || 0,
-                  shippingCost: orderData.shippingCost || 0,
-                  tax: orderData.tax || 0,
-                  total: orderData.total || orderData.subtotal || 0,
-                  status: orderData.status || 'pending',
-                  paymentStatus: orderData.paymentStatus || 'pending',
-                  paymentMethod: orderData.paymentMethod || 'razorpay',
-                  shippingAddress: orderData.shippingAddress,
-                  billingAddress: orderData.billingAddress || orderData.shippingAddress,
-                  notes: orderData.notes || ''
-                }
+    // Create order object
+    const newOrder = {
+      customerEmail: orderData.customerEmail,
+      items: orderData.items,
+      subtotal: orderData.subtotal || 0,
+      shippingCost: orderData.shippingCost || 0,
+      tax: orderData.tax || 0,
+      total: orderData.total || orderData.subtotal || 0,
+      status: orderData.status || 'pending',
+      paymentStatus: orderData.paymentStatus || 'pending',
+      paymentMethod: orderData.paymentMethod || 'razorpay',
+      shippingAddress: orderData.shippingAddress,
+      billingAddress: orderData.billingAddress || orderData.shippingAddress,
+      notes: orderData.notes || ''
+    }
 
-                // Save to shared storage
-                const savedOrder = orderStorage.addOrder(newOrder)
-    
-                    console.log('✅ Order created successfully:', savedOrder._id)
-                console.log('📊 Total orders in shared storage:', orderStorage.getOrderCount())
-    
-                    return NextResponse.json({
-                  success: true,
-                  data: savedOrder
-                })
+    // Save to shared storage
+    const savedOrder = orderStorage.addOrder(newOrder)
+
+    console.log('✅ Order created successfully:', savedOrder._id)
+    console.log('📊 Total orders in shared storage:', orderStorage.getOrderCount())
+
+    return NextResponse.json({
+      success: true,
+      data: savedOrder
+    })
     
   } catch (error: any) {
     console.error('❌ Error creating order:', error)

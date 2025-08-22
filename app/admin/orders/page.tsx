@@ -113,6 +113,9 @@ export default function AdminOrdersPage() {
   const updateOrder = async () => {
     if (!selectedOrder) return
 
+    console.log('🔄 Updating order:', selectedOrder._id)
+    console.log('📝 Update data:', updateData)
+
     try {
       const response = await fetch('/api/admin/orders', {
         method: 'PUT',
