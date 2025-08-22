@@ -18,6 +18,7 @@ interface FirebaseUser {
   displayName: string | null
   photoURL: string | null
   phoneNumber: string | null
+  emailVerified: boolean
   metadata: {
     creationTime: string
     lastSignInTime: string
@@ -52,6 +53,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     displayName: firebaseUser.displayName,
     photoURL: firebaseUser.photoURL,
     phoneNumber: firebaseUser.phoneNumber,
+    emailVerified: firebaseUser.emailVerified,
     metadata: {
       creationTime: firebaseUser.metadata.creationTime || new Date().toISOString(),
       lastSignInTime: firebaseUser.metadata.lastSignInTime || new Date().toISOString()
