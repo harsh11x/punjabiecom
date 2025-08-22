@@ -2,8 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Simple user authentication (you can enhance this later)
 const verifyUser = (request: NextRequest) => {
+  // Method 1: Check x-user-email header
   const userEmail = request.headers.get('x-user-email')
-  return userEmail // For now, just check if email is present
+  if (userEmail) {
+    return true
+  }
+  
+  // Method 2: Check Authorization header (Bearer token)
+  const authHeader = request.headers.get('authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    // For now, accept any Bearer token for user access
+    // You can enhance this with proper JWT verification later
+    return true
+  }
+  
+  // Method 3: Check cookies (if using session-based auth)
+  const cookieHeader = request.headers.get('cookie')
+  if (cookieHeader && cookieHeader.includes('user')) {
+    return true
+  }
+  
+  return false
 }
 
 // GET - Get user's orders

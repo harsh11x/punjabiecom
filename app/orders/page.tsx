@@ -58,13 +58,14 @@ export default function OrdersPage() {
 
   // Fetch user's orders
   const fetchUserOrders = async () => {
-    if (!user?.email) return
+    if (!user?.email || authLoading) return
 
     try {
       setLoading(true)
       const response = await fetch(getApiUrl('/api/user/orders'), {
         headers: {
-          'Authorization': `Bearer ${await user.getIdToken()}`
+          'Authorization': `Bearer ${await user.getIdToken()}`,
+          'x-user-email': user.email || ''
         }
       })
 
@@ -89,8 +90,8 @@ export default function OrdersPage() {
 
   // Search for specific order
   const searchOrder = async () => {
-    if (!searchOrderNumber.trim()) {
-      toast.error('Please enter an order number')
+    if (!searchOrderNumber.trim() || !user?.email || authLoading) {
+      toast.error('Please enter an order number and ensure you are logged in')
       return
     }
 
@@ -98,7 +99,8 @@ export default function OrdersPage() {
       setLoading(true)
       const response = await fetch(`${getApiUrl('/api/user/orders')}?orderNumber=${searchOrderNumber.trim()}`, {
         headers: {
-          'Authorization': `Bearer ${await user?.getIdToken()}`
+          'Authorization': `Bearer ${await user?.getIdToken()}`,
+          'x-user-email': user?.email || ''
         }
       })
 
