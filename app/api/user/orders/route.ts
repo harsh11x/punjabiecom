@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
 
     console.log('🔄 User fetching orders for:', customerEmail)
 
-    // For now, return empty array since orders are stored in main API
-    // You can enhance this to share data between API routes later
-    const orders: any[] = []
+                    // Get orders from shared storage
+                const { orderStorage } = await import('@/lib/shared-storage')
+                const orders = orderStorage.getOrdersByUser(customerEmail)
 
     console.log(`✅ Retrieved ${orders.length} orders for user`)
 

@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Simple in-memory storage for orders (resets on Vercel function restart, but works for demo)
-let orders: any[] = []
-
-// Generate unique order ID
-const generateOrderId = () => `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-
-// Generate unique order number
-const generateOrderNumber = () => `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`
+import { orderStorage } from '@/lib/shared-storage'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,36 +22,32 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Required fields validation passed')
     
-    // Create order object
-    const newOrder = {
-      _id: generateOrderId(),
-      orderNumber: generateOrderNumber(),
-      customerEmail: orderData.customerEmail,
-      items: orderData.items,
-      subtotal: orderData.subtotal || 0,
-      shippingCost: orderData.shippingCost || 0,
-      tax: orderData.tax || 0,
-      total: orderData.total || orderData.subtotal || 0,
-      status: orderData.status || 'pending',
-      paymentStatus: orderData.paymentStatus || 'pending',
-      paymentMethod: orderData.paymentMethod || 'razorpay',
-      shippingAddress: orderData.shippingAddress,
-      billingAddress: orderData.billingAddress || orderData.shippingAddress,
-      notes: orderData.notes || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+                    // Create order object
+                const newOrder = {
+                  customerEmail: orderData.customerEmail,
+                  items: orderData.items,
+                  subtotal: orderData.subtotal || 0,
+                  shippingCost: orderData.shippingCost || 0,
+                  tax: orderData.tax || 0,
+                  total: orderData.total || orderData.subtotal || 0,
+                  status: orderData.status || 'pending',
+                  paymentStatus: orderData.paymentStatus || 'pending',
+                  paymentMethod: orderData.paymentMethod || 'razorpay',
+                  shippingAddress: orderData.shippingAddress,
+                  billingAddress: orderData.billingAddress || orderData.shippingAddress,
+                  notes: orderData.notes || ''
+                }
+
+                // Save to shared storage
+                const savedOrder = orderStorage.addOrder(newOrder)
     
-    // Save to in-memory array
-    orders.push(newOrder)
+                    console.log('✅ Order created successfully:', savedOrder._id)
+                console.log('📊 Total orders in shared storage:', orderStorage.getOrderCount())
     
-    console.log('✅ Order created successfully:', newOrder._id)
-    console.log('📊 Total orders in memory:', orders.length)
-    
-    return NextResponse.json({
-      success: true,
-      data: newOrder
-    })
+                    return NextResponse.json({
+                  success: true,
+                  data: savedOrder
+                })
     
   } catch (error: any) {
     console.error('❌ Error creating order:', error)

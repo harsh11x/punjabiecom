@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Simple in-memory storage for carts (resets on Vercel function restart, but works for demo)
-let carts: any[] = []
-
-// Generate unique cart ID
-const generateCartId = () => `cart_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+import { cartStorage } from '@/lib/shared-storage'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,13 +11,8 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔄 Fetching cart for user: ${userEmail}`)
     
-    // Find user's cart
-    const userCart = carts.find(cart => cart.userEmail === userEmail)
-    
-    if (!userCart) {
-      console.log(`✅ No cart found for user: ${userEmail}`)
-      return NextResponse.json({ items: [] }, { status: 200 })
-    }
+    // Get user's cart from shared storage
+    const userCart = cartStorage.getOrCreateCart(userEmail)
     
     console.log(`✅ Retrieved cart with ${userCart.items?.length || 0} items`)
     return NextResponse.json({ items: userCart.items || [] }, { status: 200 })
@@ -47,22 +37,8 @@ export async function POST(request: NextRequest) {
     
     console.log(`🔄 Updating cart for user: ${userEmail}`)
     
-    // Find existing cart or create new one
-    let userCart = carts.find(cart => cart.userEmail === userEmail)
-    
-    if (!userCart) {
-      userCart = {
-        _id: generateCartId(),
-        userEmail,
-        items: [],
-        updatedAt: new Date().toISOString()
-      }
-      carts.push(userCart)
-    }
-    
-    // Update cart items
-    userCart.items = body.items || []
-    userCart.updatedAt = new Date().toISOString()
+    // Update cart items using shared storage
+    const userCart = cartStorage.updateCartItems(userEmail, body.items || [])
     
     console.log(`✅ Cart updated successfully with ${userCart.items.length} items`)
     
@@ -95,15 +71,8 @@ export async function PUT(request: NextRequest) {
     
     console.log(`🔄 Updating cart item for user: ${userEmail}`)
     
-    // Find user's cart
-    let userCart = carts.find(cart => cart.userEmail === userEmail)
-    
-    if (!userCart) {
-      return NextResponse.json(
-        { success: false, error: 'Cart not found' },
-        { status: 404 }
-      )
-    }
+    // Get user's cart from shared storage
+    const userCart = cartStorage.getOrCreateCart(userEmail)
     
     // Update specific item
     const { itemId, updates } = body
@@ -137,7 +106,6 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json()
     const userEmail = request.headers.get('x-user-email')
     
     if (!userEmail) {
@@ -149,19 +117,15 @@ export async function DELETE(request: NextRequest) {
     
     console.log(`🔄 Processing cart deletion for user: ${userEmail}`)
     
-    // Find user's cart
-    const userCart = carts.find(cart => cart.userEmail === userEmail)
+    // Clear cart using shared storage
+    const cleared = cartStorage.clearCart(userEmail)
     
-    if (!userCart) {
+    if (!cleared) {
       return NextResponse.json(
         { success: true, message: 'Cart already empty' },
         { status: 200 }
       )
     }
-    
-    // Clear cart items
-    userCart.items = []
-    userCart.updatedAt = new Date().toISOString()
     
     console.log(`✅ Cart cleared successfully for user: ${userEmail}`)
     
