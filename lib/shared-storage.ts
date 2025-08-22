@@ -35,12 +35,22 @@ export const orderStorage = {
   updateOrder: (orderId: string, updates: any) => {
     const orderIndex = sharedOrders.findIndex(order => order._id === orderId)
     if (orderIndex !== -1) {
+      // Handle special fields
+      const processedUpdates: any = { ...updates }
+      
+      // Convert date strings to proper format if provided
+      if (updates.estimatedDelivery) {
+        processedUpdates.estimatedDelivery = new Date(updates.estimatedDelivery).toISOString()
+      }
+      
+      // Update the order
       sharedOrders[orderIndex] = {
         ...sharedOrders[orderIndex],
-        ...updates,
+        ...processedUpdates,
         updatedAt: new Date().toISOString()
       }
-      console.log(`✅ Order updated in shared storage: ${orderId}`)
+      
+      console.log(`✅ Order updated in shared storage: ${orderId}`, processedUpdates)
       return sharedOrders[orderIndex]
     }
     return null

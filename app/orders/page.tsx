@@ -46,6 +46,7 @@ interface Order {
   deliveredAt?: string
   createdAt: string
   updatedAt: string
+  notes?: string
 }
 
 export default function OrdersPage() {
@@ -409,6 +410,16 @@ export default function OrdersPage() {
                       {order.estimatedDelivery && (
                         <p><strong>Estimated Delivery:</strong> {formatDate(order.estimatedDelivery)}</p>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Notes */}
+                {order.notes && (
+                  <div className="mb-6 p-4 bg-amber-50 rounded-lg">
+                    <h4 className="font-semibold mb-2 text-amber-900">Admin Notes</h4>
+                    <div className="text-sm text-amber-800">
+                      <p>{order.notes}</p>
                     </div>
                   </div>
                 )}

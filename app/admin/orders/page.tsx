@@ -111,7 +111,8 @@ export default function AdminOrdersPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'x-user-email': 'admin@punjabi-heritage.com'
         },
         body: JSON.stringify({
           orderId: selectedOrder._id,

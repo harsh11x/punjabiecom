@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
-import fs from 'fs'
-import path from 'path'
+import { orderStorage } from '@/lib/shared-storage'
 
 // Initialize Razorpay - REAL PAYMENTS
 let razorpay: Razorpay | null = null
@@ -53,12 +52,8 @@ export async function POST(request: NextRequest) {
     const total = subtotal + shippingCost + tax
     console.log('Order totals:', { subtotal, shippingCost, tax, total })
 
-    // Generate order number
-    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-    
     // Create order object
     const orderData = {
-      orderNumber,
       customerEmail,
       items,
       subtotal,
@@ -70,26 +65,12 @@ export async function POST(request: NextRequest) {
       paymentMethod: 'razorpay',
       shippingAddress,
       billingAddress: billingAddress || shippingAddress,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      notes: ''
     }
 
-    // Save order to file system
-    const ordersDir = path.join(process.cwd(), 'data', 'orders')
-    if (!fs.existsSync(ordersDir)) {
-      fs.mkdirSync(ordersDir, { recursive: true })
-    }
-    
-    const orderId = `order-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-    const orderFilePath = path.join(ordersDir, `${orderId}.json`)
-    
-    const savedOrder = {
-      _id: orderId,
-      ...orderData
-    }
-    
-    fs.writeFileSync(orderFilePath, JSON.stringify(savedOrder, null, 2))
-    console.log('✅ Order saved to file system:', orderNumber)
+    // Save order to shared storage
+    const savedOrder = orderStorage.addOrder(orderData)
+    console.log('✅ Order saved to shared storage:', savedOrder._id)
 
     // Try to create Razorpay order
     let razorpayOrder = null
@@ -102,11 +83,11 @@ export async function POST(request: NextRequest) {
         const razorpayOrderData = {
           amount: Math.round(total * 100), // Amount in paise (₹1 = 100 paise)
           currency: 'INR',
-          receipt: orderNumber,
+          receipt: savedOrder.orderNumber,
           notes: {
-            orderId: orderId,
+            orderId: savedOrder._id,
             customerEmail,
-            orderNumber: orderNumber
+            orderNumber: savedOrder.orderNumber
           }
         }
 
@@ -116,11 +97,9 @@ export async function POST(request: NextRequest) {
         console.log('✅ Razorpay order created:', razorpayOrder.id)
         
         // Update order with Razorpay order ID
-        const updatedOrder = {
-          ...savedOrder,
+        orderStorage.updateOrder(savedOrder._id, {
           razorpayOrderId: razorpayOrder.id
-        }
-        fs.writeFileSync(orderFilePath, JSON.stringify(updatedOrder, null, 2))
+        })
         
       } catch (razorpayError) {
         console.error('❌ Razorpay order creation failed:', razorpayError)
@@ -154,8 +133,8 @@ export async function POST(request: NextRequest) {
     const responseData = {
       success: true,
       order: {
-        id: orderId,
-        orderNumber: orderNumber,
+        id: savedOrder._id,
+        orderNumber: savedOrder.orderNumber,
         amount: total,
         items: items.length,
         razorpayOrderId: razorpayOrder.id,
@@ -163,7 +142,7 @@ export async function POST(request: NextRequest) {
         key: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key',
         currency: 'INR',
         name: 'Punjab Heritage Store',
-        description: `Order ${orderNumber}`,
+        description: `Order ${savedOrder.orderNumber}`,
         prefill: {
           name: `${shippingAddress.firstName || ''} ${shippingAddress.lastName || ''}`.trim(),
           email: customerEmail,

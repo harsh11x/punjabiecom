@@ -86,13 +86,23 @@ export async function PUT(request: NextRequest) {
 
     console.log('🔄 Admin updating order:', orderId, updates)
 
-    // For now, return success (you can enhance this later)
-    console.log('✅ Order update request received (not yet implemented)')
+    // Get order storage and update the order
+    const { orderStorage } = await import('@/lib/shared-storage')
+    const updatedOrder = orderStorage.updateOrder(orderId, updates)
+    
+    if (!updatedOrder) {
+      return NextResponse.json(
+        { success: false, error: 'Order not found' },
+        { status: 404 }
+      )
+    }
+    
+    console.log('✅ Order updated successfully in shared storage')
     
     return NextResponse.json({
       success: true,
-      data: { _id: orderId, ...updates },
-      message: 'Order update request received'
+      data: updatedOrder,
+      message: 'Order updated successfully'
     })
 
   } catch (error: any) {
