@@ -124,9 +124,9 @@ export async function POST(request: NextRequest) {
         
         // Log the specific error for debugging
         console.error('Razorpay error details:', {
-          error: razorpayError.message,
-          code: (razorpayError as any).code,
-          statusCode: (razorpayError as any).statusCode
+          error: (razorpayError as any).message || 'Unknown error',
+          code: (razorpayError as any).code || 'No code',
+          statusCode: (razorpayError as any).statusCode || 'No status code'
         })
       }
     } else {
