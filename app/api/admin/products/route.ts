@@ -208,23 +208,32 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remove product
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🗑️ Deleting product...')
+    console.log('🗑️ DELETE request received for admin products')
     
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('id')
     
     if (!productId) {
+      console.log('❌ No product ID provided in DELETE request')
       return NextResponse.json(
         { success: false, error: 'Product ID is required' },
         { status: 400 }
       )
     }
 
-    console.log('Deleting product:', productId)
+    console.log('🗑️ Deleting product with ID:', productId)
+
+    // Get current products count before deletion
+    const currentProducts = await getAllProducts()
+    console.log(`📊 Current products count: ${currentProducts.length}`)
 
     // Delete from local storage (primary)
     await deleteProduct(productId)
     console.log('✅ Product deleted from local storage:', productId)
+
+    // Verify deletion by getting products again
+    const productsAfterDeletion = await getAllProducts()
+    console.log(`📊 Products count after deletion: ${productsAfterDeletion.length}`)
 
     // Try to sync to AWS (optional)
     try {
@@ -238,7 +247,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Product deleted successfully',
-      productId
+      productId,
+      productsCount: productsAfterDeletion.length
     })
   } catch (error: any) {
     console.error('❌ Error deleting product:', error)

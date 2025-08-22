@@ -39,8 +39,36 @@ let products: SimpleProduct[] = []
 // Save products to file
 function saveProductsToFile() {
   try {
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2))
-    console.log(`💾 Saved ${products.length} products to file`)
+    // Ensure the data directory exists
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true })
+    }
+    
+    // Convert the in-memory products back to the original JSON structure
+    const productsToSave = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      punjabiName: p.name, // Map back to original structure
+      description: p.description,
+      punjabiDescription: p.description, // Map back to original structure
+      price: p.price,
+      originalPrice: p.originalPrice,
+      category: p.category,
+      subcategory: p.subcategory,
+      images: p.images,
+      colors: p.colors,
+      sizes: p.sizes,
+      stock: p.stockQuantity, // Map back to original structure
+      rating: 0, // Default rating
+      reviews: 0, // Default reviews
+      badge: '', // Default badge
+      isActive: p.isActive,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt
+    }))
+    
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(productsToSave, null, 2))
+    console.log(`💾 Saved ${products.length} products to file: ${PRODUCTS_FILE}`)
   } catch (error) {
     console.error('❌ Failed to save products to file:', error)
   }
@@ -220,40 +248,60 @@ export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' |
 
 // Update product
 export function updateProduct(id: string, updates: Partial<Omit<SimpleProduct, 'id' | 'createdAt'>>): SimpleProduct | null {
-  const index = products.findIndex(p => p.id === id)
-  if (index === -1) {
-    throw new Error('Product not found')
+  try {
+    console.log(`✏️ Attempting to update product: ${id}`)
+    console.log(`📝 Updates to apply:`, updates)
+    
+    const index = products.findIndex(p => p.id === id)
+    if (index === -1) {
+      throw new Error(`Product not found with ID: ${id}`)
+    }
+    
+    // Update the product
+    products[index] = {
+      ...products[index],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }
+    
+    console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id})`)
+    
+    // Save to file immediately
+    saveProductsToFile()
+    
+    console.log(`💾 Changes saved to file after update`)
+    return products[index]
+  } catch (error) {
+    console.error(`❌ Error updating product ${id}:`, error)
+    throw error
   }
-  
-  products[index] = {
-    ...products[index],
-    ...updates,
-    updatedAt: new Date().toISOString()
-  }
-  
-  console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id})`)
-  
-  // Save to file
-  saveProductsToFile()
-  
-  return products[index]
 }
 
 // Delete product
 export async function deleteProduct(id: string): Promise<void> {
-  await initializeFromAWS() // Ensure we have latest data
-  const index = products.findIndex(p => p.id === id)
-  if (index === -1) {
-    throw new Error('Product not found')
+  try {
+    console.log(`🗑️ Attempting to delete product: ${id}`)
+    console.log(`📊 Products before deletion: ${products.length}`)
+    
+    const index = products.findIndex(p => p.id === id)
+    if (index === -1) {
+      throw new Error(`Product not found with ID: ${id}`)
+    }
+    
+    const deletedProduct = products[index]
+    products.splice(index, 1)
+    
+    console.log(`✅ Deleted product from memory: ${deletedProduct.name} (ID: ${id})`)
+    console.log(`📊 Total products remaining: ${products.length}`)
+    
+    // Save to file immediately
+    saveProductsToFile()
+    
+    console.log(`💾 Changes saved to file after deletion`)
+  } catch (error) {
+    console.error(`❌ Error deleting product ${id}:`, error)
+    throw error
   }
-  
-  const deletedProduct = products[index]
-  products.splice(index, 1)
-  console.log(`✅ Deleted product from memory: ${deletedProduct.name} (ID: ${id})`)
-  console.log(`📊 Total products remaining: ${products.length}`)
-  
-  // Save to file
-  saveProductsToFile()
 }
 
 // Get product by ID
