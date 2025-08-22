@@ -295,6 +295,13 @@ export default function CheckoutPage() {
       }
 
       // Validate Razorpay order data
+      console.log('🔍 Validating Razorpay order data:', {
+        razorpayOrderId: data.order.razorpayOrderId,
+        key: data.order.key,
+        amount: data.order.razorpayAmount,
+        orderNumber: data.order.orderNumber
+      })
+      
       if (!data.order.razorpayOrderId || !data.order.key) {
         console.error('❌ Missing Razorpay order data:', data.order)
         toast.error('Payment gateway configuration error. Please contact support.')
@@ -303,15 +310,6 @@ export default function CheckoutPage() {
       }
 
       // Initialize Razorpay payment for real payments
-      console.log('🔥 Initializing Razorpay with options:', {
-        key: data.order.key,
-        amount: data.order.razorpayAmount,
-        currency: 'INR',
-        name: 'Punjab Heritage',
-        description: `Order #${data.order.orderNumber}`,
-        order_id: data.order.razorpayOrderId,
-      })
-      
       const options = {
         key: data.order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.order.razorpayAmount,
@@ -370,6 +368,16 @@ export default function CheckoutPage() {
         }
       }
 
+      // Debug Razorpay options
+      console.log('🔥 Razorpay options created:', {
+        key: options.key,
+        amount: options.amount,
+        currency: options.currency,
+        name: options.name,
+        description: options.description,
+        order_id: options.order_id
+      })
+
       // Load Razorpay script if not already loaded
       if (typeof window !== 'undefined') {
         if (!(window as any).Razorpay) {
@@ -398,13 +406,19 @@ export default function CheckoutPage() {
           console.log('✅ Razorpay already loaded, opening payment modal...')
           try {
             const rzp = new (window as any).Razorpay(options)
+            console.log('🔥 Razorpay instance created, opening modal...')
             rzp.open()
+            console.log('✅ Razorpay modal opened successfully')
           } catch (error) {
             console.error('❌ Error creating Razorpay instance:', error)
             toast.error('Failed to initialize payment gateway')
             setIsProcessing(false)
           }
         }
+      } else {
+        console.error('❌ Window not available - cannot load Razorpay')
+        toast.error('Payment gateway not available in this environment')
+        setIsProcessing(false)
       }
 
     } catch (error: any) {

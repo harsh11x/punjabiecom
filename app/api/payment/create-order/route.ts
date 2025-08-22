@@ -19,21 +19,12 @@ try {
     console.log('✅ Razorpay initialized successfully with production key')
   } else {
     console.log('⚠️ Using Razorpay test mode - please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET')
-    // For testing, we'll create a mock Razorpay instance
-    razorpay = {
-      orders: {
-        create: async (data: any) => {
-          console.log('🧪 Mock Razorpay order creation:', data)
-          return {
-            id: `test_${Date.now()}`,
-            amount: data.amount,
-            currency: data.currency,
-            receipt: data.receipt,
-            status: 'created'
-          }
-        }
-      }
-    } as any
+    // For testing, we'll create a working test Razorpay instance
+    razorpay = new Razorpay({
+      key_id: 'rzp_test_1DP5mmOlF5G5ag',
+      key_secret: 'thisisatestkey',
+    })
+    console.log('🧪 Razorpay initialized with test keys for development')
   }
 } catch (error) {
   console.error('❌ Failed to initialize Razorpay:', error)
@@ -96,9 +87,8 @@ export async function POST(request: NextRequest) {
     const savedOrder = orderStorage.addOrder(orderData)
     console.log('✅ Order saved to shared storage:', savedOrder._id)
 
-    // Try to create Razorpay order
+        // Try to create Razorpay order
     let razorpayOrder = null
-    let isMockPayment = false
 
     if (razorpay) {
       try {
@@ -125,22 +115,8 @@ export async function POST(request: NextRequest) {
           razorpayOrderId: razorpayOrder.id
         })
         
-        // Set isMockPayment to false since we have a real Razorpay order
-        isMockPayment = false
-        
       } catch (razorpayError) {
         console.error('❌ Razorpay order creation failed:', razorpayError)
-        console.log('🔄 Falling back to mock payment...')
-        
-        // Create mock payment order as fallback
-        razorpayOrder = {
-          id: `mock_${Date.now()}`,
-          amount: Math.round(total * 100),
-          currency: 'INR',
-          receipt: savedOrder.orderNumber,
-          status: 'created'
-        }
-        isMockPayment = true
         
         // Log the specific error for debugging
         console.error('Razorpay error details:', {
@@ -148,21 +124,29 @@ export async function POST(request: NextRequest) {
           code: (razorpayError as any).code || 'No code',
           statusCode: (razorpayError as any).statusCode || 'No status code'
         })
+        
+        // Return error instead of falling back to mock payment
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Payment gateway is currently unavailable. Please try again later or use Cash on Delivery.',
+            details: process.env.NODE_ENV === 'development' ? (razorpayError as any).message : undefined
+          },
+          { status: 503 }
+        )
       }
     } else {
-      console.log('🔄 Razorpay not available, using mock payment...')
+      console.log('❌ Razorpay not available')
       
-      // Create mock payment order
-      razorpayOrder = {
-        id: `mock_${Date.now()}`,
-        amount: Math.round(total * 100),
-        currency: 'INR',
-        receipt: savedOrder.orderNumber,
-        status: 'created'
-      }
-      isMockPayment = true
-      
-      console.log('⚠️ Razorpay instance not available - check environment variables')
+      // Return error instead of creating mock payment
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Payment gateway is not configured. Please use Cash on Delivery or contact support.',
+          details: 'RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET not set'
+        },
+        { status: 503 }
+      )
     }
 
     // Check if this is test mode
@@ -178,7 +162,7 @@ export async function POST(request: NextRequest) {
         items: items.length,
         razorpayOrderId: razorpayOrder.id,
         razorpayAmount: razorpayOrder.amount,
-        key: isTestMode ? 'rzp_test_1DP5mmOlF5G5ag' : process.env.RAZORPAY_KEY_ID,
+        key: isTestMode ? 'rzp_test_1DP5mmOlF5G5ag' : (process.env.RAZORPAY_KEY_ID || 'rzp_test_1DP5mmOlF5G5ag'),
         currency: 'INR',
         name: 'Punjab Heritage Store',
         description: `Order ${savedOrder.orderNumber}`,
@@ -190,7 +174,6 @@ export async function POST(request: NextRequest) {
         theme: {
           color: '#D97706' // Amber color matching your theme
         },
-        isMockPayment: false, // Never mock payment, always try Razorpay
         testMode: isTestMode,
         testModeInfo: isTestMode ? {
           message: 'Using Razorpay test mode - set environment variables for production',
