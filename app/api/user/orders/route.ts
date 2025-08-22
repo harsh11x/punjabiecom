@@ -42,10 +42,12 @@ export async function GET(request: NextRequest) {
     const customerEmail = request.headers.get('x-user-email')
 
     if (!customerEmail) {
-      return NextResponse.json(
-        { success: false, error: 'User email not found' },
-        { status: 400 }
-      )
+      console.log('⚠️ No customer email provided, returning empty orders')
+      return NextResponse.json({
+        success: true,
+        data: [],
+        total: 0
+      })
     }
 
     console.log('🔄 User fetching orders for:', customerEmail)

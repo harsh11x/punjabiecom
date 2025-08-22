@@ -272,13 +272,40 @@ export default function OrdersPage() {
         <Card>
           <CardContent className="text-center py-8">
             <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
               {searchedOrder ? 'No order found with that number' : 'No orders found'}
-            </p>
+            </h3>
             {!searchedOrder && (
-              <p className="text-sm text-gray-500 mt-2">
-                Start shopping to see your orders here!
-              </p>
+              <>
+                <p className="text-gray-600 mb-6">
+                  Start shopping to see your orders here!
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button 
+                    onClick={() => window.location.href = '/products'} 
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Continue Shopping
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.location.href = '/'}
+                  >
+                    Go Home
+                  </Button>
+                </div>
+              </>
+            )}
+            {searchedOrder && (
+              <Button 
+                onClick={() => {
+                  setSearchedOrder(null)
+                  setSearchOrderNumber('')
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                View All Orders
+              </Button>
             )}
           </CardContent>
         </Card>

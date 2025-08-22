@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { getApiUrl } from '@/config/environment'
+import { Package } from 'lucide-react'
 
 
 interface OrderItem {
@@ -217,7 +218,25 @@ export default function AdminOrdersPage() {
       ) : orders.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
-            <p className="text-gray-600">No orders found.</p>
+            <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">No orders found</h3>
+            <p className="text-gray-600 mb-6">
+              When customers place orders, they will appear here for you to manage.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button 
+                onClick={() => window.location.href = '/admin/products'} 
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Manage Products
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/admin'}
+              >
+                Dashboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
