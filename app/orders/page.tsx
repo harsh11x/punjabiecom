@@ -5,6 +5,7 @@ import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { User } from 'firebase/auth'
 import { getApiUrl } from '@/config/environment'
 import { useAutoLogout } from '@/hooks/useAutoLogout'
+import { Header } from '@/components/header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -243,34 +244,42 @@ export default function OrdersPage() {
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <>
+        <Header />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-600">Please log in to view your orders.</p>
+      <>
+        <Header />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+            <p className="text-gray-600">Please log in to view your orders.</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   const displayOrders = searchedOrder ? [searchedOrder] : orders
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Orders</h1>
-        <p className="text-gray-600">Track your orders and view order history</p>
-      </div>
+    <>
+      <Header />
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">My Orders</h1>
+          <p className="text-gray-600">Track your orders and view order history</p>
+        </div>
 
       {/* Order Search */}
       <Card className="mb-6">
@@ -531,6 +540,7 @@ export default function OrdersPage() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

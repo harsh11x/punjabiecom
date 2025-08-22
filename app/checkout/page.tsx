@@ -288,12 +288,10 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to create payment order')
       }
 
-      // Check if this is a mock payment
-      if (data.order.isMockPayment) {
-        console.log('❌ Mock payment detected - Razorpay not available')
-        toast.error('Payment gateway not available. Please try again later or contact support.')
-        setIsProcessing(false)
-        return
+      // Check if this is test mode
+      if (data.order.testMode) {
+        console.log('🧪 Test mode detected - using Razorpay test environment')
+        toast.info('Using test payment environment')
       }
 
       // Validate Razorpay order data
