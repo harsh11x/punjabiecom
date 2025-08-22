@@ -18,6 +18,7 @@ interface FirebaseUser {
   displayName: string | null
   photoURL: string | null
   phoneNumber: string | null
+  getIdToken: () => Promise<string>
 }
 
 interface FirebaseAuthContextType {
@@ -46,7 +47,8 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     email: firebaseUser.email,
     displayName: firebaseUser.displayName,
     photoURL: firebaseUser.photoURL,
-    phoneNumber: firebaseUser.phoneNumber
+    phoneNumber: firebaseUser.phoneNumber,
+    getIdToken: () => firebaseUser.getIdToken()
   })
 
   // Listen for authentication state changes
