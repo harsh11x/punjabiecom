@@ -194,16 +194,29 @@ function generateId(): string {
   return `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
+// Force refresh products from file
+export function refreshProductsFromFile(): void {
+  console.log('🔄 Forcing refresh of products from file...')
+  const loaded = loadProductsFromFile()
+  if (loaded) {
+    console.log(`✅ Refreshed ${products.length} products from file`)
+  } else {
+    console.log('❌ Failed to refresh products from file')
+  }
+}
+
 // Get all products
 export async function getAllProducts(): Promise<SimpleProduct[]> {
-  // Always try to load from file first
+  // Always reload from file to get fresh data
   const loaded = loadProductsFromFile()
   if (!loaded) {
     console.log('📦 No products found in file, products array is empty')
     // Don't add any demo products - keep array empty
   }
   
-  await initializeFromAWS()
+  // Don't initialize from AWS on every call to avoid overwriting file data
+  // await initializeFromAWS()
+  
   console.log(`📦 Retrieved ${products.length} products from memory`)
   console.log('📦 Products in memory:', products.map(p => ({ 
     id: p.id, 

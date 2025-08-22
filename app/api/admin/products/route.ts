@@ -3,7 +3,8 @@ import {
   getAllProducts, 
   addProduct, 
   updateProduct, 
-  deleteProduct 
+  deleteProduct,
+  refreshProductsFromFile
 } from '@/lib/simple-product-storage'
 
 // AWS Sync Function (Disabled for now - using local storage only)
@@ -92,6 +93,10 @@ export async function POST(request: NextRequest) {
     const newProduct = await addProduct(simpleProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
 
+    // Force refresh storage from file to ensure consistency
+    refreshProductsFromFile()
+    console.log('🔄 Storage refreshed from file after adding product')
+
     // Try to sync to AWS (optional - don't fail if it doesn't work)
     try {
       console.log('🔄 Attempting to sync to AWS...')
@@ -178,6 +183,10 @@ export async function PUT(request: NextRequest) {
     const updatedProduct = await updateProduct(productId, cleanUpdateData)
     console.log('✅ Product updated in local storage:', productId)
 
+    // Force refresh storage from file to ensure consistency
+    refreshProductsFromFile()
+    console.log('🔄 Storage refreshed from file after update')
+
     // Try to sync to AWS (optional)
     try {
       console.log('🔄 Attempting to sync to AWS...')
@@ -230,6 +239,10 @@ export async function DELETE(request: NextRequest) {
     // Delete from local storage (primary)
     await deleteProduct(productId)
     console.log('✅ Product deleted from local storage:', productId)
+
+    // Force refresh storage from file to ensure consistency
+    refreshProductsFromFile()
+    console.log('🔄 Storage refreshed from file after deletion')
 
     // Verify deletion by getting products again
     const productsAfterDeletion = await getAllProducts()
