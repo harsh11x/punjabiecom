@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         p.name?.toLowerCase().includes(searchLower) ||
         p.punjabiName?.toLowerCase().includes(searchLower) ||
         p.description?.toLowerCase().includes(searchLower) ||
+        p.punjabiDescription?.toLowerCase().includes(searchLower) ||
         p.category?.toLowerCase().includes(searchLower) ||
         p.subcategory?.toLowerCase().includes(searchLower)
       )

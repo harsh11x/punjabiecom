@@ -21,12 +21,13 @@ interface Product {
   punjabiDescription: string;
   price: number;
   originalPrice: number;
-  category: 'men' | 'women' | 'kids' | 'fulkari' | 'jutti';
+  category: 'men' | 'women' | 'kids' | 'fulkari';
   productType: 'jutti' | 'fulkari';
   stock: number;
   isActive: boolean;
   images: string[];
   sizes: string[];
+  colors: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -50,7 +51,8 @@ const defaultProduct: Product = {
   stock: 0,
   isActive: true,
   images: [],
-  sizes: []
+  sizes: [],
+  colors: []
 }
 
 export default function ProductForm({ 
@@ -80,6 +82,10 @@ export default function ProductForm({
     setFormData(prev => ({ ...prev, sizes }))
   }
 
+  const handleColorsChange = (colors: string[]) => {
+    setFormData(prev => ({ ...prev, colors }))
+  }
+
   const handleSave = async () => {
     // Validate required fields
     if (!formData.name || !formData.price || !formData.category) {
@@ -100,7 +106,24 @@ export default function ProductForm({
         ? `/api/admin/products?id=${initialData.id}`
         : '/api/admin/products'
       
-      const payload = formData // Don't include _id in body for PUT requests
+      // Prepare the payload with proper field mapping
+      const payload = {
+        name: formData.name,
+        punjabiName: formData.punjabiName,
+        description: formData.description,
+        punjabiDescription: formData.punjabiDescription,
+        price: formData.price,
+        originalPrice: formData.originalPrice,
+        category: formData.category, // This will be 'men', 'women', or 'kids'
+        subcategory: formData.productType, // This will be 'jutti' or 'fulkari'
+        stock: formData.stock,
+        stockQuantity: formData.stock, // For compatibility
+        isActive: formData.isActive,
+        images: formData.images,
+        sizes: formData.sizes,
+        colors: formData.colors || [],
+        inStock: formData.stock > 0
+      }
 
       console.log('Sending request:', { method, url, payload })
 
@@ -265,6 +288,9 @@ export default function ProductForm({
                 <SelectItem value="kids">Kids</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-500 mt-1">
+              Products will appear on the {formData.category} page and all products page
+            </p>
           </div>
         </div>
       </div>
@@ -330,6 +356,35 @@ export default function ProductForm({
           onSizesChange={handleSizesChange}
           required={true}
         />
+        
+        {/* Colors */}
+        <div>
+          <Label htmlFor="colors">Colors</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {['Red', 'Blue', 'Green', 'Yellow', 'Black', 'White', 'Brown', 'Pink', 'Purple', 'Orange'].map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => {
+                  const currentColors = formData.colors || []
+                  if (currentColors.includes(color)) {
+                    handleColorsChange(currentColors.filter(c => c !== color))
+                  } else {
+                    handleColorsChange([...currentColors, color])
+                  }
+                }}
+                className={`px-3 py-1 rounded-full text-sm font-medium border ${
+                  (formData.colors || []).includes(color)
+                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Selected: {formData.colors?.join(', ') || 'None'}</p>
+        </div>
       </div>
 
       {/* Status */}

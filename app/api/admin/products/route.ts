@@ -50,28 +50,31 @@ export async function POST(request: NextRequest) {
     console.log('Product data received:', productData)
 
     // Validate required fields
-    if (!productData.name || !productData.price) {
-      console.log('❌ Validation failed - missing name or price')
+    if (!productData.name || !productData.price || !productData.category) {
+      console.log('❌ Validation failed - missing name, price, or category')
       return NextResponse.json(
-        { success: false, error: 'Name and price are required' },
+        { success: false, error: 'Name, price, and category are required' },
         { status: 400 }
       )
     }
 
-    // Simple product object for testing
+    // Create product object with proper field mapping
     const simpleProduct = {
       name: String(productData.name),
+      punjabiName: String(productData.punjabiName || ''),
       description: String(productData.description || ''),
+      punjabiDescription: String(productData.punjabiDescription || ''),
       price: Number(productData.price),
       originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
-      category: String(productData.category || 'general'),
-      subcategory: productData.subcategory ? String(productData.subcategory) : undefined,
+      category: String(productData.category), // 'men', 'women', or 'kids'
+      subcategory: productData.subcategory ? String(productData.subcategory) : undefined, // 'jutti' or 'fulkari'
       images: Array.isArray(productData.images) ? productData.images : [],
       sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
       colors: Array.isArray(productData.colors) ? productData.colors : [],
-      inStock: productData.inStock !== false,
+      stock: Number(productData.stock) || 0,
+      stockQuantity: Number(productData.stock) || 0, // For compatibility
+      inStock: (productData.stock || 0) > 0,
       isActive: productData.isActive !== false, // Default to true (active)
-      stockQuantity: Number(productData.stockQuantity) || 1,
       featured: productData.featured === true,
       tags: Array.isArray(productData.tags) ? productData.tags : []
     }
@@ -130,7 +133,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData = await request.json()
-    console.log('Update data received:', { id: productId, name: updateData.name, price: updateData.price })
+    console.log('Update data received:', { id: productId, name: updateData.name, price: updateData.price, category: updateData.category })
 
     // Validate required fields
     if (!updateData.name || updateData.price === undefined || updateData.price < 0) {
@@ -140,20 +143,23 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Clean the update data
+    // Clean the update data with proper field mapping
     const cleanUpdateData = {
       name: String(updateData.name),
+      punjabiName: String(updateData.punjabiName || ''),
       description: String(updateData.description || ''),
+      punjabiDescription: String(updateData.punjabiDescription || ''),
       price: Number(updateData.price),
       originalPrice: updateData.originalPrice ? Number(updateData.originalPrice) : undefined,
-      category: String(updateData.category || 'general'),
-      subcategory: updateData.subcategory ? String(updateData.subcategory) : undefined,
+      category: String(updateData.category), // 'men', 'women', or 'kids'
+      subcategory: updateData.subcategory ? String(updateData.subcategory) : undefined, // 'jutti' or 'fulkari'
       images: Array.isArray(updateData.images) ? updateData.images : [],
       sizes: Array.isArray(updateData.sizes) ? updateData.sizes : [],
       colors: Array.isArray(updateData.colors) ? updateData.colors : [],
-      inStock: updateData.inStock !== false,
+      stock: Number(updateData.stock) || 0,
+      stockQuantity: Number(updateData.stock) || 0, // For compatibility
+      inStock: (updateData.stock || 0) > 0,
       isActive: updateData.isActive !== false,
-      stockQuantity: Number(updateData.stockQuantity) || 1,
       featured: updateData.featured === true,
       tags: Array.isArray(updateData.tags) ? updateData.tags : []
     }

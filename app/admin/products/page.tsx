@@ -26,16 +26,17 @@ interface Product {
   punjabiDescription: string;
   price: number;
   originalPrice: number;
-  category: 'men' | 'women' | 'kids' | 'fulkari' | 'jutti';
-  productType: 'jutti' | 'fulkari';
+  category: 'men' | 'women' | 'kids' | 'fulkari';
+  subcategory?: string;
   stock: number;
+  stockQuantity?: number;
   isActive: boolean;
   images: string[];
   sizes: string[];
+  colors: string[];
   createdAt?: string;
   updatedAt?: string;
 }
-
 
 export default function ProductsManagement() {
   const router = useRouter()
@@ -48,11 +49,10 @@ export default function ProductsManagement() {
 
   const categories = [
     { value: 'all', label: 'All Categories' },
-    { value: 'men', label: 'Men\'s Jutti' },
-    { value: 'women', label: 'Women\'s Jutti' },
-    { value: 'kids', label: 'Kids\' Jutti' },
-            { value: 'fulkari', label: 'Fulkari' },
-    { value: 'accessories', label: 'Accessories' }
+    { value: 'men', label: 'Men\'s Products' },
+    { value: 'women', label: 'Women\'s Products' },
+    { value: 'kids', label: 'Kids\' Products' },
+    { value: 'fulkari', label: 'Fulkari' }
   ]
 
   useEffect(() => {
@@ -117,11 +117,30 @@ export default function ProductsManagement() {
     }
   }
 
+  const getCategoryDisplayName = (category: string, subcategory?: string) => {
+    if (category === 'fulkari') return 'Fulkari'
+    if (subcategory === 'jutti') {
+      return `${category.charAt(0).toUpperCase() + category.slice(1)}'s Jutti`
+    }
+    return `${category.charAt(0).toUpperCase() + category.slice(1)}'s Products`
+  }
+
+  const getCategoryBadgeColor = (category: string) => {
+    switch (category) {
+      case 'men': return 'bg-blue-100 text-blue-800'
+      case 'women': return 'bg-pink-100 text-pink-800'
+      case 'kids': return 'bg-green-100 text-green-800'
+      case 'fulkari': return 'bg-purple-100 text-purple-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.punjabiName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.subcategory && product.subcategory.toLowerCase().includes(searchTerm.toLowerCase()))
     
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
     
@@ -209,12 +228,16 @@ export default function ProductsManagement() {
                         <Badge variant={product.isActive ? "default" : "secondary"}>
                           {product.isActive ? "Active" : "Inactive"}
                         </Badge>
+                        <Badge className={getCategoryBadgeColor(product.category)}>
+                          {getCategoryDisplayName(product.category, product.subcategory)}
+                        </Badge>
                       </div>
                       <p className="text-sm text-amber-700 mt-1">{product.punjabiName}</p>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                         <span>₹{product.price}</span>
-                        <span>Stock: {product.stock}</span>
-                        <span className="capitalize">{product.category}</span>
+                        <span>Stock: {product.stock || product.stockQuantity || 0}</span>
+                        <span>Category: {product.category}</span>
+                        {product.subcategory && <span>Type: {product.subcategory}</span>}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -240,6 +263,7 @@ export default function ProductsManagement() {
                 <div className="text-center py-8">
                   <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500">No products found</p>
+                  <p className="text-sm text-gray-400 mt-2">Start by adding your first product!</p>
                 </div>
               )}
             </div>

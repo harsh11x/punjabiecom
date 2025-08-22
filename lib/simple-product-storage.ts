@@ -16,17 +16,20 @@ if (!fs.existsSync(DATA_DIR)) {
 interface SimpleProduct {
   id: string
   name: string
+  punjabiName?: string
   description: string
+  punjabiDescription?: string
   price: number
   originalPrice?: number
-  category: string
-  subcategory?: string
+  category: string // 'men', 'women', 'kids', 'fulkari'
+  subcategory?: string // 'jutti', 'fulkari', etc.
   images: string[]
   sizes: string[]
   colors: string[]
+  stock: number
+  stockQuantity?: number // For compatibility
   inStock: boolean
   isActive: boolean
-  stockQuantity: number
   featured: boolean
   tags: string[]
   createdAt: string
@@ -34,28 +37,7 @@ interface SimpleProduct {
 }
 
 // In-memory storage (will reset on each deployment)
-let products: SimpleProduct[] = [
-  // Sample product to prevent empty state
-  {
-    id: 'sample_1',
-    name: 'Traditional Punjabi Jutti',
-    description: 'Handcrafted leather jutti with traditional embroidery',
-    price: 1500,
-    originalPrice: 2000,
-    category: 'men',
-    subcategory: 'traditional',
-    images: ['/placeholder.jpg'],
-    sizes: ['7', '8', '9', '10'],
-    colors: ['Brown', 'Black'],
-    inStock: true,
-    isActive: true,
-    stockQuantity: 10,
-    featured: true,
-    tags: ['traditional', 'handmade'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-]
+let products: SimpleProduct[] = []
 
 // Save products to file
 function saveProductsToFile() {
@@ -121,19 +103,13 @@ async function initializeFromAWS() {
         }))
         console.log(`✅ Loaded ${products.length} products from AWS`)
       } else {
-        console.log('⚠️ No products returned from AWS, keeping demo products')
+        console.log('⚠️ No products returned from AWS, keeping local products')
       }
     } else {
-      console.log('⚠️ Could not load from AWS, keeping demo products')
+      console.log('⚠️ Could not load from AWS, keeping local products')
     }
   } catch (error) {
-    console.log('⚠️ AWS not available, keeping demo products:', error)
-  }
-  
-  // Ensure we always have at least demo products
-  if (products.length === 0) {
-    console.log('🔄 No products found, ensuring demo products are available')
-    // Demo products should already be in the array from initialization
+    console.log('⚠️ AWS not available, keeping local products:', error)
   }
   
   isInitialized = true
@@ -149,9 +125,9 @@ export async function getAllProducts(): Promise<SimpleProduct[]> {
   // Always try to load from file first
   const loaded = loadProductsFromFile()
   if (!loaded) {
-    // If no products in file, initialize with demo products
-    console.log('📦 No products found in file, initializing with demo products...')
-    // Save demo products to file
+    // If no products in file, start with empty array
+    console.log('📦 No products found in file, starting with empty product list...')
+    products = []
     saveProductsToFile()
   }
   
@@ -164,7 +140,9 @@ export async function getAllProducts(): Promise<SimpleProduct[]> {
 export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' | 'updatedAt'>): SimpleProduct {
   const newProduct: SimpleProduct = {
     name: productData.name || '',
+    punjabiName: productData.punjabiName || '',
     description: productData.description || '',
+    punjabiDescription: productData.punjabiDescription || '',
     price: productData.price || 0,
     originalPrice: productData.originalPrice,
     category: productData.category || 'general',
@@ -172,9 +150,10 @@ export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' |
     images: Array.isArray(productData.images) ? productData.images : [],
     sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
     colors: Array.isArray(productData.colors) ? productData.colors : [],
-    inStock: productData.inStock !== false,
+    stock: productData.stock || 0,
+    stockQuantity: productData.stockQuantity || productData.stock || 0, // For compatibility
+    inStock: (productData.stock || 0) > 0,
     isActive: productData.isActive !== false, // Default to true (active)
-    stockQuantity: productData.stockQuantity || 1,
     featured: productData.featured === true,
     tags: Array.isArray(productData.tags) ? productData.tags : [],
     id: generateId(),
@@ -183,7 +162,7 @@ export function addProduct(productData: Omit<SimpleProduct, 'id' | 'createdAt' |
   }
   
   products.push(newProduct)
-  console.log(`✅ Added product to memory: ${newProduct.name} (ID: ${newProduct.id})`)
+  console.log(`✅ Added product to memory: ${newProduct.name} (ID: ${newProduct.id}, Category: ${newProduct.category})`)
   console.log(`📊 Total products in memory: ${products.length}`)
   
   // Save to file
@@ -205,7 +184,7 @@ export function updateProduct(id: string, updates: Partial<Omit<SimpleProduct, '
     updatedAt: new Date().toISOString()
   }
   
-  console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id})`)
+  console.log(`✅ Updated product in memory: ${products[index].name} (ID: ${id}, Category: ${products[index].category})`)
   
   // Save to file
   saveProductsToFile()
@@ -241,8 +220,11 @@ export async function searchProducts(query: string): Promise<SimpleProduct[]> {
   const searchTerm = query.toLowerCase()
   return products.filter(product => 
     product.name.toLowerCase().includes(searchTerm) ||
+    product.punjabiName?.toLowerCase().includes(searchTerm) ||
     product.description.toLowerCase().includes(searchTerm) ||
+    product.punjabiDescription?.toLowerCase().includes(searchTerm) ||
     product.category.toLowerCase().includes(searchTerm) ||
+    product.subcategory?.toLowerCase().includes(searchTerm) ||
     product.tags.some(tag => tag.toLowerCase().includes(searchTerm))
   )
 }
@@ -250,7 +232,9 @@ export async function searchProducts(query: string): Promise<SimpleProduct[]> {
 // Get products by category
 export async function getProductsByCategory(category: string): Promise<SimpleProduct[]> {
   await initializeFromAWS()
-  return products.filter(p => p.category.toLowerCase() === category.toLowerCase())
+  const filteredProducts = products.filter(p => p.category.toLowerCase() === category.toLowerCase())
+  console.log(`🔍 Found ${filteredProducts.length} products for category: ${category}`)
+  return filteredProducts
 }
 
 // Get featured products
@@ -268,6 +252,6 @@ export function getProductStats() {
     outOfStock: products.filter(p => !p.inStock).length,
     featured: products.filter(p => p.featured).length,
     categories: [...new Set(products.map(p => p.category))].length,
-    totalValue: products.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0)
+    totalValue: products.reduce((sum, p) => sum + (p.price * p.stock), 0)
   }
 }
