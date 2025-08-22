@@ -76,6 +76,12 @@ function loadProductsFromFile() {
         
         products.splice(0, products.length, ...mappedProducts)
         console.log(`📁 Loaded ${products.length} products from file with proper mapping`)
+        console.log('📁 Sample mapped products:', mappedProducts.slice(0, 2).map(p => ({ 
+          id: p.id, 
+          name: p.name, 
+          category: p.category, 
+          subcategory: p.subcategory 
+        })))
         return true
       }
     }
@@ -96,7 +102,7 @@ async function initializeFromAWS() {
     
     // Check if AWS environment variables are available
     if (!process.env.AWS_SYNC_SERVER_URL || !process.env.AWS_SYNC_SECRET) {
-      console.log('⚠️ AWS environment variables not set, skipping AWS sync')
+      console.log('⚠️ AWS environment variables not set, keeping file products')
       isInitialized = true
       return
     }
@@ -135,8 +141,13 @@ async function initializeFromAWS() {
           updatedAt: p.updatedAt || new Date().toISOString()
         }))
         
-        products = mappedProducts
-        console.log(`✅ Loaded ${products.length} products from AWS with proper mapping`)
+        // Only replace products if we got actual products from AWS
+        if (mappedProducts.length > 0) {
+          products = mappedProducts
+          console.log(`✅ Loaded ${products.length} products from AWS with proper mapping`)
+        } else {
+          console.log('⚠️ No products returned from AWS, keeping file products')
+        }
       } else {
         console.log('⚠️ No products returned from AWS, keeping file products')
       }
@@ -165,6 +176,12 @@ export async function getAllProducts(): Promise<SimpleProduct[]> {
   
   await initializeFromAWS()
   console.log(`📦 Retrieved ${products.length} products from memory`)
+  console.log('📦 Products in memory:', products.map(p => ({ 
+    id: p.id, 
+    name: p.name, 
+    category: p.category, 
+    subcategory: p.subcategory 
+  })))
   return [...products]
 }
 
