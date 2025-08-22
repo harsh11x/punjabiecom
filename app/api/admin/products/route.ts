@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     
     const productData = await request.json()
     console.log('Product data received:', productData)
+    console.log('Mapping: category =', productData.category, 'productType =', productData.productType, 'subcategory =', productData.subcategory)
 
     // Validate required fields
     if (!productData.name || !productData.price) {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       price: Number(productData.price),
       originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
       category: String(productData.category || 'general'),
-      subcategory: productData.subcategory ? String(productData.subcategory) : undefined,
+      subcategory: productData.subcategory || productData.productType, // Map productType to subcategory
       images: Array.isArray(productData.images) ? productData.images : [],
       sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
       colors: Array.isArray(productData.colors) ? productData.colors : [],
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Simple product data:', simpleProduct)
+    console.log('Final mapping: category =', simpleProduct.category, 'subcategory =', simpleProduct.subcategory)
 
     // Try to add product to local storage
     console.log('📁 Attempting to add product to local storage...')
@@ -147,7 +149,7 @@ export async function PUT(request: NextRequest) {
       price: Number(updateData.price),
       originalPrice: updateData.originalPrice ? Number(updateData.originalPrice) : undefined,
       category: String(updateData.category || 'general'),
-      subcategory: updateData.subcategory ? String(updateData.subcategory) : undefined,
+      subcategory: updateData.subcategory || updateData.productType, // Map productType to subcategory
       images: Array.isArray(updateData.images) ? updateData.images : [],
       sizes: Array.isArray(updateData.sizes) ? updateData.sizes : [],
       colors: Array.isArray(updateData.colors) ? updateData.colors : [],

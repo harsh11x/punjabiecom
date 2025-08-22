@@ -93,6 +93,12 @@ export default function ProductForm({
     }
 
     console.log('Saving product with data:', formData)
+    console.log('Form data breakdown:')
+    console.log('- category:', formData.category)
+    console.log('- productType:', formData.productType)
+    console.log('- name:', formData.name)
+    console.log('- price:', formData.price)
+    
     setIsSaving(true)
     try {
       const method = initialData?.id ? 'PUT' : 'POST'
