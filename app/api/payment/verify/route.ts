@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { orderStorage } from '@/lib/shared-storage'
 import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 Payment verification started...')
+    console.log('🔥 Verifying payment...')
     
     const body = await request.json()
-    console.log('Verification request body:', body)
-
     const { 
       razorpay_order_id, 
       razorpay_payment_id, 
@@ -16,18 +15,92 @@ export async function POST(request: NextRequest) {
       orderId 
     } = body
 
-    // Validate required fields
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
-      console.error('❌ Missing required verification data:', { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId })
+    console.log('Payment verification data:', {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId
+    })
+
+    // Check if this is a mock payment
+    if (razorpay_order_id && razorpay_order_id.startsWith('mock_')) {
+      console.log('🔄 Verifying mock payment...')
+      
+      // For mock payments, we can skip signature verification
+      // and just update the order status
+      
+      // Update order status
+      const ordersDir = path.join(process.cwd(), 'data', 'orders')
+      const orderFilePath = path.join(ordersDir, `${orderId}.json`)
+      
+      if (!fs.existsSync(orderFilePath)) {
+        console.error('❌ Order not found:', orderId)
+        return NextResponse.json(
+          { success: false, error: 'Order not found' },
+          { status: 404 }
+        )
+      }
+
+      const orderData = JSON.parse(fs.readFileSync(orderFilePath, 'utf8'))
+      
+      // Update order with payment details
+      const updatedOrder = {
+        ...orderData,
+        paymentStatus: 'completed',
+        status: 'confirmed',
+        razorpayPaymentId: razorpay_payment_id || 'mock_payment_id',
+        razorpaySignature: razorpay_signature || 'mock_signature',
+        paidAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      fs.writeFileSync(orderFilePath, JSON.stringify(updatedOrder, null, 2))
+      console.log('✅ Mock payment verified and order updated:', orderId)
+
+      // Send success response
+      return NextResponse.json({
+        success: true,
+        message: 'Mock payment verified successfully',
+        order: {
+          id: orderId,
+          orderNumber: updatedOrder.orderNumber,
+          status: updatedOrder.status,
+          paymentStatus: updatedOrder.paymentStatus,
+          total: updatedOrder.total
+        }
+      })
+    }
+
+    // Verify Razorpay signature for real payments
+    const key_secret = process.env.RAZORPAY_KEY_SECRET
+    if (!key_secret) {
+      throw new Error('Razorpay key secret not configured')
+    }
+
+    const generated_signature = crypto
+      .createHmac('sha256', key_secret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex')
+
+    console.log('Signature verification:', {
+      generated: generated_signature,
+      received: razorpay_signature,
+      match: generated_signature === razorpay_signature
+    })
+
+    if (generated_signature !== razorpay_signature) {
+      console.error('❌ Payment signature verification failed')
       return NextResponse.json(
-        { success: false, error: 'Missing payment verification data' },
+        { success: false, error: 'Payment verification failed' },
         { status: 400 }
       )
     }
 
-    // Get the order from storage
-    const order = orderStorage.getAllOrders().find(o => o._id === orderId)
-    if (!order) {
+    // Update order status
+    const ordersDir = path.join(process.cwd(), 'data', 'orders')
+    const orderFilePath = path.join(ordersDir, `${orderId}.json`)
+    
+    if (!fs.existsSync(orderFilePath)) {
       console.error('❌ Order not found:', orderId)
       return NextResponse.json(
         { success: false, error: 'Order not found' },
@@ -35,45 +108,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('✅ Order found:', order._id)
-
-    // Verify the payment signature
-    // Note: In production, you should verify the signature using your Razorpay secret
-    // For now, we'll trust the payment data from Razorpay
-    console.log('🔐 Payment signature verification (trusted mode)')
+    const orderData = JSON.parse(fs.readFileSync(orderFilePath, 'utf8'))
     
-    // Update order status to confirmed and paid
-    const updatedOrder = orderStorage.updateOrder(orderId, {
+    // Update order with payment details
+    const updatedOrder = {
+      ...orderData,
+      paymentStatus: 'completed',
       status: 'confirmed',
-      paymentStatus: 'paid',
-      razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature,
-      paymentDate: new Date().toISOString(),
-      notes: `Payment verified successfully. Razorpay Order: ${razorpay_order_id}, Payment: ${razorpay_payment_id}`
-    })
+      paidAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
 
-    console.log('✅ Order updated successfully:', updatedOrder._id)
+    fs.writeFileSync(orderFilePath, JSON.stringify(updatedOrder, null, 2))
+    console.log('✅ Order updated with payment details:', orderId)
 
-    // Return success response
-    const responseData = {
+    // Send success response
+    return NextResponse.json({
       success: true,
       message: 'Payment verified successfully',
       order: {
-        id: updatedOrder._id,
+        id: orderId,
         orderNumber: updatedOrder.orderNumber,
         status: updatedOrder.status,
         paymentStatus: updatedOrder.paymentStatus,
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id
+        total: updatedOrder.total
       }
-    }
-
-    console.log('✅ Payment verification completed successfully')
-    return NextResponse.json(responseData)
+    })
 
   } catch (error: any) {
-    console.error('❌ Payment verification failed:', error)
+    console.error('❌ Error verifying payment:', error)
     
     return NextResponse.json(
       { 
@@ -84,12 +149,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-export async function GET() {
-  return NextResponse.json({
-    success: true,
-    message: 'Payment verification API is working',
-    timestamp: new Date().toISOString()
-  })
 }
