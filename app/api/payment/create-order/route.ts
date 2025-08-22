@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
           id: `mock_${Date.now()}`,
           amount: Math.round(total * 100),
           currency: 'INR',
-          receipt: orderNumber,
+          receipt: savedOrder.orderNumber,
           status: 'created'
         }
         isMockPayment = true
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         id: `mock_${Date.now()}`,
         amount: Math.round(total * 100),
         currency: 'INR',
-        receipt: orderNumber,
+        receipt: savedOrder.orderNumber,
         status: 'created'
       }
       isMockPayment = true
