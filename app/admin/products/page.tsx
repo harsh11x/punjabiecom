@@ -27,6 +27,7 @@ interface Product {
   price: number;
   originalPrice: number;
   category: 'men' | 'women' | 'kids' | 'fulkari';
+  productType: 'jutti' | 'fulkari';
   subcategory?: string;
   stock: number;
   stockQuantity?: number;
@@ -66,7 +67,12 @@ export default function ProductsManagement() {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          setProducts(data.products)
+          // Map the API response to include productType field
+          const mappedProducts = data.products.map((product: any) => ({
+            ...product,
+            productType: product.subcategory || 'jutti' // Map subcategory to productType
+          }))
+          setProducts(mappedProducts)
         } else {
           toast.error('Failed to load products')
         }
@@ -87,7 +93,12 @@ export default function ProductsManagement() {
   }
 
   const openEditDialog = (product: Product) => {
-    setEditingProduct(product)
+    // Map the product data to match what ProductForm expects
+    const mappedProduct: Product = {
+      ...product,
+      productType: (product.subcategory as 'jutti' | 'fulkari') || 'jutti' // Map subcategory to productType
+    }
+    setEditingProduct(mappedProduct)
     setShowDialog(true)
   }
 
@@ -117,9 +128,9 @@ export default function ProductsManagement() {
     }
   }
 
-  const getCategoryDisplayName = (category: string, subcategory?: string) => {
+  const getCategoryDisplayName = (category: string, productType?: string) => {
     if (category === 'fulkari') return 'Fulkari'
-    if (subcategory === 'jutti') {
+    if (productType === 'jutti') {
       return `${category.charAt(0).toUpperCase() + category.slice(1)}'s Jutti`
     }
     return `${category.charAt(0).toUpperCase() + category.slice(1)}'s Products`
@@ -140,7 +151,7 @@ export default function ProductsManagement() {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.punjabiName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.subcategory && product.subcategory.toLowerCase().includes(searchTerm.toLowerCase()))
+      (product.productType && product.productType.toLowerCase().includes(searchTerm.toLowerCase()))
     
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
     
@@ -229,7 +240,7 @@ export default function ProductsManagement() {
                           {product.isActive ? "Active" : "Inactive"}
                         </Badge>
                         <Badge className={getCategoryBadgeColor(product.category)}>
-                          {getCategoryDisplayName(product.category, product.subcategory)}
+                          {getCategoryDisplayName(product.category, product.productType)}
                         </Badge>
                       </div>
                       <p className="text-sm text-amber-700 mt-1">{product.punjabiName}</p>
@@ -237,7 +248,7 @@ export default function ProductsManagement() {
                         <span>₹{product.price}</span>
                         <span>Stock: {product.stock || product.stockQuantity || 0}</span>
                         <span>Category: {product.category}</span>
-                        {product.subcategory && <span>Type: {product.subcategory}</span>}
+                        {product.productType && <span>Type: {product.productType}</span>}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
