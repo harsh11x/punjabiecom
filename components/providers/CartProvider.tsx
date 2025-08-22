@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { getApiUrl } from '@/config/environment'
 import { toast } from 'sonner'
 

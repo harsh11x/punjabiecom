@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { CartProvider } from '@/components/providers/CartProvider'
-import { FirebaseAuthProvider } from '@/components/providers/FirebaseAuthProvider'
+import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 import ErrorBoundary from '@/components/error-boundary'
 
 interface SafeProvidersProps {
