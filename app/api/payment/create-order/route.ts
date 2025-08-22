@@ -6,11 +6,15 @@ import { orderStorage } from '@/lib/shared-storage'
 let razorpay: Razorpay | null = null
 
 try {
+  // Use test keys if production keys are not available
+  const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_1DP5mmOlF5G5ag'
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'thisisatestkey'
+  
   razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'your_key_secret',
+    key_id: keyId,
+    key_secret: keySecret,
   })
-  console.log('✅ Razorpay initialized successfully')
+  console.log('✅ Razorpay initialized successfully with key:', keyId)
 } catch (error) {
   console.error('❌ Failed to initialize Razorpay:', error)
   razorpay = null
@@ -101,6 +105,9 @@ export async function POST(request: NextRequest) {
           razorpayOrderId: razorpayOrder.id
         })
         
+        // Set isMockPayment to false since we have a real Razorpay order
+        isMockPayment = false
+        
       } catch (razorpayError) {
         console.error('❌ Razorpay order creation failed:', razorpayError)
         console.log('🔄 Falling back to mock payment...')
@@ -114,6 +121,13 @@ export async function POST(request: NextRequest) {
           status: 'created'
         }
         isMockPayment = true
+        
+        // Log the specific error for debugging
+        console.error('Razorpay error details:', {
+          error: razorpayError.message,
+          code: (razorpayError as any).code,
+          statusCode: (razorpayError as any).statusCode
+        })
       }
     } else {
       console.log('🔄 Razorpay not available, using mock payment...')
@@ -127,6 +141,8 @@ export async function POST(request: NextRequest) {
         status: 'created'
       }
       isMockPayment = true
+      
+      console.log('⚠️ Razorpay instance not available - check environment variables')
     }
 
     // Return response for frontend
@@ -137,9 +153,9 @@ export async function POST(request: NextRequest) {
         orderNumber: savedOrder.orderNumber,
         amount: total,
         items: items.length,
-        razorpayOrderId: razorpayOrder.id,
+        razorpayOrderId: isMockPayment ? null : razorpayOrder.id,
         razorpayAmount: razorpayOrder.amount,
-        key: process.env.RAZORPAY_KEY_ID || 'rzp_test_mock_key',
+        key: isMockPayment ? null : (process.env.RAZORPAY_KEY_ID || 'rzp_test_1DP5mmOlF5G5ag'),
         currency: 'INR',
         name: 'Punjab Heritage Store',
         description: `Order ${savedOrder.orderNumber}`,
@@ -155,7 +171,7 @@ export async function POST(request: NextRequest) {
         mockPaymentInfo: isMockPayment ? {
           message: 'This is a mock payment for testing or when Razorpay is unavailable',
           testMode: true,
-          autoSuccess: true
+          autoSuccess: false
         } : undefined
       }
     }
@@ -184,7 +200,13 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     razorpay: {
       keyId: process.env.RAZORPAY_KEY_ID ? 'Configured' : 'Not configured',
-      keySecret: process.env.RAZORPAY_KEY_SECRET ? 'Configured' : 'Not configured'
+      keySecret: process.env.RAZORPAY_KEY_SECRET ? 'Configured' : 'Not configured',
+      instance: razorpay ? 'Initialized' : 'Not initialized',
+      testMode: !process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET
+    },
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      hasRazorpay: !!razorpay
     }
   })
 }

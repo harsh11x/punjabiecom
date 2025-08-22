@@ -290,23 +290,23 @@ export default function CheckoutPage() {
 
       // Check if this is a mock payment
       if (data.order.isMockPayment) {
-        console.log('Using mock payment system')
-        
-        // For mock payments, we can simulate success immediately
-        // or show a different flow
-        toast.success('Mock payment order created successfully!')
-        
-        // Clear cart after successful mock payment
-        clearCart()
-        
-        // Redirect to success page
-        router.push(`/order-success?orderId=${data.order.id}&orderNumber=${data.order.orderNumber}`)
+        console.log('❌ Mock payment detected - Razorpay not available')
+        toast.error('Payment gateway not available. Please try again later or contact support.')
+        setIsProcessing(false)
+        return
+      }
+
+      // Validate Razorpay order data
+      if (!data.order.razorpayOrderId || !data.order.key) {
+        console.error('❌ Missing Razorpay order data:', data.order)
+        toast.error('Payment gateway configuration error. Please contact support.')
+        setIsProcessing(false)
         return
       }
 
       // Initialize Razorpay payment for real payments
       console.log('🔥 Initializing Razorpay with options:', {
-        key: data.order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: data.order.key,
         amount: data.order.razorpayAmount,
         currency: 'INR',
         name: 'Punjab Heritage',
@@ -375,20 +375,37 @@ export default function CheckoutPage() {
       // Load Razorpay script if not already loaded
       if (typeof window !== 'undefined') {
         if (!(window as any).Razorpay) {
+          console.log('🔄 Loading Razorpay script...')
           const script = document.createElement('script')
           script.src = 'https://checkout.razorpay.com/v1/checkout.js'
           script.onload = () => {
-            const rzp = new (window as any).Razorpay(options)
-            rzp.open()
+            console.log('✅ Razorpay script loaded successfully')
+            try {
+              const rzp = new (window as any).Razorpay(options)
+              console.log('🔥 Opening Razorpay payment modal...')
+              rzp.open()
+            } catch (error) {
+              console.error('❌ Error creating Razorpay instance:', error)
+              toast.error('Failed to initialize payment gateway')
+              setIsProcessing(false)
+            }
           }
           script.onerror = () => {
+            console.error('❌ Failed to load Razorpay script')
             toast.error('Failed to load payment gateway')
             setIsProcessing(false)
           }
           document.body.appendChild(script)
         } else {
-          const rzp = new (window as any).Razorpay(options)
-          rzp.open()
+          console.log('✅ Razorpay already loaded, opening payment modal...')
+          try {
+            const rzp = new (window as any).Razorpay(options)
+            rzp.open()
+          } catch (error) {
+            console.error('❌ Error creating Razorpay instance:', error)
+            toast.error('Failed to initialize payment gateway')
+            setIsProcessing(false)
+          }
         }
       }
 

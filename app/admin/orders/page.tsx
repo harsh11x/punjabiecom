@@ -83,7 +83,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const response = await fetch(getApiUrl('/api/admin/orders'), {
+      const response = await fetch('/api/admin/orders', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'x-user-email': 'admin@punjabi-heritage.com' // Add user email header
@@ -114,7 +114,7 @@ export default function AdminOrdersPage() {
     if (!selectedOrder) return
 
     try {
-      const response = await fetch(getApiUrl('/api/admin/orders'), {
+      const response = await fetch('/api/admin/orders', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
