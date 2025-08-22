@@ -111,12 +111,27 @@ export default function AdminOrdersPage() {
 
   // Update order status
   const updateOrder = async () => {
-    if (!selectedOrder) return
+    console.log('🔥 Update order function called!')
+    
+    if (!selectedOrder) {
+      console.error('❌ No selected order!')
+      toast.error('No order selected for update')
+      return
+    }
 
     console.log('🔄 Updating order:', selectedOrder._id)
     console.log('📝 Update data:', updateData)
 
     try {
+      console.log('📡 Sending PUT request to /api/admin/orders')
+      
+      const requestBody = {
+        orderId: selectedOrder._id,
+        updates: updateData
+      }
+      
+      console.log('📦 Request body:', JSON.stringify(requestBody, null, 2))
+      
       const response = await fetch('/api/admin/orders', {
         method: 'PUT',
         headers: {
@@ -124,17 +139,21 @@ export default function AdminOrdersPage() {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
           'x-user-email': 'admin@punjabi-heritage.com'
         },
-        body: JSON.stringify({
-          orderId: selectedOrder._id,
-          updates: updateData
-        })
+        body: JSON.stringify(requestBody)
       })
 
+      console.log('📡 Response status:', response.status)
+      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
-        throw new Error('Failed to update order')
+        const errorText = await response.text()
+        console.error('❌ Response not OK:', errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
       }
 
       const result = await response.json()
+      console.log('✅ Response data:', result)
+      
       if (result.success) {
         toast.success('Order updated successfully')
         setIsUpdateDialogOpen(false)
@@ -151,7 +170,7 @@ export default function AdminOrdersPage() {
         throw new Error(result.error || 'Failed to update order')
       }
     } catch (error: any) {
-      console.error('Error updating order:', error)
+      console.error('❌ Error updating order:', error)
       toast.error(error.message || 'Failed to update order')
     }
   }
@@ -216,9 +235,23 @@ export default function AdminOrdersPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Order Management</h1>
-        <Button onClick={fetchOrders} disabled={loading}>
-          {loading ? 'Loading...' : 'Refresh Orders'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => {
+              console.log('🧪 Test button clicked!')
+              console.log('📊 Current orders:', orders.length)
+              console.log('🔍 Selected order:', selectedOrder)
+              console.log('📝 Update data:', updateData)
+            }} 
+            variant="outline"
+            size="sm"
+          >
+            Test Debug
+          </Button>
+          <Button onClick={fetchOrders} disabled={loading}>
+            {loading ? 'Loading...' : 'Refresh Orders'}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -327,16 +360,23 @@ export default function AdminOrdersPage() {
                   </div>
                   
                   <Dialog open={isUpdateDialogOpen && selectedOrder?._id === order._id} onOpenChange={(open) => {
+                    console.log('🔄 Dialog state change:', { open, orderId: order._id, selectedOrderId: selectedOrder?._id })
+                    
                     if (open) {
+                      console.log('✅ Opening dialog for order:', order._id)
                       setSelectedOrder(order)
-                      setUpdateData({
+                      const newUpdateData = {
                         status: order.status,
                         paymentStatus: order.paymentStatus,
                         trackingNumber: order.trackingNumber || '',
                         estimatedDelivery: order.estimatedDelivery || '',
                         notes: order.notes || ''
-                      })
+                      }
+                      console.log('📝 Setting update data:', newUpdateData)
+                      setUpdateData(newUpdateData)
+                      setIsUpdateDialogOpen(true)
                     } else {
+                      console.log('❌ Closing dialog')
                       setIsUpdateDialogOpen(false)
                       setSelectedOrder(null)
                     }
@@ -413,7 +453,15 @@ export default function AdminOrdersPage() {
                         </div>
                         
                         <div className="flex gap-2">
-                          <Button onClick={updateOrder} className="flex-1">
+                          <Button 
+                            onClick={() => {
+                              console.log('🔥 Update button clicked!')
+                              console.log('🔍 Selected order:', selectedOrder)
+                              console.log('📝 Update data:', updateData)
+                              updateOrder()
+                            }} 
+                            className="flex-1"
+                          >
                             Update Order
                           </Button>
                           <Button 
