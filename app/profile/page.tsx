@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
+import { useAutoLogout } from '@/hooks/useAutoLogout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,6 +74,12 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(true)
+
+  // Auto-logout after 45 minutes of inactivity
+  useAutoLogout({ 
+    isAdmin: false, 
+    onLogout: logout 
+  })
   const [formData, setFormData] = useState({
     name: '',
     email: '',

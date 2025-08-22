@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { User } from 'firebase/auth'
 import { getApiUrl } from '@/config/environment'
+import { useAutoLogout } from '@/hooks/useAutoLogout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -50,12 +51,18 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  const { user: firebaseUser, loading: authLoading } = useFirebaseAuth()
+  const { user: firebaseUser, loading: authLoading, logout } = useFirebaseAuth()
   const user = firebaseUser as User | null
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [searchOrderNumber, setSearchOrderNumber] = useState('')
   const [searchedOrder, setSearchedOrder] = useState<Order | null>(null)
+
+  // Auto-logout after 45 minutes of inactivity
+  useAutoLogout({ 
+    isAdmin: false, 
+    onLogout: logout 
+  })
 
   // Fetch user's orders
   const fetchUserOrders = async () => {
@@ -84,6 +91,42 @@ export default function OrdersPage() {
     } catch (error: any) {
       console.error('Error fetching orders:', error)
       toast.error(error.message || 'Failed to fetch orders')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Cancel order
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${await user?.getIdToken()}`,
+          'x-user-email': user?.email || ''
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to cancel order')
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        toast.success('Order cancelled successfully')
+        fetchUserOrders() // Refresh orders
+      } else {
+        throw new Error(result.error || 'Failed to cancel order')
+      }
+    } catch (error: any) {
+      console.error('Error cancelling order:', error)
+      toast.error(error.message || 'Failed to cancel order')
     } finally {
       setLoading(false)
     }
@@ -424,6 +467,16 @@ export default function OrdersPage() {
                   </div>
                 )}
 
+                {/* Cancellation Policy */}
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-blue-900">Cancellation Policy</h4>
+                  <div className="text-sm text-blue-800">
+                    <p>• Orders can only be cancelled within 24 hours of ordering</p>
+                    <p>• Delivered orders cannot be cancelled</p>
+                    <p>• Cancelled orders cannot be reinstated</p>
+                  </div>
+                </div>
+
                 {/* Order Progress */}
                 <div>
                   <h4 className="font-semibold mb-3">Order Progress</h4>
@@ -460,6 +513,16 @@ export default function OrdersPage() {
                   {order.status === 'delivered' && (
                     <Button variant="outline" size="sm">
                       Rate & Review
+                    </Button>
+                  )}
+                  {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCancelOrder(order._id)}
+                      className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
+                    >
+                      Cancel Order
                     </Button>
                   )}
                 </div>

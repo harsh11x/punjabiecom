@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { getApiUrl } from '@/config/environment'
 import { Package } from 'lucide-react'
+import { useAutoLogout } from '@/hooks/useAutoLogout'
 
 
 interface OrderItem {
@@ -59,7 +60,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
-  const { isAuthenticated } = useAdminAuth()
+  const { isAuthenticated, logout } = useAdminAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -70,6 +71,12 @@ export default function AdminOrdersPage() {
     trackingNumber: '',
     estimatedDelivery: '',
     notes: ''
+  })
+
+  // Auto-logout after 5 minutes of inactivity
+  useAutoLogout({ 
+    isAdmin: true, 
+    onLogout: logout 
   })
 
   // Fetch orders from AWS

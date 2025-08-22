@@ -305,6 +305,15 @@ export default function CheckoutPage() {
       }
 
       // Initialize Razorpay payment for real payments
+      console.log('🔥 Initializing Razorpay with options:', {
+        key: data.order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.order.razorpayAmount,
+        currency: 'INR',
+        name: 'Punjab Heritage',
+        description: `Order #${data.order.orderNumber}`,
+        order_id: data.order.razorpayOrderId,
+      })
+      
       const options = {
         key: data.order.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.order.razorpayAmount,

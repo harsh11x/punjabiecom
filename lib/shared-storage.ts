@@ -56,6 +56,41 @@ export const orderStorage = {
     return null
   },
 
+  // Cancel order (within 24 hours)
+  cancelOrder: (orderId: string) => {
+    const orderIndex = sharedOrders.findIndex(order => order._id === orderId)
+    if (orderIndex !== -1) {
+      const order = sharedOrders[orderIndex]
+      const orderDate = new Date(order.createdAt)
+      const now = new Date()
+      const hoursDiff = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60)
+      
+      if (hoursDiff > 24) {
+        return { success: false, error: 'Orders can only be cancelled within 24 hours of ordering' }
+      }
+      
+      if (order.status === 'cancelled') {
+        return { success: false, error: 'Order is already cancelled' }
+      }
+      
+      if (order.status === 'delivered') {
+        return { success: false, error: 'Cannot cancel delivered orders' }
+      }
+      
+      // Update order status to cancelled
+      sharedOrders[orderIndex] = {
+        ...order,
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      
+      console.log(`✅ Order cancelled in shared storage: ${orderId}`)
+      return { success: true, order: sharedOrders[orderIndex] }
+    }
+    return { success: false, error: 'Order not found' }
+  },
+
   // Get order count
   getOrderCount: () => sharedOrders.length
 }
