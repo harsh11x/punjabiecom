@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useFirebaseAuth } from '@/components/providers/FirebaseAuthProvider'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -67,7 +67,7 @@ interface Order {
 }
 
 export default function ProfilePage() {
-  const { user, updateUserProfile, isAuthenticated, signOut } = useFirebaseAuth()
+  const { user, updateUserProfile, isAuthenticated, logout } = useFirebaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -117,14 +117,15 @@ export default function ProfilePage() {
       const token = await user.getIdToken()
       const response = await fetch('/api/user/orders', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'x-user-email': user.email || ''
         }
       })
       
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          setOrders(data.orders)
+          setOrders(data.data || [])
         } else {
           console.error('Failed to load orders:', data.error)
         }
@@ -187,7 +188,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
-      await signOut()
+      await logout()
       router.push('/login')
     } catch (error) {
       console.error('Logout error:', error)
@@ -454,7 +455,7 @@ export default function ProfilePage() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading orders...</p>
                   </div>
-                ) : orders.length > 0 ? (
+                ) : orders && orders.length > 0 ? (
                   <div className="space-y-4">
                     {orders.slice(0, 3).map((order) => (
                       <div key={order._id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
@@ -494,7 +495,7 @@ export default function ProfilePage() {
                       </div>
                     ))}
                     
-                    {orders.length > 3 && (
+                    {orders && orders.length > 3 && (
                       <div className="text-center pt-4">
                         <Button 
                           variant="outline"
