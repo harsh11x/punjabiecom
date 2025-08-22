@@ -66,14 +66,14 @@ export async function GET(request: NextRequest) {
     const customerEmail = searchParams.get('email') || 
                          request.headers.get('x-user-email')
     
-    let filteredOrders = orders
+    let filteredOrders = orderStorage.getAllOrders()
     
     if (orderId) {
-      filteredOrders = orders.filter((order: any) => order._id === orderId)
+      filteredOrders = filteredOrders.filter((order: any) => order._id === orderId)
     } else if (orderNumber) {
-      filteredOrders = orders.filter((order: any) => order.orderNumber === orderNumber)
+      filteredOrders = filteredOrders.filter((order: any) => order.orderNumber === orderNumber)
     } else if (customerEmail) {
-      filteredOrders = orders.filter((order: any) => 
+      filteredOrders = filteredOrders.filter((order: any) => 
         order.customerEmail.toLowerCase() === customerEmail.toLowerCase()
       )
     }
@@ -107,27 +107,21 @@ export async function PUT(request: NextRequest) {
     }
     
     const updateData = await request.json()
-    const orderIndex = orders.findIndex((order: any) => order._id === orderId)
+    // Update order using shared storage
+    const updatedOrder = orderStorage.updateOrder(orderId, updateData)
     
-    if (orderIndex === -1) {
+    if (!updatedOrder) {
       return NextResponse.json(
         { success: false, error: 'Order not found' },
         { status: 404 }
       )
     }
     
-    // Update order
-    orders[orderIndex] = {
-      ...orders[orderIndex],
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    }
-    
     console.log('✅ Order updated successfully:', orderId)
     
     return NextResponse.json({
       success: true,
-      data: orders[orderIndex]
+      data: updatedOrder
     })
     
   } catch (error: any) {
@@ -143,7 +137,7 @@ export async function PUT(request: NextRequest) {
 export async function HEAD() {
   return NextResponse.json({ 
     status: 'healthy', 
-    ordersCount: orders.length,
+    ordersCount: orderStorage.getOrderCount(),
     timestamp: new Date().toISOString()
   })
 }
