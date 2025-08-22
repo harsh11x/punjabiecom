@@ -33,7 +33,7 @@ interface SimpleProduct {
   updatedAt: string
 }
 
-// In-memory storage (will reset on each deployment)
+// In-memory storage (will be populated from file)
 let products: SimpleProduct[] = []
 
 // Save products to file
@@ -172,6 +172,7 @@ export async function getAllProducts(): Promise<SimpleProduct[]> {
   const loaded = loadProductsFromFile()
   if (!loaded) {
     console.log('📦 No products found in file, products array is empty')
+    // Don't add any demo products - keep array empty
   }
   
   await initializeFromAWS()

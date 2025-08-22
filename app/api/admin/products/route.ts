@@ -74,7 +74,14 @@ export async function POST(request: NextRequest) {
       isActive: productData.isActive !== false, // Default to true (active)
       stockQuantity: Number(productData.stockQuantity) || 1,
       featured: productData.featured === true,
-      tags: Array.isArray(productData.tags) ? productData.tags : []
+      tags: Array.isArray(productData.tags) ? productData.tags : [],
+      // Add missing fields to match existing product structure
+      punjabiName: productData.punjabiName || productData.name,
+      punjabiDescription: productData.punjabiDescription || productData.description || '',
+      rating: productData.rating || 0,
+      reviews: productData.reviews || 0,
+      badge: productData.badge || '',
+      stock: Number(productData.stockQuantity) || 1 // Map stockQuantity to stock for consistency
     }
 
     console.log('Simple product data:', simpleProduct)
@@ -157,7 +164,14 @@ export async function PUT(request: NextRequest) {
       isActive: updateData.isActive !== false,
       stockQuantity: Number(updateData.stockQuantity) || 1,
       featured: updateData.featured === true,
-      tags: Array.isArray(updateData.tags) ? updateData.tags : []
+      tags: Array.isArray(updateData.tags) ? updateData.tags : [],
+      // Add missing fields to match existing product structure
+      punjabiName: updateData.punjabiName || updateData.name,
+      punjabiDescription: updateData.punjabiDescription || updateData.description || '',
+      rating: updateData.rating || 0,
+      reviews: updateData.reviews || 0,
+      badge: updateData.badge || '',
+      stock: Number(updateData.stockQuantity) || 1 // Map stockQuantity to stock for consistency
     }
 
     // Update product in local storage (primary)
