@@ -17,9 +17,12 @@ export async function GET(request: NextRequest) {
     
     // Get all products
     let products = await getAllProducts()
+    console.log(`📦 Total products loaded: ${products.length}`)
+    console.log('📦 Sample products:', products.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category, subcategory: p.subcategory })))
     
     // Filter by active products only
     products = products.filter((p: any) => p.isActive !== false)
+    console.log(`📦 Active products: ${products.length}`)
     
     // Category filter - Handle special cases for jutti and fulkari
     if (category && category !== 'all') {
@@ -27,10 +30,12 @@ export async function GET(request: NextRequest) {
         // For jutti category, show all products with subcategory 'jutti' from any main category
         products = products.filter((p: any) => p.subcategory === 'jutti')
         console.log(`🔍 Filtered by jutti subcategory, found ${products.length} products`)
+        console.log('🔍 Jutti products:', products.map(p => ({ id: p.id, name: p.name, category: p.category, subcategory: p.subcategory })))
       } else {
         // For other categories (men, women, kids, fulkari), filter by main category
         products = products.filter((p: any) => p.category === category)
         console.log(`🔍 Filtered by category: ${category}, found ${products.length} products`)
+        console.log(`🔍 ${category} products:`, products.map(p => ({ id: p.id, name: p.name, category: p.category, subcategory: p.subcategory })))
       }
     }
     
