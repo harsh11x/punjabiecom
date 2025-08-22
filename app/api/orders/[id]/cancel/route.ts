@@ -3,10 +3,10 @@ import { orderStorage } from '@/lib/shared-storage'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = params.id
+    const { id: orderId } = await params
     
     if (!orderId) {
       return NextResponse.json(

@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
 
     console.log('🔄 Admin fetching all orders...')
     
-                    // Get orders from shared storage
-                const { orderStorage } = await import('@/lib/shared-storage')
-                const orders = orderStorage.getAllOrders()
+    // Get orders from shared storage
+    const { orderStorage } = await import('@/lib/shared-storage')
+    const orders = orderStorage.getAllOrders()
     
     console.log(`✅ Retrieved ${orders.length} orders for admin`)
     

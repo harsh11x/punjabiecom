@@ -52,9 +52,9 @@ export async function GET(request: NextRequest) {
 
     console.log('🔄 User fetching orders for:', customerEmail)
 
-                    // Get orders from shared storage
-                const { orderStorage } = await import('@/lib/shared-storage')
-                const orders = orderStorage.getOrdersByUser(customerEmail)
+    // Get orders from shared storage
+    const { orderStorage } = await import('@/lib/shared-storage')
+    const orders = orderStorage.getOrdersByUser(customerEmail)
 
     console.log(`✅ Retrieved ${orders.length} orders for user`)
 

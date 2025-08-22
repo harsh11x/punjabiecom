@@ -8,7 +8,7 @@ interface UseAutoLogoutProps {
 
 export function useAutoLogout({ isAdmin = false, onLogout }: UseAutoLogoutProps) {
   const router = useRouter()
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const activityRef = useRef<number>(Date.now())
 
   // Set timeout based on user type
