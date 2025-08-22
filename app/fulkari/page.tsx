@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Filter, Heart, ShoppingBag, Star, Search, Sparkles, Package, Grid3X3, List, Menu } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -53,11 +53,7 @@ export default function FulkariPage() {
     }
   })
 
-  useEffect(() => {
-    fetchProducts()
-  }, [searchTerm, subcategoryFilter, sortBy, priceRange, currentPage])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -83,7 +79,11 @@ export default function FulkariPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage, searchTerm, subcategoryFilter, sortBy, priceRange])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const toggleWishlist = (productId: string) => {
     setWishlist(prev => 

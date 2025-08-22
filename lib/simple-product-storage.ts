@@ -146,15 +146,13 @@ function generateId(): string {
 
 // Get all products
 export async function getAllProducts(): Promise<SimpleProduct[]> {
-  // First try to load from file if not already loaded
-  if (products.length === 0) {
-    const loaded = loadProductsFromFile()
-    if (!loaded) {
-      // If no products in file, initialize with demo products
-      console.log('📦 No products found, initializing with demo products...')
-      // Save demo products to file
-      saveProductsToFile()
-    }
+  // Always try to load from file first
+  const loaded = loadProductsFromFile()
+  if (!loaded) {
+    // If no products in file, initialize with demo products
+    console.log('📦 No products found in file, initializing with demo products...')
+    // Save demo products to file
+    saveProductsToFile()
   }
   
   await initializeFromAWS()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Filter, Heart, ShoppingBag, Star, Search, Users, Package, Grid3X3, List } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -52,12 +52,9 @@ export default function WomenPage() {
     }
   })
 
-  useEffect(() => {
-    fetchProducts()
-  }, [searchTerm, subcategoryFilter, sortBy, priceRange, currentPage])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
+      console.log('🔍 Fetching women\'s products...')
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
@@ -68,21 +65,39 @@ export default function WomenPage() {
         ...(priceRange !== 'all' && { priceRange })
       })
 
+      console.log('🔍 API params:', params.toString())
       const response = await fetch(`/api/products?${params}`)
+      console.log('🔍 API response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('🔍 API response data:', data)
+        console.log('🔍 Products count:', data.data?.length || 0)
         setProducts(data.data || [])
         setTotalPages(data.pagination?.pages || 1)
       } else {
+        console.error('❌ API response not ok:', response.status)
         toast.error('Failed to fetch women\'s products')
       }
     } catch (error) {
-      console.error('Error fetching women\'s products:', error)
+      console.error('❌ Error fetching women\'s products:', error)
       toast.error('Error loading women\'s products')
     } finally {
+      console.log('🔍 Setting loading to false')
       setLoading(false)
     }
-  }
+  }, [currentPage, searchTerm, subcategoryFilter, sortBy, priceRange])
+
+  useEffect(() => {
+    console.log('🔍 useEffect triggered, calling fetchProducts')
+    fetchProducts()
+  }, [fetchProducts])
+
+  // Debug effect to log state changes
+  useEffect(() => {
+    console.log('🔍 Products state changed:', products.length, 'products')
+    console.log('🔍 Loading state:', loading)
+  }, [products, loading])
 
   const toggleWishlist = (productId: string) => {
     setWishlist(prev => 

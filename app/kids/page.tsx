@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Filter, Heart, ShoppingBag, Star, Search, Baby, Package, Grid3X3, List } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -52,11 +52,7 @@ export default function KidsPage() {
     }
   })
 
-  useEffect(() => {
-    fetchProducts()
-  }, [searchTerm, subcategoryFilter, sortBy, priceRange, currentPage])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -82,7 +78,11 @@ export default function KidsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage, searchTerm, subcategoryFilter, sortBy, priceRange])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const toggleWishlist = (productId: string) => {
     setWishlist(prev => 

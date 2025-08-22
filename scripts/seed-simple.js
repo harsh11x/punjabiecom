@@ -1,154 +1,179 @@
 const fs = require('fs')
 const path = require('path')
 
+// Data file paths
 const DATA_DIR = path.resolve(process.cwd(), 'data')
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
 
-// Sample products data
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true })
+}
+
 const sampleProducts = [
+  // Men's Products
   {
-    id: "1",
-    name: "Bridal Gold Jutti",
-    punjabiName: "ਦੁਲਹਨ ਸੋਨੇ ਦੀ ਜੁੱਤੀ",
-    description: "Exquisite handcrafted bridal jutti with intricate gold embroidery and traditional Punjabi designs. Perfect for weddings and special occasions.",
-    punjabiDescription: "ਸੋਨੇ ਦੀ ਕਢਾਈ ਨਾਲ ਸਜਾਈ ਗਈ ਸੁੰਦਰ ਦੁਲਹਨ ਜੁੱਤੀ। ਵਿਆਹ ਅਤੇ ਖਾਸ ਮੌਕਿਆਂ ਲਈ ਸੰਪੂਰਨ।",
-    price: 3299,
-    originalPrice: 4199,
-    category: "women",
-    images: ["/womens-bridal-jutti-gold.png"],
-    colors: ["Gold", "Red", "Pink"],
-    sizes: ["5", "6", "7", "8", "9"],
-    stock: 25,
-    rating: 4.9,
-    reviews: 89,
-    badge: "ਦੁਲਹਨ ਸਪੈਸ਼ਲ",
-    badgeEn: "Bridal Special",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "2",
-    name: "Embroidered Jutti",
-    punjabiName: "ਕਢਾਈ ਵਾਲੀ ਜੁੱਤੀ",
-    description: "Beautiful embroidered jutti with traditional Punjabi motifs. Comfortable and stylish for daily wear.",
-    punjabiDescription: "ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਨਕਸ਼ਿਆਂ ਨਾਲ ਸਜਾਈ ਗਈ ਸੁੰਦਰ ਕਢਾਈ ਵਾਲੀ ਜੁੱਤੀ।",
-    price: 2899,
-    originalPrice: 3699,
-    category: "women",
-    images: ["/womens-embroidered-jutti.png"],
-    colors: ["Red", "Green", "Blue"],
-    sizes: ["5", "6", "7", "8", "9"],
-    stock: 40,
-    rating: 4.8,
-    reviews: 167,
-    badge: "ਸਭ ਤੋਂ ਵਧੀਆ",
-    badgeEn: "Best Seller",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "3",
-    name: "Traditional Leather Jutti",
-    punjabiName: "ਪਰੰਪਰਾਗਤ ਚਮੜੇ ਦੀ ਜੁੱਤੀ",
-    description: "Handcrafted leather jutti for men with traditional Punjabi styling. Durable and comfortable for all occasions.",
-    punjabiDescription: "ਮਰਦਾਂ ਲਈ ਹੱਥ ਨਾਲ ਬਣਾਈ ਗਈ ਚਮੜੇ ਦੀ ਜੁੱਤੀ। ਸਾਰੇ ਮੌਕਿਆਂ ਲਈ ਟਿਕਾਊ ਅਤੇ ਆਰਾਮਦਾਇਕ।",
-    price: 2599,
-    originalPrice: 3299,
+    id: 'men_jutti_1',
+    name: "Royal Punjabi Jutti",
+    punjabiName: "ਸ਼ਾਹੀ ਪੰਜਾਬੀ ਜੁੱਤੀ",
+    description: "Handcrafted traditional Punjabi jutti made with premium leather and intricate embroidery work.",
+    price: 2499,
+    originalPrice: 3199,
     category: "men",
+    subcategory: "jutti",
     images: ["/mens-punjabi-jutti-leather-brown-traditional.png"],
     colors: ["Brown", "Black", "Tan"],
     sizes: ["6", "7", "8", "9", "10", "11"],
-    stock: 35,
-    rating: 4.7,
-    reviews: 134,
-    badge: "ਪਰੰਪਰਾਗਤ",
-    badgeEn: "Traditional",
+    stock: 25,
+    rating: 4.8,
+    reviews: 124,
+    badge: "ਸਭ ਤੋਂ ਵਧੀਆ",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
   {
-    id: "4",
+    id: 'men_jutti_2',
     name: "Traditional Khussa",
     punjabiName: "ਪਰੰਪਰਾਗਤ ਖੁੱਸਾ",
-    description: "Classic Punjabi khussa with pointed toe design. Perfect for traditional wear and cultural events.",
-    punjabiDescription: "ਨੁਕੀਲੇ ਪੰਜੇ ਵਾਲਾ ਕਲਾਸਿਕ ਪੰਜਾਬੀ ਖੁੱਸਾ। ਪਰੰਪਰਾਗਤ ਪਹਿਰਾਵੇ ਅਤੇ ਸੱਭਿਆਚਾਰਕ ਸਮਾਗਮਾਂ ਲਈ ਸੰਪੂਰਨ।",
-    price: 2299,
-    originalPrice: 2999,
+    description: "Elegant traditional khussa with authentic Punjabi craftsmanship and comfortable fit.",
+    price: 2799,
+    originalPrice: 3599,
     category: "men",
+    subcategory: "jutti",
     images: ["/mens-traditional-khussa.png"],
-    colors: ["Maroon", "Navy", "Black"],
+    colors: ["Black", "Brown", "Maroon"],
     sizes: ["6", "7", "8", "9", "10", "11"],
-    stock: 30,
+    stock: 18,
     rating: 4.6,
-    reviews: 98,
+    reviews: 203,
     badge: "ਨਵਾਂ",
-    badgeEn: "New",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
+
+  // Women's Products
   {
-    id: "5",
-    name: "Colorful Kids Jutti",
-    punjabiName: "ਰੰਗ-ਬਿਰੰਗੀ ਬੱਚਿਆਂ ਦੀ ਜੁੱਤੀ",
-    description: "Vibrant and comfortable jutti designed specially for kids. Soft sole and colorful designs.",
-    punjabiDescription: "ਬੱਚਿਆਂ ਲਈ ਵਿਸ਼ੇਸ਼ ਤੌਰ 'ਤੇ ਤਿਆਰ ਕੀਤੀ ਗਈ ਚਮਕਦਾਰ ਅਤੇ ਆਰਾਮਦਾਇਕ ਜੁੱਤੀ।",
-    price: 1599,
-    originalPrice: 1999,
-    category: "kids",
-    images: ["/colorful-kids-jutti.png"],
-    colors: ["Pink", "Blue", "Yellow", "Green"],
-    sizes: ["1", "2", "3", "4", "5"],
-    stock: 50,
-    rating: 4.8,
-    reviews: 76,
-    badge: "ਬੱਚਿਆਂ ਦੀ ਪਸੰਦ",
-    badgeEn: "Kids Favorite",
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "6",
-    name: "Traditional Phulkari Dupatta",
-    punjabiName: "ਪਰੰਪਰਾਗਤ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
-    description: "Authentic handwoven phulkari dupatta with traditional embroidery. A masterpiece of Punjabi craftsmanship.",
-    punjabiDescription: "ਪਰੰਪਰਾਗਤ ਕਢਾਈ ਨਾਲ ਅਸਲੀ ਹੱਥ ਨਾਲ ਬੁਣਿਆ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ। ਪੰਜਾਬੀ ਕਾਰੀਗਰੀ ਦਾ ਸ਼ਾਹਕਾਰ।",
-    price: 4599,
-    originalPrice: 5999,
-    category: "phulkari",
-    images: ["/punjabi-phulkari-dupatta.png"],
-    colors: ["Red", "Orange", "Pink", "Yellow"],
-    sizes: ["Standard"],
-    stock: 20,
+    id: 'women_jutti_1',
+    name: "Bridal Gold Jutti",
+    punjabiName: "ਦੁਲਹਨ ਸੋਨੇ ਦੀ ਜੁੱਤੀ",
+    description: "Exquisite bridal jutti with gold embroidery and traditional craftsmanship for special occasions.",
+    price: 3299,
+    originalPrice: 4199,
+    category: "women",
+    subcategory: "jutti",
+    images: ["/womens-bridal-jutti-gold.png"],
+    colors: ["Gold", "Red", "Pink"],
+    sizes: ["5", "6", "7", "8", "9"],
+    stock: 15,
     rating: 4.9,
-    reviews: 45,
-    badge: "ਹੱਥ ਨਾਲ ਬਣਿਆ",
-    badgeEn: "Handmade",
+    reviews: 89,
+    badge: "ਦੁਲਹਨ ਸਪੈਸ਼ਲ",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
   {
-    id: "7",
+    id: 'women_jutti_2',
+    name: "Embroidered Jutti",
+    punjabiName: "ਕਢਾਈ ਵਾਲੀ ਜੁੱਤੀ",
+    description: "Beautiful embroidered jutti with intricate threadwork and comfortable sole for daily wear.",
+    price: 2899,
+    originalPrice: 3699,
+    category: "women",
+    subcategory: "jutti",
+    images: ["/womens-embroidered-jutti.png"],
+    colors: ["Red", "Green", "Blue"],
+    sizes: ["5", "6", "7", "8", "9"],
+    stock: 22,
+    rating: 4.8,
+    reviews: 167,
+    badge: "ਸਭ ਤੋਂ ਵਧੀਆ",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+
+  // Kids Products
+  {
+    id: 'kids_jutti_1',
+    name: "Colorful Kids Jutti",
+    punjabiName: "ਬੱਚਿਆਂ ਦੀ ਰੰਗੀਨ ਜੁੱਤੀ",
+    description: "Vibrant and comfortable jutti designed specially for kids with soft sole and playful colors.",
+    price: 1299,
+    originalPrice: 1699,
+    category: "kids",
+    subcategory: "jutti",
+    images: ["/colorful-kids-jutti.png"],
+    colors: ["Multi", "Blue", "Pink"],
+    sizes: ["1", "2", "3", "4", "5"],
+    stock: 35,
+    rating: 4.7,
+    reviews: 156,
+    badge: "ਸਭ ਤੋਂ ਵਧੀਆ",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'kids_jutti_2',
+    name: "Baby Soft Jutti",
+    punjabiName: "ਬੇਬੀ ਨਰਮ ਜੁੱਤੀ",
+    description: "Ultra-soft jutti for babies and toddlers with gentle materials and secure fit.",
+    price: 999,
+    originalPrice: 1299,
+    category: "kids",
+    subcategory: "jutti",
+    images: ["/placeholder.jpg"],
+    colors: ["Pink", "Blue", "Yellow"],
+    sizes: ["0", "1", "2"],
+    stock: 28,
+    rating: 4.8,
+    reviews: 89,
+    badge: "ਨਵਾਂ",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+
+  // Fulkari Products
+  {
+    id: 'fulkari_dupatta_1',
     name: "Bridal Phulkari Dupatta",
     punjabiName: "ਦੁਲਹਨ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
-    description: "Exquisite bridal phulkari dupatta with intricate golden thread work. Perfect for wedding ceremonies.",
-    punjabiDescription: "ਸੋਨੇ ਦੇ ਧਾਗੇ ਨਾਲ ਬਣਿਆ ਸ਼ਾਨਦਾਰ ਦੁਲਹਨ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ। ਵਿਆਹ ਦੇ ਸਮਾਗਮਾਂ ਲਈ ਸੰਪੂਰਨ।",
-    price: 7999,
-    originalPrice: 9999,
-    category: "phulkari",
+    description: "Exquisite bridal phulkari dupatta with traditional hand embroidery and premium silk fabric.",
+    price: 4999,
+    originalPrice: 6499,
+    category: "fulkari",
+    subcategory: "dupatta",
     images: ["/bridal-phulkari-dupatta.png"],
-    colors: ["Red", "Maroon", "Pink"],
-    sizes: ["Standard"],
-    stock: 15,
-    rating: 5.0,
-    reviews: 23,
-    badge: "ਦੁਲਹਨ ਸਪੈਸ਼ਲ",
-    badgeEn: "Bridal Special",
+    colors: ["Red", "Gold", "Maroon"],
+    sizes: ["2.5m"],
+    stock: 8,
+    rating: 4.9,
+    reviews: 89,
+    badge: "ਹੱਥ ਦੀ ਕਢਾਈ",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'fulkari_bagh_1',
+    name: "Traditional Bagh Phulkari",
+    punjabiName: "ਪਰੰਪਰਾਗਤ ਬਾਗ਼ ਫੁਲਕਾਰੀ",
+    description: "Authentic bagh phulkari with intricate geometric patterns and vibrant thread work.",
+    price: 3799,
+    originalPrice: 4999,
+    category: "fulkari",
+    subcategory: "bagh",
+    images: ["/traditional-bagh-phulkari-embroidery.png"],
+    colors: ["Yellow", "Orange", "Red"],
+    sizes: ["2.5m"],
+    stock: 12,
+    rating: 4.8,
+    reviews: 203,
+    badge: "ਪਰੰਪਰਾਗਤ",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -157,23 +182,27 @@ const sampleProducts = [
 
 function seedProducts() {
   try {
-    // Ensure data directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true })
-    }
-
     // Write products to file
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(sampleProducts, null, 2), 'utf8')
+    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(sampleProducts, null, 2))
+    
+    console.log(`✅ Successfully seeded ${sampleProducts.length} products!`)
+    
+    // Log products by category
+    const menProducts = sampleProducts.filter(p => p.category === 'men')
+    const womenProducts = sampleProducts.filter(p => p.category === 'women')
+    const kidsProducts = sampleProducts.filter(p => p.category === 'kids')
+    const fulkariProducts = sampleProducts.filter(p => p.category === 'fulkari')
 
-    console.log('✅ Database seeded successfully!')
-    console.log('📦 Sample products created:', sampleProducts.length)
-    console.log('🏪 Categories: Women, Men, Kids, Phulkari')
-    console.log('\nYour products are ready! Start your server and access:')
-    console.log('- Website: http://localhost:3000')
-    console.log('- Admin Panel: http://localhost:3000/admin')
-
+    console.log(`\n📊 Products by category:`)
+    console.log(`Men's: ${menProducts.length}`)
+    console.log(`Women's: ${womenProducts.length}`)
+    console.log(`Kids: ${kidsProducts.length}`)
+    console.log(`Fulkari: ${fulkariProducts.length}`)
+    
+    console.log(`\n📁 Products saved to: ${PRODUCTS_FILE}`)
+    
   } catch (error) {
-    console.error('❌ Error seeding database:', error)
+    console.error('❌ Error seeding products:', error)
   }
 }
 

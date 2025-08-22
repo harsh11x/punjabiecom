@@ -3,16 +3,106 @@ import { getAllProducts } from '@/lib/simple-product-storage'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📦 Fetching all products for products page...')
+    console.log('📦 Fetching products with filters...')
     
-    const products = await getAllProducts()
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get('category')
+    const subcategory = searchParams.get('subcategory')
+    const search = searchParams.get('search')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '12')
+    const sortBy = searchParams.get('sortBy') || searchParams.get('sort') || 'createdAt'
+    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const priceRange = searchParams.get('priceRange')
     
-    console.log(`✅ Retrieved ${products.length} products`)
+    // Get all products
+    let products = await getAllProducts()
+    
+    // Filter by active products only
+    products = products.filter((p: any) => p.isActive !== false)
+    
+    // Category filter
+    if (category && category !== 'all') {
+      products = products.filter((p: any) => p.category === category)
+      console.log(`🔍 Filtered by category: ${category}, found ${products.length} products`)
+    }
+    
+    // Subcategory filter
+    if (subcategory && subcategory !== 'all') {
+      products = products.filter((p: any) => p.subcategory === subcategory)
+      console.log(`🔍 Filtered by subcategory: ${subcategory}, found ${products.length} products`)
+    }
+    
+    // Search filter
+    if (search) {
+      const searchLower = search.toLowerCase()
+      products = products.filter((p: any) => 
+        p.name?.toLowerCase().includes(searchLower) ||
+        p.punjabiName?.toLowerCase().includes(searchLower) ||
+        p.description?.toLowerCase().includes(searchLower) ||
+        p.category?.toLowerCase().includes(searchLower) ||
+        p.subcategory?.toLowerCase().includes(searchLower)
+      )
+      console.log(`🔍 Filtered by search: "${search}", found ${products.length} products`)
+    }
+    
+    // Price range filter
+    if (priceRange && priceRange !== 'all') {
+      const [min, max] = priceRange.split('-').map(p => p.replace('+', ''))
+      if (max) {
+        products = products.filter((p: any) => p.price >= parseInt(min) && p.price <= parseInt(max))
+      } else {
+        products = products.filter((p: any) => p.price >= parseInt(min))
+      }
+      console.log(`🔍 Filtered by price range: ${priceRange}, found ${products.length} products`)
+    }
+    
+    // Sort products
+    products.sort((a: any, b: any) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case 'price-low':
+          return a.price - b.price
+        case 'price-high':
+          return b.price - a.price
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0)
+        case 'popular':
+          return (b.reviews || 0) - (a.reviews || 0)
+        case 'createdAt':
+          if (sortOrder === 'desc') {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          } else {
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          }
+        default:
+          if (sortOrder === 'desc') {
+            return b[sortBy] > a[sortBy] ? 1 : -1
+          } else {
+            return a[sortBy] > b[sortBy] ? 1 : -1
+          }
+      }
+    })
+    
+    // Get total before pagination
+    const total = products.length
+    
+    // Paginate
+    const skip = (page - 1) * limit
+    const paginatedProducts = products.slice(skip, skip + limit)
+    
+    console.log(`✅ Retrieved ${paginatedProducts.length} products (page ${page} of ${Math.ceil(total / limit)})`)
     
     return NextResponse.json({
       success: true,
-      products,
-      total: products.length
+      data: paginatedProducts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
     })
   } catch (error) {
     console.error('❌ Error fetching products:', error)
@@ -20,8 +110,13 @@ export async function GET(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to fetch products',
-        products: [],
-        total: 0
+        data: [],
+        pagination: {
+          page: 1,
+          limit: 12,
+          total: 0,
+          pages: 0
+        }
       },
       { status: 500 }
     )

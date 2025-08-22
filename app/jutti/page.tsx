@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { CartIcon } from "@/components/cart/CartIcon"
 import { AuthGuardedCart } from "@/components/AuthGuardedCart"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 interface Product {
   _id: string
@@ -42,20 +42,20 @@ export default function JuttiPage() {
   const [open, setOpen] = useState(false)
 
   // Fetch products from API
-  useEffect(() => {
-    const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
       try {
         setLoading(true)
         setError(null)
         
-        // Build query parameters - get all juttis by default
+        // Build query parameters - get all juttis by filtering by subcategory
         const params = new URLSearchParams({
-          category: 'jutti',
+          subcategory: 'jutti',
           limit: '100' // Get more products for jutti section
         })
         
+        // If a specific category is selected, filter by main category as well
         if (selectedCategory !== 'all') {
-          params.set('subcategory', selectedCategory)
+          params.set('category', selectedCategory)
         }
         
         if (selectedPriceRange !== 'all') {
@@ -75,18 +75,8 @@ export default function JuttiPage() {
         const data = await response.json()
         
         if (data.success) {
-          // Filter to show only juttis from all categories
-          let juttiProducts = data.data || []
-          
-          // If no specific subcategory is selected, show all juttis
-          if (selectedCategory === 'all') {
-            juttiProducts = juttiProducts.filter((product: Product) => 
-              product.category === 'jutti' || 
-              (product.subcategory && ['men', 'women', 'kids'].includes(product.subcategory))
-            )
-          }
-          
-          setProducts(juttiProducts)
+          // All products returned should be juttis since we filter by subcategory=jutti
+          setProducts(data.data || [])
         } else {
           throw new Error(data.error || 'Failed to fetch products')
         }
@@ -97,10 +87,11 @@ export default function JuttiPage() {
       } finally {
         setLoading(false)
       }
-    }
-
-    fetchProducts()
   }, [selectedCategory, selectedPriceRange, selectedSort])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   // Handle filter changes
   const handleCategoryChange = (value: string) => {
