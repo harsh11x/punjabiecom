@@ -1,41 +1,5 @@
 [
   {
-    "name": "Traditional Punjabi Jutti",
-    "punjabiName": "ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ",
-    "description": "Handcrafted traditional Punjabi jutti with intricate embroidery",
-    "punjabiDescription": "ਹੱਥ ਨਾਲ ਬਣੀ ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ ਜਿਸ ਵਿੱਚ ਸੁੰਦਰ ਕਢਾਈ ਹੈ",
-    "price": 1299,
-    "originalPrice": 1599,
-    "category": "men",
-    "subcategory": "jutti",
-    "stock": 25,
-    "rating": 4.5,
-    "reviews": 23,
-    "isActive": true,
-    "featured": true,
-    "images": [
-      "/placeholder.jpg"
-    ],
-    "sizes": [
-      "7",
-      "8",
-      "9",
-      "10"
-    ],
-    "colors": [
-      "Brown",
-      "Black"
-    ],
-    "tags": [
-      "traditional",
-      "handcrafted",
-      "embroidery"
-    ],
-    "id": "prod_1755965388565_z1z9e9o",
-    "createdAt": "2025-08-23T16:09:48.565Z",
-    "updatedAt": "2025-08-23T16:09:48.565Z"
-  },
-  {
     "name": "Women's Bridal Jutti",
     "punjabiName": "ਔਰਤਾਂ ਦੀ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
     "description": "Elegant bridal jutti perfect for special occasions",
