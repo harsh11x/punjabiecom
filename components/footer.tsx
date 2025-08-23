@@ -128,51 +128,72 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Connect With Us */}
+            {/* Visit Our Store */}
             <div>
               <h4 className="text-lg font-bold text-amber-100 mb-4 flex items-center">
-                <span className="mr-2">ਸਾਡੇ ਨਾਲ ਜੁੜੋ</span>
-                <span className="text-amber-300">• Connect With Us</span>
+                <span className="mr-2">ਸਾਡੀ ਦੁਕਾਨ ਵਿੱਚ ਆਓ</span>
+                <span className="text-amber-300">• Visit Our Store</span>
               </h4>
-              <p className="text-amber-100 mb-4 text-sm">
-                ਨਵੇਂ ਸੰਗਰਹਿ ਅਤੇ ਸੱਭਿਆਚਾਰਕ ਕਹਾਣੀਆਂ ਲਈ ਸਾਡਾ ਪਿੱਛਾ ਕਰੋ।
-              </p>
-              <p className="text-amber-200 italic text-sm mb-6">
-                Follow us for the latest collections and cultural stories.
-              </p>
               
-              <div className="flex space-x-4">
-                <a 
-                  href="https://facebook.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
-                  aria-label="Follow us on Facebook"
-                >
-                  <Facebook className="w-5 h-5 text-white" />
-                </a>
-                <a 
-                  href="https://instagram.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center hover:from-pink-600 hover:to-purple-700 transition-colors"
-                  aria-label="Follow us on Instagram"
-                >
-                  <Instagram className="w-5 h-5 text-white" />
-                </a>
-                <a 
-                  href="https://youtube.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
-                  aria-label="Subscribe to our YouTube channel"
-                >
-                  <Youtube className="w-5 h-5 text-white" />
-                </a>
+              {/* Address */}
+              <div className="mb-6">
+                <p className="text-amber-100 font-semibold mb-2">
+                  <span className="block">Punjabi Jutti and Fulkari</span>
+                </p>
+                <address className="text-amber-200 text-sm not-italic leading-relaxed">
+                  Haveli, Highway,<br />
+                  Grand Trunk Rd, Amritsar,<br />
+                  Jandiala Rural, Punjab 143115<br />
+                  India
+                </address>
+              </div>
+
+              {/* Social Media */}
+              <div className="mb-6">
+                <p className="text-amber-100 mb-3 text-sm">
+                  ਨਵੇਂ ਸੰਗਰਹਿ ਅਤੇ ਸੱਭਿਆਚਾਰਕ ਕਹਾਣੀਆਂ ਲਈ ਸਾਡਾ ਪਿੱਛਾ ਕਰੋ।
+                </p>
+                <p className="text-amber-200 italic text-xs mb-4">
+                  Follow us for the latest collections and cultural stories.
+                </p>
+                
+                <div className="flex space-x-3">
+                  <a 
+                    href="https://www.instagram.com/uniquepunjabijuttiandfulkari/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center hover:from-pink-600 hover:to-purple-700 transition-colors"
+                    aria-label="Follow us on Instagram @uniquepunjabijuttiandfulkari"
+                  >
+                    <Instagram className="w-5 h-5 text-white" />
+                  </a>
+                  <a 
+                    href="https://facebook.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                    aria-label="Follow us on Facebook"
+                  >
+                    <Facebook className="w-5 h-5 text-white" />
+                  </a>
+                  <a 
+                    href="https://youtube.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
+                    aria-label="Subscribe to our YouTube channel"
+                  >
+                    <Youtube className="w-5 h-5 text-white" />
+                  </a>
+                </div>
+                
+                <p className="text-amber-200 text-xs mt-2">
+                  @uniquepunjabijuttiandfulkari
+                </p>
               </div>
 
               {/* Newsletter Signup */}
-              <div className="mt-6">
+              <div>
                 <p className="text-amber-100 text-sm mb-2">ਸਾਡੇ ਨਿਊਜ਼ਲੈਟਰ ਲਈ ਸਾਈਨ ਅੱਪ ਕਰੋ</p>
                 <p className="text-amber-200 text-xs mb-3 italic">Subscribe to our newsletter</p>
                 <div className="flex">
