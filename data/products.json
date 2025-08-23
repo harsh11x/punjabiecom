@@ -1,1 +1,149 @@
-[]
+[
+  {
+    "name": "Traditional Punjabi Jutti",
+    "punjabiName": "ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ",
+    "description": "Handcrafted traditional Punjabi jutti with intricate embroidery",
+    "punjabiDescription": "ਹੱਥ ਨਾਲ ਬਣੀ ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ ਜਿਸ ਵਿੱਚ ਸੁੰਦਰ ਕਢਾਈ ਹੈ",
+    "price": 1299,
+    "originalPrice": 1599,
+    "category": "men",
+    "subcategory": "jutti",
+    "stock": 25,
+    "isActive": true,
+    "featured": true,
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "colors": [
+      "Brown",
+      "Black"
+    ],
+    "tags": [
+      "traditional",
+      "handcrafted",
+      "embroidery"
+    ],
+    "rating": 4.5,
+    "reviews": 23,
+    "id": "prod_1755976799571_l01tcsi",
+    "createdAt": "2025-08-23T19:19:59.571Z",
+    "updatedAt": "2025-08-23T19:19:59.571Z"
+  },
+  {
+    "name": "Women's Bridal Jutti",
+    "punjabiName": "ਔਰਤਾਂ ਦੀ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
+    "description": "Elegant bridal jutti perfect for special occasions",
+    "punjabiDescription": "ਵਿਸ਼ੇਸ਼ ਮੌਕਿਆਂ ਲਈ ਸੁੰਦਰ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
+    "price": 1899,
+    "originalPrice": 2299,
+    "category": "women",
+    "subcategory": "jutti",
+    "stock": 15,
+    "isActive": true,
+    "featured": true,
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "colors": [
+      "Red",
+      "Gold",
+      "Silver"
+    ],
+    "tags": [
+      "bridal",
+      "elegant",
+      "special-occasion"
+    ],
+    "rating": 4.8,
+    "reviews": 18,
+    "id": "prod_1755976799571_wltl4dx",
+    "createdAt": "2025-08-23T19:19:59.571Z",
+    "updatedAt": "2025-08-23T19:19:59.571Z"
+  },
+  {
+    "name": "Kids Colorful Jutti",
+    "punjabiName": "ਬੱਚਿਆਂ ਦੀ ਰੰਗੀਨ ਜੁੱਤੀ",
+    "description": "Colorful and comfortable jutti for kids",
+    "punjabiDescription": "ਬੱਚਿਆਂ ਲਈ ਰੰਗੀਨ ਅਤੇ ਆਰਾਮਦਾਇਕ ਜੁੱਤੀ",
+    "price": 899,
+    "originalPrice": 1199,
+    "category": "kids",
+    "subcategory": "jutti",
+    "stock": 30,
+    "isActive": true,
+    "featured": true,
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "colors": [
+      "Blue",
+      "Pink",
+      "Green",
+      "Yellow"
+    ],
+    "tags": [
+      "kids",
+      "colorful",
+      "comfortable"
+    ],
+    "rating": 4.2,
+    "reviews": 12,
+    "id": "prod_1755976799571_t7jsfek",
+    "createdAt": "2025-08-23T19:19:59.571Z",
+    "updatedAt": "2025-08-23T19:19:59.571Z"
+  },
+  {
+    "name": "Phulkari Dupatta",
+    "punjabiName": "ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
+    "description": "Beautiful handcrafted Phulkari dupatta with traditional embroidery",
+    "punjabiDescription": "ਪਰੰਪਰਾਗਤ ਕਢਾਈ ਨਾਲ ਸੁੰਦਰ ਹੱਥ ਨਾਲ ਬਣੀ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
+    "price": 2499,
+    "originalPrice": 2999,
+    "category": "fulkari",
+    "subcategory": "fulkari",
+    "stock": 20,
+    "isActive": true,
+    "featured": true,
+    "images": [
+      "/placeholder.jpg"
+    ],
+    "sizes": [
+      "Free Size"
+    ],
+    "colors": [
+      "Red",
+      "Pink",
+      "Orange"
+    ],
+    "tags": [
+      "phulkari",
+      "handcrafted",
+      "traditional",
+      "dupatta"
+    ],
+    "rating": 4.9,
+    "reviews": 8,
+    "id": "prod_1755976799571_2d2je6y",
+    "createdAt": "2025-08-23T19:19:59.571Z",
+    "updatedAt": "2025-08-23T19:19:59.571Z"
+  }
+]

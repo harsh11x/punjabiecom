@@ -80,6 +80,20 @@ function initializeFromFiles() {
     const fs = require('fs')
     const path = require('path')
     
+    // Load products from products.json
+    const productsFile = path.join(process.cwd(), 'data', 'products.json')
+    if (fs.existsSync(productsFile)) {
+      try {
+        const productsData = JSON.parse(fs.readFileSync(productsFile, 'utf8'))
+        if (Array.isArray(productsData)) {
+          sharedProducts.push(...productsData)
+          console.log(`📁 Loaded ${productsData.length} products from products.json into shared storage`)
+        }
+      } catch (err) {
+        console.warn('⚠️ Failed to load products.json:', err)
+      }
+    }
+    
     // Load individual order files from data/orders/
     const ordersDir = path.join(process.cwd(), 'data', 'orders')
     if (fs.existsSync(ordersDir)) {
@@ -164,6 +178,20 @@ export const productStorage = {
       updatedAt: new Date().toISOString()
     }
     sharedProducts.push(newProduct)
+    
+    // Save to file system for persistence
+    try {
+      if (typeof window === 'undefined') {
+        const fs = require('fs')
+        const path = require('path')
+        const productsFile = path.join(process.cwd(), 'data', 'products.json')
+        fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+        console.log(`💾 Products saved to file system: ${sharedProducts.length} total`)
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to save products to file system:', error)
+    }
+    
     console.log(`✅ Product added to shared storage: ${newProduct.name} (ID: ${newProduct.id})`)
     return newProduct
   },
@@ -187,6 +215,20 @@ export const productStorage = {
         ...updates,
         updatedAt: new Date().toISOString()
       }
+      
+      // Save to file system for persistence
+      try {
+        if (typeof window === 'undefined') {
+          const fs = require('fs')
+          const path = require('path')
+          const productsFile = path.join(process.cwd(), 'data', 'products.json')
+          fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+          console.log(`💾 Products saved to file system after update: ${sharedProducts.length} total`)
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to save products to file system after update:', error)
+      }
+      
       console.log(`✅ Product updated in shared storage: ${id}`)
       return sharedProducts[productIndex]
     }
@@ -198,6 +240,20 @@ export const productStorage = {
     const productIndex = sharedProducts.findIndex(product => product.id === id)
     if (productIndex !== -1) {
       const deletedProduct = sharedProducts.splice(productIndex, 1)[0]
+      
+      // Save to file system for persistence
+      try {
+        if (typeof window === 'undefined') {
+          const fs = require('fs')
+          const path = require('path')
+          const productsFile = path.join(process.cwd(), 'data', 'products.json')
+          fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+          console.log(`💾 Products saved to file system after deletion: ${sharedProducts.length} total`)
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to save products to file system after deletion:', error)
+      }
+      
       console.log(`✅ Product deleted from shared storage: ${id}`)
       return deletedProduct
     }
@@ -231,6 +287,121 @@ export const productStorage = {
       categories: categoryCounts,
       totalValue: Math.round(totalValue * 100) / 100
     }
+  },
+
+  // Save all products to file system
+  saveAllProducts: () => {
+    try {
+      if (typeof window === 'undefined') {
+        const fs = require('fs')
+        const path = require('path')
+        const productsFile = path.join(process.cwd(), 'data', 'products.json')
+        fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+        console.log(`💾 All ${sharedProducts.length} products saved to file system`)
+        return true
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to save all products to file system:', error)
+      return false
+    }
+    return false
+  },
+
+  // Seed products if none exist
+  seedProductsIfEmpty: () => {
+    if (sharedProducts.length > 0) {
+      console.log('🌱 Products already exist, skipping seeding')
+      return false
+    }
+
+    console.log('🌱 No products found, seeding sample products...')
+    
+    const sampleProducts = [
+      {
+        name: "Traditional Punjabi Jutti",
+        punjabiName: "ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ",
+        description: "Handcrafted traditional Punjabi jutti with intricate embroidery",
+        punjabiDescription: "ਹੱਥ ਨਾਲ ਬਣੀ ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ ਜਿਸ ਵਿੱਚ ਸੁੰਦਰ ਕਢਾਈ ਹੈ",
+        price: 1299,
+        originalPrice: 1599,
+        category: "men",
+        subcategory: "jutti",
+        stock: 25,
+        isActive: true,
+        featured: true,
+        images: ["/placeholder.jpg"],
+        sizes: ["7", "8", "9", "10"],
+        colors: ["Brown", "Black"],
+        tags: ["traditional", "handcrafted", "embroidery"],
+        rating: 4.5,
+        reviews: 23
+      },
+      {
+        name: "Women's Bridal Jutti",
+        punjabiName: "ਔਰਤਾਂ ਦੀ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
+        description: "Elegant bridal jutti perfect for special occasions",
+        punjabiDescription: "ਵਿਸ਼ੇਸ਼ ਮੌਕਿਆਂ ਲਈ ਸੁੰਦਰ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
+        price: 1899,
+        originalPrice: 2299,
+        category: "women",
+        subcategory: "jutti",
+        stock: 15,
+        isActive: true,
+        featured: true,
+        images: ["/placeholder.jpg"],
+        sizes: ["6", "7", "8", "9"],
+        colors: ["Red", "Gold", "Silver"],
+        tags: ["bridal", "elegant", "special-occasion"],
+        rating: 4.8,
+        reviews: 18
+      },
+      {
+        name: "Kids Colorful Jutti",
+        punjabiName: "ਬੱਚਿਆਂ ਦੀ ਰੰਗੀਨ ਜੁੱਤੀ",
+        description: "Colorful and comfortable jutti for kids",
+        punjabiDescription: "ਬੱਚਿਆਂ ਲਈ ਰੰਗੀਨ ਅਤੇ ਆਰਾਮਦਾਇਕ ਜੁੱਤੀ",
+        price: 899,
+        originalPrice: 1199,
+        category: "kids",
+        subcategory: "jutti",
+        stock: 30,
+        isActive: true,
+        featured: true,
+        images: ["/placeholder.jpg"],
+        sizes: ["1", "2", "3", "4", "5"],
+        colors: ["Blue", "Pink", "Green", "Yellow"],
+        tags: ["kids", "colorful", "comfortable"],
+        rating: 4.2,
+        reviews: 12
+      },
+      {
+        name: "Phulkari Dupatta",
+        punjabiName: "ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
+        description: "Beautiful handcrafted Phulkari dupatta with traditional embroidery",
+        punjabiDescription: "ਪਰੰਪਰਾਗਤ ਕਢਾਈ ਨਾਲ ਸੁੰਦਰ ਹੱਥ ਨਾਲ ਬਣੀ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
+        price: 2499,
+        originalPrice: 2999,
+        category: "fulkari",
+        subcategory: "fulkari",
+        stock: 20,
+        isActive: true,
+        featured: true,
+        images: ["/placeholder.jpg"],
+        sizes: ["Free Size"],
+        colors: ["Red", "Pink", "Orange"],
+        tags: ["phulkari", "handcrafted", "traditional", "dupatta"],
+        rating: 4.9,
+        reviews: 8
+      }
+    ]
+
+    // Add each product
+    sampleProducts.forEach(productData => {
+      productStorage.addProduct(productData)
+    })
+
+    console.log(`🌱 Seeded ${sampleProducts.length} sample products`)
+    return true
   }
 }
 
@@ -431,3 +602,8 @@ export const getStorageStats = () => ({
 })
 
 console.log('🚀 Shared storage initialized')
+
+// Seed products if none exist after initialization
+if (sharedProducts.length === 0) {
+  productStorage.seedProductsIfEmpty()
+}
