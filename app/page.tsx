@@ -10,6 +10,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { FeaturedProductsClient } from "@/components/featured-products-client"
 import { OptimizedLink } from "@/components/performance/optimized-link"
+import { ProductSlideshow } from "@/components/ProductSlideshow"
 import ClientWrapper from "@/components/client-wrapper"
 
 interface Product {
@@ -151,20 +152,11 @@ export default function HomePage() {
 
             <div className="relative order-1 lg:order-2">
               <div className="relative z-10">
-                {/* Decorative Frame */}
-                <div className="absolute -inset-2 lg:-inset-4 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 rounded-2xl lg:rounded-3xl opacity-20 blur-lg"></div>
-                <div className="absolute -inset-1 lg:-inset-2 bg-gradient-to-br from-amber-300 to-red-500 rounded-xl lg:rounded-2xl"></div>
-                <div className="relative bg-white p-1 lg:p-2 rounded-xl lg:rounded-2xl shadow-2xl">
-                <Image
-                  src="/punjabi-jutti-shoes.png"
-                  alt="Traditional Punjabi Jutti"
-                  width={600}
-                  height={700}
-                  priority
-                  className="rounded-lg lg:rounded-xl shadow-lg w-full"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                {/* Product Slideshow - Automatically showcases all products */}
+                <ProductSlideshow 
+                  autoplayInterval={2000}
+                  className="w-full"
                 />
-                </div>
               </div>
 
               {/* Floating Decorative Elements - Hidden on mobile */}
