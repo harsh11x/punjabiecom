@@ -74,8 +74,11 @@ export default function ProductsManagement() {
           }))
           setProducts(mappedProducts)
           
-          // Auto-seeding disabled - products should be managed manually
-          // This prevents deleted products from automatically reappearing
+          // If no products exist, automatically seed some sample products
+          if (mappedProducts.length === 0) {
+            console.log('No products found, seeding sample products...')
+            await seedSampleProducts()
+          }
         } else {
           toast.error('Failed to load products')
         }
@@ -127,9 +130,6 @@ export default function ProductsManagement() {
   const handleDelete = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return
 
-    console.log('🗑️ Deleting product:', productId)
-    console.log('📊 Current products count before deletion:', products.length)
-
     try {
       const response = await fetch(`/api/admin/products?id=${productId}`, {
         method: 'DELETE',
@@ -139,31 +139,16 @@ export default function ProductsManagement() {
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          console.log('✅ Delete API response:', data)
           toast.success('Product deleted successfully')
-          
-          // Force immediate state update
-          setProducts(prevProducts => {
-            const updatedProducts = prevProducts.filter(p => p.id !== productId)
-            console.log('🔄 Updated products state:', updatedProducts.length, 'products')
-            return updatedProducts
-          })
-          
-          // Also reload from server to ensure consistency
-          setTimeout(() => {
-            console.log('🔄 Reloading products from server...')
-            loadProducts()
-          }, 100)
+          loadProducts()
         } else {
-          console.error('❌ Delete failed:', data.error)
           toast.error(data.error || 'Failed to delete product')
         }
       } else {
-        console.error('❌ Delete request failed:', response.status)
         toast.error('Failed to delete product')
       }
     } catch (error) {
-      console.error('❌ Error deleting product:', error)
+      console.error('Error deleting product:', error)
       toast.error('Failed to delete product')
     }
   }

@@ -50,9 +50,14 @@ export function ProductSlideshow({
         const fetchedProducts = data.data || []
         
         if (fetchedProducts.length === 0) {
-          // Auto-seeding disabled - products should be managed through admin panel only
-          // This prevents deleted products from automatically reappearing
-          setProducts([])
+          // If no products found, try seeding
+          await fetch('/api/seed-products', { method: 'POST' })
+          // Retry fetching
+          const retryResponse = await fetch('/api/products?limit=20')
+          if (retryResponse.ok) {
+            const retryData = await retryResponse.json()
+            setProducts(retryData.data || [])
+          }
         } else {
           setProducts(fetchedProducts)
         }
