@@ -1,0 +1,41 @@
+{
+  "_id": "order_1755601097961_u4cz474",
+  "orderNumber": "PH175560109796180",
+  "customerEmail": "harshdevsingh2004@gmail.com",
+  "items": [
+    {
+      "productId": "test",
+      "name": "Traditional Punjabi Jutti",
+      "price": 1500,
+      "quantity": 1
+    }
+  ],
+  "subtotal": 0,
+  "shippingCost": 0,
+  "tax": 0,
+  "total": 1500,
+  "status": "confirmed",
+  "paymentStatus": "pending",
+  "paymentMethod": "cod",
+  "shippingAddress": {
+    "firstName": "Harsh",
+    "lastName": "Dev",
+    "address": "663 GF, Housefed Complex, New Amritsar",
+    "city": "Amritsar",
+    "state": "Punjab",
+    "zipCode": "143001",
+    "phone": "7527072000"
+  },
+  "billingAddress": {
+    "firstName": "Harsh",
+    "lastName": "Dev",
+    "address": "663 GF, Housefed Complex, New Amritsar",
+    "city": "Amritsar",
+    "state": "Punjab",
+    "zipCode": "143001",
+    "phone": "7527072000"
+  },
+  "notes": "",
+  "createdAt": "2025-08-19T10:58:17.961Z",
+  "updatedAt": "2025-08-19T10:58:17.961Z"
+}

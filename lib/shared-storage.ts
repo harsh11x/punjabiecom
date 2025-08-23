@@ -6,6 +6,72 @@ let sharedOrders: any[] = []
 let sharedCarts: any[] = []
 let sharedProducts: any[] = []
 
+// Function to identify fake/test orders
+function isFakeOrder(order: any): boolean {
+  if (!order) return true
+  
+  // Check for obvious test identifiers in order structure
+  if (order._id?.includes('test') || order._id?.includes('fallback')) return true
+  if (order.orderNumber?.includes('TEST')) return true
+  if (order.status === 'test') return true
+  
+  // Check for test email addresses (primary indicator)
+  if (order.customerEmail?.includes('test@') || order.customerEmail?.includes('@test.')) return true
+  if (order.customerEmail === 'test@example.com') return true
+  
+  // If customer email is real (not test), consider it a real order even if other fields are test
+  const realEmailDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com']
+  const isRealEmail = order.customerEmail && realEmailDomains.some(domain => order.customerEmail.includes(domain))
+  
+  if (isRealEmail) {
+    // For real emails, only flag as fake if ALL indicators suggest it's test data
+    let testIndicators = 0
+    
+    // Check for test products
+    if (order.items?.some((item: any) => 
+      item.name?.includes('Test Product') || item.name?.includes('Test Item')
+    )) testIndicators++
+    
+    // Check for test addresses
+    const addr = order.shippingAddress
+    if (addr?.fullName?.includes('Test') || 
+        addr?.firstName?.includes('Test') ||
+        addr?.addressLine1?.includes('Test') ||
+        addr?.address?.includes('Test') ||
+        addr?.city?.includes('Test') ||
+        addr?.state?.includes('Test')) testIndicators++
+    
+    // Check for test tracking numbers
+    if (order.trackingNumber?.includes('TEST')) testIndicators++
+    
+    // Only consider fake if multiple test indicators (real customer wouldn't have real address + real email)
+    return testIndicators >= 2
+  }
+  
+  // For non-real emails, check for any test indicators
+  // Check for test products
+  if (order.items?.some((item: any) => 
+    item.name?.includes('Test') || 
+    item.productId === 'test' ||
+    item.id === 'test' ||
+    item.id?.includes('test-product')
+  )) return true
+  
+  // Check for test addresses
+  const addr = order.shippingAddress
+  if (addr?.fullName?.includes('Test') || 
+      addr?.firstName?.includes('Test') ||
+      addr?.addressLine1?.includes('Test') ||
+      addr?.address?.includes('Test') ||
+      addr?.city?.includes('Test') ||
+      addr?.state?.includes('Test')) return true
+  
+  // Check for test tracking numbers
+  if (order.trackingNumber?.includes('TEST')) return true
+  
+  return false
+}
+
 // Initialize storage from file system
 function initializeFromFiles() {
   if (typeof window !== 'undefined') return // Skip on client side
@@ -19,13 +85,19 @@ function initializeFromFiles() {
     if (fs.existsSync(ordersDir)) {
       const orderFiles = fs.readdirSync(ordersDir).filter((file: string) => file.endsWith('.json'))
       let loadedOrders = 0
+      let skippedFakeOrders = 0
       
       orderFiles.forEach((file: string) => {
         try {
           const orderData = JSON.parse(fs.readFileSync(path.join(ordersDir, file), 'utf8'))
           if (orderData._id) {
-            sharedOrders.push(orderData)
-            loadedOrders++
+            if (!isFakeOrder(orderData)) {
+              sharedOrders.push(orderData)
+              loadedOrders++
+            } else {
+              skippedFakeOrders++
+              console.log(`🗑️ Skipped fake order: ${orderData.orderNumber || orderData._id}`)
+            }
           }
         } catch (err) {
           console.warn(`⚠️ Failed to load order file ${file}:`, err)
@@ -33,7 +105,10 @@ function initializeFromFiles() {
       })
       
       if (loadedOrders > 0) {
-        console.log(`📁 Loaded ${loadedOrders} orders from files into shared storage`)
+        console.log(`📁 Loaded ${loadedOrders} real orders from files into shared storage`)
+      }
+      if (skippedFakeOrders > 0) {
+        console.log(`🗑️ Skipped ${skippedFakeOrders} fake/test orders`)
       }
     }
     
@@ -43,13 +118,27 @@ function initializeFromFiles() {
       try {
         const ordersData = JSON.parse(fs.readFileSync(ordersFile, 'utf8'))
         if (Array.isArray(ordersData)) {
-          // Add orders that aren't already loaded
+          let additionalOrders = 0
+          let skippedAdditionalFake = 0
+          
+          // Add orders that aren't already loaded and aren't fake
           ordersData.forEach((order: any) => {
             if (!sharedOrders.find(o => o._id === order._id)) {
-              sharedOrders.push(order)
+              if (!isFakeOrder(order)) {
+                sharedOrders.push(order)
+                additionalOrders++
+              } else {
+                skippedAdditionalFake++
+              }
             }
           })
-          console.log(`📁 Loaded additional orders from orders.json`)
+          
+          if (additionalOrders > 0) {
+            console.log(`📁 Loaded ${additionalOrders} additional real orders from orders.json`)
+          }
+          if (skippedAdditionalFake > 0) {
+            console.log(`🗑️ Skipped ${skippedAdditionalFake} additional fake orders from orders.json`)
+          }
         }
       } catch (err) {
         console.warn('⚠️ Failed to load orders.json:', err)
