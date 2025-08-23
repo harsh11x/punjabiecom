@@ -244,7 +244,7 @@ export default async function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {stats.categories}
+                  {Object.keys(stats.categories).length}
                 </div>
                 <div className="text-sm text-gray-600">Product Categories</div>
               </div>
