@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     console.log(`🔄 Fetching cart for user: ${userEmail}`)
     
     // Get user's cart from shared storage
-    const userCart = cartStorage.getUserCart(userEmail)
+    const userCart = cartStorage.getOrCreateCart(userEmail)
     
     console.log(`✅ Retrieved cart with ${userCart.items?.length || 0} items`)
     return NextResponse.json({ items: userCart.items || [] }, { status: 200 })
@@ -38,12 +38,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔄 Updating cart for user: ${userEmail}`)
     
     // Update cart items using shared storage
-    // For now, clear and add new items
-    cartStorage.clearUserCart(userEmail)
-    body.items?.forEach((item: any) => {
-      cartStorage.addToCart(userEmail, item)
-    })
-    const userCart = cartStorage.getUserCart(userEmail)
+    const userCart = cartStorage.updateCartItems(userEmail, body.items || [])
     
     console.log(`✅ Cart updated successfully with ${userCart.items.length} items`)
     
@@ -77,7 +72,7 @@ export async function PUT(request: NextRequest) {
     console.log(`🔄 Updating cart item for user: ${userEmail}`)
     
     // Get user's cart from shared storage
-    const userCart = cartStorage.getUserCart(userEmail)
+    const userCart = cartStorage.getOrCreateCart(userEmail)
     
     // Update specific item
     const { itemId, updates } = body
@@ -123,7 +118,7 @@ export async function DELETE(request: NextRequest) {
     console.log(`🔄 Processing cart deletion for user: ${userEmail}`)
     
     // Clear cart using shared storage
-    const cleared = cartStorage.clearUserCart(userEmail)
+    const cleared = cartStorage.clearCart(userEmail)
     
     if (!cleared) {
       return NextResponse.json(

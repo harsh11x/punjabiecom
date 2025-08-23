@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const savedOrder = orderStorage.addOrder(newOrder)
 
     console.log('✅ Order created successfully:', savedOrder._id)
-    console.log('📊 Total orders in shared storage:', orderStorage.getAllOrders().length)
+    console.log('📊 Total orders in shared storage:', orderStorage.getOrderCount())
 
     return NextResponse.json({
       success: true,
@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest) {
 export async function HEAD() {
   return NextResponse.json({ 
     status: 'healthy', 
-    ordersCount: orderStorage.getAllOrders().length,
+    ordersCount: orderStorage.getOrderCount(),
     timestamp: new Date().toISOString()
   })
 }
