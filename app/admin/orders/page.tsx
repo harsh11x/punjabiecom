@@ -27,27 +27,31 @@ interface OrderItem {
 }
 
 interface ShippingAddress {
-  fullName: string
-  addressLine1: string
+  fullName?: string
+  firstName?: string
+  lastName?: string
+  addressLine1?: string
   addressLine2?: string
-  city: string
-  state: string
-  pincode: string
-  phone: string
+  address?: string
+  city?: string
+  state?: string
+  pincode?: string
+  zipCode?: string
+  phone?: string
 }
 
 interface Order {
   _id: string
   orderNumber: string
-  customerEmail: string
+  customerEmail?: string
   items: OrderItem[]
-  subtotal: number
-  shippingCost: number
-  tax: number
-  total: number
+  subtotal?: number
+  shippingCost?: number
+  tax?: number
+  total?: number
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
-  paymentMethod: 'razorpay' | 'cod' | 'bank_transfer'
+  paymentMethod?: 'razorpay' | 'cod' | 'bank_transfer'
   shippingAddress: ShippingAddress
   trackingNumber?: string
   estimatedDelivery?: string
@@ -217,7 +221,38 @@ export default function AdminOrdersPage() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
-    }).format(amount)
+    }).format(amount || 0)
+  }
+
+  // Helper functions to safely access inconsistent order data
+  const getCustomerName = (order: Order) => {
+    if (order.shippingAddress?.fullName) {
+      return order.shippingAddress.fullName
+    }
+    if (order.shippingAddress?.firstName && order.shippingAddress?.lastName) {
+      return `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}`
+    }
+    return 'N/A'
+  }
+
+  const getCustomerAddress = (order: Order) => {
+    const addr = order.shippingAddress
+    if (!addr) return 'N/A'
+    
+    const street = addr.addressLine1 || addr.address || 'N/A'
+    const city = addr.city || 'N/A'
+    const state = addr.state || 'N/A'
+    const postal = addr.pincode || addr.zipCode || 'N/A'
+    
+    return `${street}, ${city}, ${state} - ${postal}`
+  }
+
+  const getCustomerPhone = (order: Order) => {
+    return order.shippingAddress?.phone || 'N/A'
+  }
+
+  const getCustomerEmail = (order: Order) => {
+    return order.customerEmail || 'N/A'
   }
 
   if (!isAuthenticated) {
@@ -294,7 +329,7 @@ export default function AdminOrdersPage() {
                       Order #{order.orderNumber}
                     </CardTitle>
                     <p className="text-sm text-gray-600">
-                      {order.customerEmail} • {formatDate(order.createdAt)}
+                      {getCustomerEmail(order)} • {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -313,19 +348,19 @@ export default function AdminOrdersPage() {
                   <div>
                     <h4 className="font-semibold mb-2">Customer Details</h4>
                     <p className="text-sm">
-                      <strong>Name:</strong> {order.shippingAddress.fullName}<br />
-                      <strong>Phone:</strong> {order.shippingAddress.phone}<br />
-                      <strong>Address:</strong> {order.shippingAddress.addressLine1}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                      <strong>Name:</strong> {getCustomerName(order)}<br />
+                      <strong>Phone:</strong> {getCustomerPhone(order)}<br />
+                      <strong>Address:</strong> {getCustomerAddress(order)}
                     </p>
                   </div>
                   
                   <div>
                     <h4 className="font-semibold mb-2">Order Summary</h4>
                     <p className="text-sm">
-                      <strong>Items:</strong> {order.items.length}<br />
-                      <strong>Subtotal:</strong> {formatCurrency(order.subtotal)}<br />
-                      <strong>Shipping:</strong> {formatCurrency(order.shippingCost)}<br />
-                      <strong>Total:</strong> {formatCurrency(order.total)}
+                      <strong>Items:</strong> {order.items?.length || 0}<br />
+                      <strong>Subtotal:</strong> {formatCurrency(order.subtotal || 0)}<br />
+                      <strong>Shipping:</strong> {formatCurrency(order.shippingCost || 0)}<br />
+                      <strong>Total:</strong> {formatCurrency(order.total || 0)}
                     </p>
                   </div>
                 </div>
@@ -333,10 +368,10 @@ export default function AdminOrdersPage() {
                 <div className="mb-4">
                   <h4 className="font-semibold mb-2">Items</h4>
                   <div className="space-y-2">
-                    {order.items.map((item, index) => (
+                    {(order.items || []).map((item, index) => (
                       <div key={index} className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded">
-                        <span>{item.name} (Qty: {item.quantity})</span>
-                        <span>{formatCurrency(item.price * item.quantity)}</span>
+                        <span>{item.name || 'N/A'} (Qty: {item.quantity || 0})</span>
+                        <span>{formatCurrency((item.price || 0) * (item.quantity || 0))}</span>
                       </div>
                     ))}
                   </div>
@@ -344,7 +379,7 @@ export default function AdminOrdersPage() {
 
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-gray-600">
-                    <strong>Payment Method:</strong> {order.paymentMethod.toUpperCase()}
+                    <strong>Payment Method:</strong> {(order.paymentMethod || 'N/A').toUpperCase()}
                     {order.trackingNumber && (
                       <>
                         <br />
