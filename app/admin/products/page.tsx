@@ -73,6 +73,12 @@ export default function ProductsManagement() {
             productType: product.subcategory || 'jutti' // Map subcategory to productType
           }))
           setProducts(mappedProducts)
+          
+          // If no products exist, automatically seed some sample products
+          if (mappedProducts.length === 0) {
+            console.log('No products found, seeding sample products...')
+            await seedSampleProducts()
+          }
         } else {
           toast.error('Failed to load products')
         }
@@ -84,6 +90,25 @@ export default function ProductsManagement() {
       toast.error('Failed to load products')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const seedSampleProducts = async () => {
+    try {
+      const response = await fetch('/api/seed-products', { 
+        method: 'POST',
+        credentials: 'include' 
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          toast.success('Sample products added successfully!')
+          // Reload products to show the newly added ones
+          loadProducts()
+        }
+      }
+    } catch (error) {
+      console.error('Error seeding products:', error)
     }
   }
 
@@ -178,13 +203,22 @@ export default function ProductsManagement() {
             <h1 className="text-3xl font-bold text-red-900 mb-2">Products Management</h1>
             <p className="text-amber-700">Manage your store's product catalog</p>
           </div>
-          <Button 
-            onClick={openCreateDialog}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Product
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={seedSampleProducts}
+              variant="outline"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+            >
+              🌱 Seed Products
+            </Button>
+            <Button 
+              onClick={openCreateDialog}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Product
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
