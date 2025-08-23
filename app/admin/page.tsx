@@ -16,10 +16,25 @@ import {
 } from 'lucide-react'
 
 export default async function AdminDashboard() {
-  const [products, stats] = await Promise.all([
-    productStorage.getAllProducts(),
-    productStorage.getProductStats()
-  ])
+  let products = []
+  let stats = {
+    total: 0,
+    inStock: 0,
+    active: 0,
+    featured: 0,
+    categories: {},
+    totalValue: 0
+  }
+
+  try {
+    [products, stats] = await Promise.all([
+      productStorage.getAllProducts(),
+      productStorage.getProductStats()
+    ])
+  } catch (error) {
+    console.error('Error loading admin dashboard data:', error)
+    // Continue with default values
+  }
 
   const recentProducts = products
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -137,23 +152,23 @@ export default async function AdminDashboard() {
               ) : (
                 <div className="space-y-4">
                   {recentProducts.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={product._id || product.id || 'unknown'} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex-1">
-                        <h4 className="font-medium">{product.name}</h4>
-                        <p className="text-sm text-gray-600">{product.category}</p>
-                        <p className="text-sm font-medium">₹{product.price.toLocaleString()}</p>
+                        <h4 className="font-medium">{product.name || 'Unnamed Product'}</h4>
+                        <p className="text-sm text-gray-600">{product.category || 'Uncategorized'}</p>
+                        <p className="text-sm font-medium">₹{(product.price || 0).toLocaleString()}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={product.isActive ? "default" : "destructive"}>
-                          {product.isActive ? "Active" : "Inactive"}
+                        <Badge variant={(product.isActive !== false) ? "default" : "destructive"}>
+                          {(product.isActive !== false) ? "Active" : "Inactive"}
                         </Badge>
-                        <Badge variant={product.inStock ? "default" : "secondary"}>
-                          {product.inStock ? "In Stock" : "Out of Stock"}
+                        <Badge variant={(product.stock || 0) > 0 ? "default" : "secondary"}>
+                          {(product.stock || 0) > 0 ? "In Stock" : "Out of Stock"}
                         </Badge>
                         {product.featured && (
                           <Badge variant="outline">Featured</Badge>
                         )}
-                        <Link href={`/admin/products/${product.id}`}>
+                        <Link href={`/admin/products/${product._id || product.id || 'unknown'}`}>
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -244,7 +259,7 @@ export default async function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {stats.categories}
+                  {Object.keys(stats.categories || {}).length}
                 </div>
                 <div className="text-sm text-gray-600">Product Categories</div>
               </div>
