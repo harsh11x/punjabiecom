@@ -42,10 +42,11 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
   if (!isValidProduct(product)) {
     console.warn('❌ Invalid product data:', product)
     console.warn('❌ Validation failed for product:', (product as any)?.name || 'Unknown')
-    return null
+    // Temporarily continue anyway to see what happens
+    console.log('⚠️ Continuing despite validation failure...')
+  } else {
+    console.log('✅ Product validation passed for:', product.name)
   }
-  
-  console.log('✅ Product validation passed for:', product.name)
 
   const { addItem } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
