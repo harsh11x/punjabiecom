@@ -38,18 +38,14 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
   // Debug: Log the product being processed
   console.log('🔍 Processing product:', product)
   
-  // Temporarily disable validation to debug
-  console.log('🔍 Processing product:', product)
-  
   // Validate product data first
   if (!isValidProduct(product)) {
     console.warn('❌ Invalid product data:', product)
     console.warn('❌ Validation failed for product:', (product as any)?.name || 'Unknown')
-    // Temporarily continue anyway to see what happens
-    console.log('⚠️ Continuing despite validation failure...')
-  } else {
-    console.log('✅ Product validation passed for:', product.name)
+    return null
   }
+  
+  console.log('✅ Product validation passed for:', product.name)
 
   const { addItem } = useCart()
   const { isAuthenticated } = useFirebaseAuth()
