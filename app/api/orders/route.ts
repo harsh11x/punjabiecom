@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { orderStorage } from '@/lib/shared-storage'
+import { smsService } from '@/lib/sms-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,23 @@ export async function POST(request: NextRequest) {
     const savedOrder = orderStorage.addOrder(newOrder)
 
     console.log('✅ Order created successfully:', savedOrder._id)
-    console.log('📊 Total orders in shared storage:', orderStorage.getOrderCount())
+    console.log('📊 Total orders in shared storage:', orderStorage.getAllOrders().length)
+
+    // Send SMS notification if phone number is available
+    if (orderData.customerPhone) {
+      try {
+        const smsSent = await smsService.sendOrderConfirmation(savedOrder)
+        if (smsSent) {
+          console.log('📱 SMS notification sent successfully')
+        } else {
+          console.warn('⚠️ SMS notification failed')
+        }
+      } catch (smsError) {
+        console.warn('⚠️ SMS notification error:', smsError)
+      }
+    } else {
+      console.log('ℹ️ No customer phone number provided, skipping SMS')
+    }
 
     return NextResponse.json({
       success: true,
@@ -137,7 +154,7 @@ export async function PUT(request: NextRequest) {
 export async function HEAD() {
   return NextResponse.json({ 
     status: 'healthy', 
-    ordersCount: orderStorage.getOrderCount(),
+    ordersCount: orderStorage.getAllOrders().length,
     timestamp: new Date().toISOString()
   })
 }

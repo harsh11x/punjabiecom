@@ -145,6 +145,20 @@ function initializeFromFiles() {
       }
     }
     
+    // Load products from products.json if it exists
+    const productsFile = path.join(process.cwd(), 'data', 'products.json')
+    if (fs.existsSync(productsFile)) {
+      try {
+        const productsData = JSON.parse(fs.readFileSync(productsFile, 'utf8'))
+        if (Array.isArray(productsData)) {
+          sharedProducts = [...productsData]
+          console.log(`📁 Loaded ${productsData.length} products from products.json`)
+        }
+      } catch (err) {
+        console.warn('⚠️ Failed to load products.json:', err)
+      }
+    }
+    
   } catch (error) {
     console.warn('⚠️ Failed to initialize from files:', error)
   }
@@ -157,6 +171,9 @@ initializeFromFiles()
 export const productStorage = {
   // Add new product
   addProduct: (productData: any) => {
+    // Ensure fresh data from files
+    initializeFromFiles()
+    
     const newProduct = {
       ...productData,
       id: `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -164,22 +181,43 @@ export const productStorage = {
       updatedAt: new Date().toISOString()
     }
     sharedProducts.push(newProduct)
+    
+    // Save to file system
+    try {
+      if (typeof window === 'undefined') {
+        const fs = require('fs')
+        const path = require('path')
+        const productsFile = path.join(process.cwd(), 'data', 'products.json')
+        fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+        console.log(`💾 Products saved to file system`)
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to save products to file system:', error)
+    }
+    
     console.log(`✅ Product added to shared storage: ${newProduct.name} (ID: ${newProduct.id})`)
     return newProduct
   },
 
   // Get all products
   getAllProducts: () => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
     return [...sharedProducts]
   },
 
   // Get product by ID
   getProductById: (id: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
     return sharedProducts.find(product => product.id === id)
   },
 
   // Update product
   updateProduct: (id: string, updates: any) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
     const productIndex = sharedProducts.findIndex(product => product.id === id)
     if (productIndex !== -1) {
       sharedProducts[productIndex] = {
@@ -187,6 +225,20 @@ export const productStorage = {
         ...updates,
         updatedAt: new Date().toISOString()
       }
+      
+      // Save to file system
+      try {
+        if (typeof window === 'undefined') {
+          const fs = require('fs')
+          const path = require('path')
+          const productsFile = path.join(process.cwd(), 'data', 'products.json')
+          fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+          console.log(`💾 Products saved to file system`)
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to save products to file system:', error)
+      }
+      
       console.log(`✅ Product updated in shared storage: ${id}`)
       return sharedProducts[productIndex]
     }
@@ -195,9 +247,26 @@ export const productStorage = {
 
   // Delete product
   deleteProduct: (id: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
     const productIndex = sharedProducts.findIndex(product => product.id === id)
     if (productIndex !== -1) {
       const deletedProduct = sharedProducts.splice(productIndex, 1)[0]
+      
+      // Save to file system
+      try {
+        if (typeof window === 'undefined') {
+          const fs = require('fs')
+          const path = require('path')
+          const productsFile = path.join(process.cwd(), 'data', 'products.json')
+          fs.writeFileSync(productsFile, JSON.stringify(sharedProducts, null, 2))
+          console.log(`💾 Products saved to file system`)
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to save products to file system:', error)
+      }
+      
       console.log(`✅ Product deleted from shared storage: ${id}`)
       return deletedProduct
     }
@@ -205,10 +274,17 @@ export const productStorage = {
   },
 
   // Get product count
-  getProductCount: () => sharedProducts.length,
+  getProductCount: () => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    return sharedProducts.length
+  },
 
   // Get product statistics
   getProductStats: () => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
     const totalProducts = sharedProducts.length
     const activeProducts = sharedProducts.filter(p => p.isActive !== false).length
     const featuredProducts = sharedProducts.filter(p => p.featured === true).length
@@ -237,11 +313,13 @@ export const productStorage = {
 // Order Management
 export const orderStorage = {
   // Add new order
-  addOrder: (order: any) => {
+  addOrder: (orderData: any) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
     const newOrder = {
-      ...order,
+      ...orderData,
       _id: `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      orderNumber: `PH${Date.now()}${Math.random().toString(36).substring(2, 4).toUpperCase()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -279,16 +357,23 @@ export const orderStorage = {
 
   // Get all orders
   getAllOrders: () => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
     return [...sharedOrders]
   },
 
   // Get orders by user email
   getOrdersByUser: (email: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
     return sharedOrders.filter(order => order.customerEmail === email)
   },
 
   // Update order
   updateOrder: (orderId: string, updates: any) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
     const orderIndex = sharedOrders.findIndex(order => order._id === orderId)
     if (orderIndex !== -1) {
       // Handle special fields
@@ -340,6 +425,9 @@ export const orderStorage = {
 
   // Cancel order (within 24 hours)
   cancelOrder: (orderId: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
     const orderIndex = sharedOrders.findIndex(order => order._id === orderId)
     if (orderIndex !== -1) {
       const order = sharedOrders[orderIndex]
@@ -348,78 +436,155 @@ export const orderStorage = {
       const hoursDiff = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60)
       
       if (hoursDiff > 24) {
-        return { success: false, error: 'Orders can only be cancelled within 24 hours of ordering' }
+        throw new Error('Orders can only be cancelled within 24 hours of placement')
       }
       
-      if (order.status === 'cancelled') {
-        return { success: false, error: 'Order is already cancelled' }
-      }
-      
-      if (order.status === 'delivered') {
-        return { success: false, error: 'Cannot cancel delivered orders' }
-      }
-      
-      // Update order status to cancelled
       sharedOrders[orderIndex] = {
         ...order,
         status: 'cancelled',
-        cancelledAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
       
-      console.log(`✅ Order cancelled in shared storage: ${orderId}`)
-      return { success: true, order: sharedOrders[orderIndex] }
+      // Save to file system
+      try {
+        if (typeof window === 'undefined') {
+          const fs = require('fs')
+          const path = require('path')
+          const ordersDir = path.join(process.cwd(), 'data', 'orders')
+          
+          // Ensure directory exists
+          if (!fs.existsSync(ordersDir)) {
+            fs.mkdirSync(ordersDir, { recursive: true })
+          }
+          
+          // Save individual order file
+          const orderFilePath = path.join(ordersDir, `${orderId}.json`)
+          fs.writeFileSync(orderFilePath, JSON.stringify(sharedOrders[orderIndex], null, 2))
+          
+          // Also update orders.json with all orders
+          const ordersFile = path.join(process.cwd(), 'data', 'orders.json')
+          fs.writeFileSync(ordersFile, JSON.stringify(sharedOrders, null, 2))
+          
+          console.log(`💾 Order saved to file system: ${orderId}`)
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to save order to file system:', error)
+      }
+      
+      console.log(`✅ Order cancelled: ${orderId}`)
+      return sharedOrders[orderIndex]
     }
-    return { success: false, error: 'Order not found' }
+    return null
   },
 
-  // Get order count
-  getOrderCount: () => sharedOrders.length
+  // Get order by ID
+  getOrderById: (orderId: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    return sharedOrders.find(order => order._id === orderId)
+  },
+
+  // Get order by Razorpay order ID
+  getOrderByRazorpayId: (razorpayOrderId: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    return sharedOrders.find(order => order.razorpayOrderId === razorpayOrderId)
+  }
 }
 
 // Cart Management
 export const cartStorage = {
-  // Get or create cart for user
-  getOrCreateCart: (userEmail: string) => {
-    let userCart = sharedCarts.find(cart => cart.userEmail === userEmail)
+  // Add item to cart
+  addToCart: (userId: string, item: any) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
     
+    let userCart = sharedCarts.find(cart => cart.userId === userId)
     if (!userCart) {
-      userCart = {
-        userEmail,
-        items: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+      userCart = { userId, items: [] }
       sharedCarts.push(userCart)
-      console.log(`✅ New cart created for user: ${userEmail}`)
+    }
+    
+    const existingItemIndex = userCart.items.findIndex(
+      (cartItem: any) => cartItem.productId === item.productId && 
+                         cartItem.size === item.size && 
+                         cartItem.color === item.color
+    )
+    
+    if (existingItemIndex !== -1) {
+      userCart.items[existingItemIndex].quantity += item.quantity
+    } else {
+      userCart.items.push(item)
+    }
+    
+    console.log(`✅ Item added to cart for user: ${userId}`)
+    return userCart
+  },
+
+  // Get user cart
+  getUserCart: (userId: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    return sharedCarts.find(cart => cart.userId === userId) || { userId, items: [] }
+  },
+
+  // Update cart item quantity
+  updateCartItemQuantity: (userId: string, productId: string, size: string, color: string, quantity: number) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
+    const userCart = sharedCarts.find(cart => cart.userId === userId)
+    if (userCart) {
+      const itemIndex = userCart.items.findIndex(
+        (item: any) => item.productId === productId && item.size === size && item.color === color
+      )
+      
+      if (itemIndex !== -1) {
+        if (quantity <= 0) {
+          userCart.items.splice(itemIndex, 1)
+        } else {
+          userCart.items[itemIndex].quantity = quantity
+        }
+        console.log(`✅ Cart item quantity updated for user: ${userId}`)
+      }
     }
     
     return userCart
   },
 
-  // Update cart items
-  updateCartItems: (userEmail: string, items: any[]) => {
-    const userCart = cartStorage.getOrCreateCart(userEmail)
-    userCart.items = items
-    userCart.updatedAt = new Date().toISOString()
-    console.log(`✅ Cart updated for user: ${userEmail}, ${items.length} items`)
+  // Remove item from cart
+  removeFromCart: (userId: string, productId: string, size: string, color: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
+    const userCart = sharedCarts.find(cart => cart.userId === userId)
+    if (userCart) {
+      const itemIndex = userCart.items.findIndex(
+        (item: any) => item.productId === productId && item.size === size && item.color === color
+      )
+      
+      if (itemIndex !== -1) {
+        userCart.items.splice(itemIndex, 1)
+        console.log(`✅ Item removed from cart for user: ${userId}`)
+      }
+    }
+    
     return userCart
   },
 
-  // Clear cart
-  clearCart: (userEmail: string) => {
-    const userCart = sharedCarts.find(cart => cart.userEmail === userEmail)
-    if (userCart) {
-      userCart.items = []
-      userCart.updatedAt = new Date().toISOString()
-      console.log(`✅ Cart cleared for user: ${userEmail}`)
-      return true
+  // Clear user cart
+  clearUserCart: (userId: string) => {
+    // Always ensure fresh data from files
+    initializeFromFiles()
+    
+    const userCartIndex = sharedCarts.findIndex(cart => cart.userId === userId)
+    if (userCartIndex !== -1) {
+      sharedCarts.splice(userCartIndex, 1)
+      console.log(`✅ Cart cleared for user: ${userId}`)
     }
-    return false
-  },
-
-  // Get cart count
-  getCartCount: () => sharedCarts.length
+    
+    return { userId, items: [] }
+  }
 }
 
 // Health check

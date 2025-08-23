@@ -41,8 +41,8 @@ export function isValidProduct(product: any): product is Product {
   }
 
   // Check for either _id or id field
-  const hasId = product._id !== undefined && product._id !== null || 
-                product.id !== undefined && product.id !== null
+  const hasId = (product._id !== undefined && product._id !== null) || 
+                (product.id !== undefined && product.id !== null)
   
   console.log('🔍 ID check:', { _id: product._id, id: product.id, hasId })
   
