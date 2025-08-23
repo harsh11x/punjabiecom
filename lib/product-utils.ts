@@ -37,7 +37,17 @@ export function isValidProduct(product: any): product is Product {
   }
 
   const requiredFields = ['_id', 'name', 'price', 'stock']
-  return requiredFields.every(field => product[field] !== undefined && product[field] !== null)
+  const requiredCheck = requiredFields.every(field => product[field] !== undefined && product[field] !== null)
+  
+  // Ensure rating and reviews are numbers (default to 0 if missing)
+  if (product.rating === undefined || product.rating === null) {
+    product.rating = 0
+  }
+  if (product.reviews === undefined || product.reviews === null) {
+    product.reviews = 0
+  }
+  
+  return requiredCheck
 }
 
 /**
