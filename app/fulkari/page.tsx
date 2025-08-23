@@ -65,7 +65,7 @@ export default function FulkariPage() {
         ...(priceRange !== 'all' && { priceRange })
       })
 
-      const response = await fetch(`/api/products/local?${params}`)
+      const response = await fetch(`/api/products?${params}`)
       if (response.ok) {
         const data = await response.json()
         setProducts(data.data || [])

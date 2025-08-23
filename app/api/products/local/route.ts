@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-
-// Data file paths
-const DATA_DIR = path.resolve(process.cwd(), 'data')
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json')
+import { productStorage } from '@/lib/shared-storage'
 
 function getProducts() {
-  if (!fs.existsSync(PRODUCTS_FILE)) {
-    return []
-  }
   try {
-    const data = fs.readFileSync(PRODUCTS_FILE, 'utf8')
-    return JSON.parse(data)
+    return productStorage.getAllProducts()
   } catch (error) {
-    console.error('Error reading products:', error)
+    console.error('Error reading products from shared storage:', error)
     return []
   }
 }
