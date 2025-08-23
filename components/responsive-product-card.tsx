@@ -13,7 +13,8 @@ import { AuthModal } from "@/components/auth/AuthModal"
 import { getProductImage, getProductSize, getProductColor, createCartItem, isValidProduct } from "@/lib/product-utils"
 
 interface Product {
-  _id: string
+  _id?: string
+  id?: string
   name: string
   punjabiName?: string
   price: number
@@ -34,10 +35,20 @@ interface ResponsiveProductCardProps {
 }
 
 export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
+  // Debug: Log the product being processed
+  console.log('🔍 Processing product:', product)
+  
+  // Temporarily disable validation to debug
+  console.log('🔍 Processing product:', product)
+  
   // Validate product data first
   if (!isValidProduct(product)) {
-    console.warn('Invalid product data:', product)
-    return null
+    console.warn('❌ Invalid product data:', product)
+    console.warn('❌ Validation failed for product:', (product as any)?.name || 'Unknown')
+    // Temporarily continue anyway to see what happens
+    console.log('⚠️ Continuing despite validation failure...')
+  } else {
+    console.log('✅ Product validation passed for:', product.name)
   }
 
   const { addItem } = useCart()
@@ -55,7 +66,7 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
     try {
       const cartItem = createCartItem(product, selectedSize, selectedColor)
       addItem({
-        id: product._id,
+        id: product._id || product.id || 'unknown',
         ...cartItem
       })
     } catch (error) {
@@ -69,7 +80,7 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
       <Card className="group hover:shadow-2xl transition-all duration-500 border-2 lg:border-3 border-amber-200 hover:border-amber-400 bg-gradient-to-b from-white to-amber-50 overflow-hidden">
         <CardContent className="p-3 lg:p-6">
           {/* Clickable Product Information Area */}
-          <Link href={`/products/${product._id}`} className="block">
+          <Link href={`/products/${product._id || product.id}`} className="block">
             <div className="relative mb-4 lg:mb-6">
               <div className="absolute -inset-1 lg:-inset-2 bg-gradient-to-br from-amber-300 to-red-400 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
               <Image

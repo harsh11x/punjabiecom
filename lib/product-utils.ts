@@ -1,7 +1,8 @@
 // Product utility functions for safe data access
 
 interface Product {
-  _id: string
+  _id?: string
+  id?: string
   name: string
   punjabiName?: string
   price: number
@@ -32,12 +33,27 @@ interface CartItem {
  * Validates if a product object has all required fields
  */
 export function isValidProduct(product: any): product is Product {
+  console.log('🔍 Validating product:', product?.name)
+  
   if (!product || typeof product !== 'object') {
+    console.log('❌ Product is not an object:', product)
     return false
   }
 
-  const requiredFields = ['_id', 'name', 'price', 'stock']
-  const requiredCheck = requiredFields.every(field => product[field] !== undefined && product[field] !== null)
+  // Check for either _id or id field
+  const hasId = product._id !== undefined && product._id !== null || 
+                product.id !== undefined && product.id !== null
+  
+  console.log('🔍 ID check:', { _id: product._id, id: product.id, hasId })
+  
+  const requiredFields = ['name', 'price', 'stock']
+  const requiredCheck = requiredFields.every(field => {
+    const hasField = product[field] !== undefined && product[field] !== null
+    console.log(`🔍 Field ${field}:`, { value: product[field], hasField })
+    return hasField
+  })
+  
+  console.log('🔍 Required fields check:', requiredCheck)
   
   // Ensure rating and reviews are numbers (default to 0 if missing)
   if (product.rating === undefined || product.rating === null) {
@@ -47,7 +63,10 @@ export function isValidProduct(product: any): product is Product {
     product.reviews = 0
   }
   
-  return requiredCheck
+  const result = hasId && requiredCheck
+  console.log('🔍 Final validation result:', result)
+  
+  return result
 }
 
 /**
@@ -100,7 +119,7 @@ export function createCartItem(product: Product, selectedSize?: string, selected
   }
 
   return {
-    productId: product._id,
+    productId: product._id || product.id || 'unknown',
     name: product.name,
     punjabiName: product.punjabiName || product.name,
     price: product.price,
