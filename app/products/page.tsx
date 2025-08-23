@@ -55,24 +55,8 @@ export default function ProductsPage() {
         const data = await response.json()
         console.log('Products API response:', data)
         
-        // Check if we have products, if not, try to seed some
-        if (data.success && data.data && data.data.length === 0) {
-          console.log('No products found, attempting to seed...')
-          await seedProducts()
-          // Try fetching again after seeding
-          const retryResponse = await fetch('/api/products')
-          if (retryResponse.ok) {
-            const retryData = await retryResponse.json()
-            if (retryData.success && retryData.data) {
-              const activeProducts = retryData.data.filter((product: Product) => 
-                product.isActive !== false && (product.inStock || product.stock > 0)
-              )
-              setProducts(activeProducts)
-              setFilteredProducts(activeProducts)
-              return
-            }
-          }
-        }
+        // Auto-seeding disabled - products should be managed through admin panel only
+        // This prevents deleted products from automatically reappearing
         
         // Show all active products from all categories
         if (data.success && data.data) {
@@ -95,17 +79,7 @@ export default function ProductsPage() {
     fetchProducts()
   }, [])
 
-  const seedProducts = async () => {
-    try {
-      const response = await fetch('/api/seed-products', { method: 'POST' })
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Products seeded:', data)
-      }
-    } catch (error) {
-      console.error('Error seeding products:', error)
-    }
-  }
+  // Auto-seeding function removed - products should be managed through admin panel only
 
   // Filter and sort products
   useEffect(() => {
