@@ -6,6 +6,64 @@ let sharedOrders: any[] = []
 let sharedCarts: any[] = []
 let sharedProducts: any[] = []
 
+// Initialize storage from file system
+function initializeFromFiles() {
+  if (typeof window !== 'undefined') return // Skip on client side
+  
+  try {
+    const fs = require('fs')
+    const path = require('path')
+    
+    // Load individual order files from data/orders/
+    const ordersDir = path.join(process.cwd(), 'data', 'orders')
+    if (fs.existsSync(ordersDir)) {
+      const orderFiles = fs.readdirSync(ordersDir).filter((file: string) => file.endsWith('.json'))
+      let loadedOrders = 0
+      
+      orderFiles.forEach((file: string) => {
+        try {
+          const orderData = JSON.parse(fs.readFileSync(path.join(ordersDir, file), 'utf8'))
+          if (orderData._id) {
+            sharedOrders.push(orderData)
+            loadedOrders++
+          }
+        } catch (err) {
+          console.warn(`⚠️ Failed to load order file ${file}:`, err)
+        }
+      })
+      
+      if (loadedOrders > 0) {
+        console.log(`📁 Loaded ${loadedOrders} orders from files into shared storage`)
+      }
+    }
+    
+    // Load orders from orders.json if it exists
+    const ordersFile = path.join(process.cwd(), 'data', 'orders.json')
+    if (fs.existsSync(ordersFile)) {
+      try {
+        const ordersData = JSON.parse(fs.readFileSync(ordersFile, 'utf8'))
+        if (Array.isArray(ordersData)) {
+          // Add orders that aren't already loaded
+          ordersData.forEach((order: any) => {
+            if (!sharedOrders.find(o => o._id === order._id)) {
+              sharedOrders.push(order)
+            }
+          })
+          console.log(`📁 Loaded additional orders from orders.json`)
+        }
+      } catch (err) {
+        console.warn('⚠️ Failed to load orders.json:', err)
+      }
+    }
+    
+  } catch (error) {
+    console.warn('⚠️ Failed to initialize from files:', error)
+  }
+}
+
+// Initialize on module load
+initializeFromFiles()
+
 // Product Management
 export const productStorage = {
   // Add new product
@@ -99,6 +157,33 @@ export const orderStorage = {
       updatedAt: new Date().toISOString()
     }
     sharedOrders.push(newOrder)
+    
+    // Save to file system for persistence
+    try {
+      if (typeof window === 'undefined') {
+        const fs = require('fs')
+        const path = require('path')
+        const ordersDir = path.join(process.cwd(), 'data', 'orders')
+        
+        // Ensure directory exists
+        if (!fs.existsSync(ordersDir)) {
+          fs.mkdirSync(ordersDir, { recursive: true })
+        }
+        
+        // Save individual order file
+        const orderFilePath = path.join(ordersDir, `${newOrder._id}.json`)
+        fs.writeFileSync(orderFilePath, JSON.stringify(newOrder, null, 2))
+        
+        // Also update orders.json with all orders
+        const ordersFile = path.join(process.cwd(), 'data', 'orders.json')
+        fs.writeFileSync(ordersFile, JSON.stringify(sharedOrders, null, 2))
+        
+        console.log(`💾 Order saved to file system: ${newOrder._id}`)
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to save order to file system:', error)
+    }
+    
     console.log(`✅ Order added to shared storage: ${newOrder._id}`)
     return newOrder
   },
@@ -130,6 +215,32 @@ export const orderStorage = {
         ...sharedOrders[orderIndex],
         ...processedUpdates,
         updatedAt: new Date().toISOString()
+      }
+      
+      // Save to file system for persistence
+      try {
+        if (typeof window === 'undefined') {
+          const fs = require('fs')
+          const path = require('path')
+          const ordersDir = path.join(process.cwd(), 'data', 'orders')
+          
+          // Ensure directory exists
+          if (!fs.existsSync(ordersDir)) {
+            fs.mkdirSync(ordersDir, { recursive: true })
+          }
+          
+          // Save individual order file
+          const orderFilePath = path.join(ordersDir, `${orderId}.json`)
+          fs.writeFileSync(orderFilePath, JSON.stringify(sharedOrders[orderIndex], null, 2))
+          
+          // Also update orders.json with all orders
+          const ordersFile = path.join(process.cwd(), 'data', 'orders.json')
+          fs.writeFileSync(ordersFile, JSON.stringify(sharedOrders, null, 2))
+          
+          console.log(`💾 Order saved to file system: ${orderId}`)
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to save order to file system:', error)
       }
       
       console.log(`✅ Order updated in shared storage: ${orderId}`, processedUpdates)
