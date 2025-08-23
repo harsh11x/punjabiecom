@@ -74,11 +74,8 @@ export default function ProductsManagement() {
           }))
           setProducts(mappedProducts)
           
-          // If no products exist, automatically seed some sample products
-          if (mappedProducts.length === 0) {
-            console.log('No products found, seeding sample products...')
-            await seedSampleProducts()
-          }
+          // Auto-seeding disabled - products should be managed manually
+          // This prevents deleted products from automatically reappearing
         } else {
           toast.error('Failed to load products')
         }
