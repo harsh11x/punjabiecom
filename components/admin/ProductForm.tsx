@@ -75,7 +75,21 @@ export default function ProductForm({
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value }
+      
+      // If product type is changed to fulkari, automatically set category to fulkari
+      if (name === 'productType' && value === 'fulkari') {
+        updated.category = 'fulkari'
+      }
+      
+      // If product type is changed from fulkari to jutti, reset category to men
+      if (name === 'productType' && value === 'jutti' && prev.category === 'fulkari') {
+        updated.category = 'men'
+      }
+      
+      return updated
+    })
   }
 
   const handleSizesChange = (sizes: string[]) => {
@@ -87,6 +101,11 @@ export default function ProductForm({
   }
 
   const handleSave = async () => {
+    // Ensure category is set correctly for fulkari products
+    if (formData.productType === 'fulkari') {
+      formData.category = 'fulkari'
+    }
+    
     // Validate required fields
     if (!formData.name || !formData.price || !formData.category) {
       toast.error('Please fill in required fields: name, price, and category are required')
@@ -278,7 +297,11 @@ export default function ProductForm({
           </div>
           <div>
             <Label htmlFor="category">For Whom *</Label>
-            <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => handleSelectChange('category', value)}
+              disabled={formData.productType === 'fulkari'}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select target audience" />
               </SelectTrigger>
@@ -286,10 +309,14 @@ export default function ProductForm({
                 <SelectItem value="men">Men</SelectItem>
                 <SelectItem value="women">Women</SelectItem>
                 <SelectItem value="kids">Kids</SelectItem>
+                <SelectItem value="fulkari">Fulkari (All)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-gray-500 mt-1">
-              Products will appear on the {formData.category} page and all products page
+              {formData.productType === 'fulkari' 
+                ? 'Fulkari products appear only in Fulkari section and All Products page'
+                : `Products will appear on the ${formData.category} page and all products page`
+              }
             </p>
           </div>
         </div>

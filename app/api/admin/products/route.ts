@@ -63,8 +63,9 @@ export async function POST(request: NextRequest) {
       punjabiDescription: String(productData.punjabiDescription || ''),
       price: Number(productData.price),
       originalPrice: productData.originalPrice ? Number(productData.originalPrice) : undefined,
-      category: String(productData.category), // 'men', 'women', or 'kids'
-      subcategory: productData.subcategory ? String(productData.subcategory) : undefined, // 'jutti' or 'fulkari'
+      category: String(productData.category), // 'men', 'women', 'kids', or 'fulkari'
+      subcategory: productData.productType ? String(productData.productType) : 
+                   productData.subcategory ? String(productData.subcategory) : 'jutti', // 'jutti' or 'fulkari'
       images: Array.isArray(productData.images) ? productData.images : [],
       sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
       colors: Array.isArray(productData.colors) ? productData.colors : [],
@@ -148,8 +149,9 @@ export async function PUT(request: NextRequest) {
       punjabiDescription: String(updateData.punjabiDescription || ''),
       price: Number(updateData.price),
       originalPrice: updateData.originalPrice ? Number(updateData.originalPrice) : undefined,
-      category: String(updateData.category), // 'men', 'women', or 'kids'
-      subcategory: updateData.subcategory ? String(updateData.subcategory) : undefined, // 'jutti' or 'fulkari'
+      category: String(updateData.category), // 'men', 'women', 'kids', or 'fulkari'
+      subcategory: updateData.productType ? String(updateData.productType) : 
+                   updateData.subcategory ? String(updateData.subcategory) : 'jutti', // 'jutti' or 'fulkari'
       images: Array.isArray(updateData.images) ? updateData.images : [],
       sizes: Array.isArray(updateData.sizes) ? updateData.sizes : [],
       colors: Array.isArray(updateData.colors) ? updateData.colors : [],
