@@ -98,26 +98,28 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
 
       // Configure Razorpay options
       const options: RazorpayOptions = {
-        key: orderData.data.key,
-        amount: orderData.data.amount,
-        currency: orderData.data.currency,
+        key: orderData.order.key,
+        amount: orderData.order.razorpayAmount,
+        currency: orderData.order.currency,
         name: 'Punjab Heritage',
         description: 'Authentic Punjabi Crafts',
-        order_id: orderData.data.razorpayOrderId,
+        order_id: orderData.order.razorpayOrderId,
         image: '/logo.png',
         handler: async function (response: RazorpayResponse) {
           try {
+            console.log('Payment successful, verifying...', response)
+            
             // Verify payment
-            const verifyResponse = await fetch('/api/payment/verify', {
+            const verifyResponse = await fetch('/api/payment/verify-payment', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: orderData.data.orderId
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                orderId: orderData.order.id
               })
             })
 
@@ -125,7 +127,7 @@ export function RazorpayCheckout({ shippingAddress, onSuccess, onError }: Razorp
 
             if (verifyData.success) {
               clearCart()
-              onSuccess(orderData.data.orderId)
+              onSuccess(orderData.order.id)
             } else {
               throw new Error(verifyData.error || 'Payment verification failed')
             }
