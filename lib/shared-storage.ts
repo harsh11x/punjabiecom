@@ -4,6 +4,88 @@
 // Global storage objects
 let sharedOrders: any[] = []
 let sharedCarts: any[] = []
+let sharedProducts: any[] = []
+
+// Product Management
+export const productStorage = {
+  // Add new product
+  addProduct: (productData: any) => {
+    const newProduct = {
+      ...productData,
+      id: `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    sharedProducts.push(newProduct)
+    console.log(`✅ Product added to shared storage: ${newProduct.name} (ID: ${newProduct.id})`)
+    return newProduct
+  },
+
+  // Get all products
+  getAllProducts: () => {
+    return [...sharedProducts]
+  },
+
+  // Get product by ID
+  getProductById: (id: string) => {
+    return sharedProducts.find(product => product.id === id)
+  },
+
+  // Update product
+  updateProduct: (id: string, updates: any) => {
+    const productIndex = sharedProducts.findIndex(product => product.id === id)
+    if (productIndex !== -1) {
+      sharedProducts[productIndex] = {
+        ...sharedProducts[productIndex],
+        ...updates,
+        updatedAt: new Date().toISOString()
+      }
+      console.log(`✅ Product updated in shared storage: ${id}`)
+      return sharedProducts[productIndex]
+    }
+    return null
+  },
+
+  // Delete product
+  deleteProduct: (id: string) => {
+    const productIndex = sharedProducts.findIndex(product => product.id === id)
+    if (productIndex !== -1) {
+      const deletedProduct = sharedProducts.splice(productIndex, 1)[0]
+      console.log(`✅ Product deleted from shared storage: ${id}`)
+      return deletedProduct
+    }
+    return null
+  },
+
+  // Get product count
+  getProductCount: () => sharedProducts.length,
+
+  // Get product statistics
+  getProductStats: () => {
+    const totalProducts = sharedProducts.length
+    const activeProducts = sharedProducts.filter(p => p.isActive !== false).length
+    const featuredProducts = sharedProducts.filter(p => p.featured === true).length
+    const lowStockProducts = sharedProducts.filter(p => (p.stock || 0) < 10).length
+    const inStockProducts = sharedProducts.filter(p => (p.stock || 0) > 0).length
+    
+    const categoryCounts = sharedProducts.reduce((acc: any, product) => {
+      acc[product.category] = (acc[product.category] || 0) + 1
+      return acc
+    }, {})
+    
+    const totalValue = sharedProducts.reduce((sum, product) => sum + (product.price * (product.stock || 0)), 0)
+    
+    return {
+      total: totalProducts,
+      active: activeProducts,
+      featured: featuredProducts,
+      lowStock: lowStockProducts,
+      inStock: inStockProducts,
+      categories: categoryCounts,
+      totalValue: Math.round(totalValue * 100) / 100
+    }
+  }
+}
 
 // Order Management
 export const orderStorage = {
@@ -144,6 +226,7 @@ export const cartStorage = {
 export const getStorageStats = () => ({
   orders: sharedOrders.length,
   carts: sharedCarts.length,
+  products: sharedProducts.length,
   timestamp: new Date().toISOString()
 })
 

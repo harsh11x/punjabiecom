@@ -1,4 +1,4 @@
-import { getAllProducts, getProductStats } from '@/lib/simple-product-storage'
+import { productStorage } from '@/lib/shared-storage'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,8 +17,8 @@ import {
 
 export default async function AdminDashboard() {
   const [products, stats] = await Promise.all([
-    getAllProducts(),
-    getProductStats()
+    productStorage.getAllProducts(),
+    productStorage.getProductStats()
   ])
 
   const recentProducts = products

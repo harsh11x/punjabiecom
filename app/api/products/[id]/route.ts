@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllProducts } from '@/lib/simple-product-storage'
+import { productStorage } from '@/lib/shared-storage'
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +18,7 @@ export async function GET(
     
     console.log(`🔍 Looking for product with ID: ${id}`)
     
-    const products = await getAllProducts()
+    const products = await productStorage.getAllProducts()
     console.log(`📦 Total products available: ${products.length}`)
     
     const product = products.find((p: any) => p.id === id)

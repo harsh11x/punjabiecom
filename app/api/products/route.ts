@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllProducts } from '@/lib/simple-product-storage'
+import { productStorage } from '@/lib/shared-storage'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const priceRange = searchParams.get('priceRange')
     
     // Get all products
-    let products = await getAllProducts()
+    let products = await productStorage.getAllProducts()
     
     // Filter by active products only
     products = products.filter((p: any) => p.isActive !== false)

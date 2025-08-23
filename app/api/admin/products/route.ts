@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { 
-  getAllProducts, 
-  addProduct, 
-  updateProduct, 
-  deleteProduct 
-} from '@/lib/simple-product-storage'
+  productStorage
+} from '@/lib/shared-storage'
 
 // AWS Sync Function (Disabled for now - using local storage only)
 async function syncToAWS(action: string, product: any, productId?: string) {
-  console.log(`🔄 AWS sync disabled - using local storage only: ${action}`)
-  return { success: true, result: 'Local storage only' }
+  console.log(`🔄 AWS sync disabled - using shared storage only: ${action}`)
+  return { success: true, result: 'Shared storage only' }
 }
 
 // GET - Fetch all products
@@ -18,7 +15,7 @@ export async function GET() {
     console.log('📋 Fetching all products...')
     
     // Get products from local storage (primary)
-    const products = await getAllProducts()
+    const products = await productStorage.getAllProducts()
     
     console.log(`✅ Retrieved ${products.length} products`)
     
@@ -83,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Try to add product to local storage
     console.log('📁 Attempting to add product to local storage...')
-    const newProduct = await addProduct(simpleProduct)
+    const newProduct = await productStorage.addProduct(simpleProduct)
     console.log('✅ Product added to local storage:', newProduct.id)
 
     // Try to sync to AWS (optional - don't fail if it doesn't work)
@@ -165,7 +162,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update product in local storage (primary)
-    const updatedProduct = await updateProduct(productId, cleanUpdateData)
+    const updatedProduct = await productStorage.updateProduct(productId, cleanUpdateData)
     console.log('✅ Product updated in local storage:', productId)
 
     // Try to sync to AWS (optional)
@@ -213,7 +210,7 @@ export async function DELETE(request: NextRequest) {
     console.log('Deleting product:', productId)
 
     // Delete from local storage (primary)
-    await deleteProduct(productId)
+    await productStorage.deleteProduct(productId)
     console.log('✅ Product deleted from local storage:', productId)
 
     // Try to sync to AWS (optional)
