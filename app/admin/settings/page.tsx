@@ -48,9 +48,6 @@ interface PaymentSettings {
   razorpayEnabled: boolean
   razorpayKeyId: string
   razorpayKeySecret: string
-  codEnabled: boolean
-  codMinOrder: number
-  codMaxOrder: number
 }
 
 interface NotificationSettings {
@@ -96,10 +93,7 @@ export default function SettingsPage() {
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>({
     razorpayEnabled: true,
     razorpayKeyId: 'rzp_test_xxxxx',
-    razorpayKeySecret: 'xxxxx_secret_key',
-    codEnabled: true,
-    codMinOrder: 500,
-    codMaxOrder: 50000
+    razorpayKeySecret: 'xxxxx_secret_key'
   })
 
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
@@ -428,44 +422,7 @@ export default function SettingsPage() {
                   )}
                 </div>
 
-                {/* COD Settings */}
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-green-900">Cash on Delivery (COD)</h3>
-                      <p className="text-sm text-green-700">Accept cash payments on delivery</p>
-                    </div>
-                    <Switch
-                      checked={paymentSettings.codEnabled}
-                      onCheckedChange={(checked) => setPaymentSettings({...paymentSettings, codEnabled: checked})}
-                    />
-                  </div>
-                  
-                  {paymentSettings.codEnabled && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="codMinOrder">Minimum Order Amount (₹)</Label>
-                        <Input
-                          id="codMinOrder"
-                          type="number"
-                          value={paymentSettings.codMinOrder}
-                          onChange={(e) => setPaymentSettings({...paymentSettings, codMinOrder: parseInt(e.target.value)})}
-                          placeholder="500"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="codMaxOrder">Maximum Order Amount (₹)</Label>
-                        <Input
-                          id="codMaxOrder"
-                          type="number"
-                          value={paymentSettings.codMaxOrder}
-                          onChange={(e) => setPaymentSettings({...paymentSettings, codMaxOrder: parseInt(e.target.value)})}
-                          placeholder="50000"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+
               </CardContent>
             </Card>
           </TabsContent>

@@ -29,7 +29,7 @@ export default function CheckoutPage() {
     pincode: '',
     phone: ''
   })
-  const [paymentMethod, setPaymentMethod] = useState('cod')
+  const [paymentMethod, setPaymentMethod] = useState('razorpay')
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -129,93 +129,7 @@ export default function CheckoutPage() {
       console.log('Form validation passed, cart items:', items)
       console.log('Selected payment method:', paymentMethod)
 
-      // Handle Cash on Delivery orders
-      if (paymentMethod === 'cod') {
-        console.log('Processing Cash on Delivery order...')
-        
-        // For COD orders, we create the order directly without payment processing
-        const codOrderData = {
-          items: items.map(item => ({
-            productId: item.id,
-            name: item.name,
-            punjabiName: item.name, // Add required punjabiName field
-            price: item.price,
-            quantity: item.quantity,
-            size: item.size || 'Standard',
-            color: item.color || 'Default',
-            image: item.image || ''
-          })),
-          shippingAddress: {
-            fullName: `${formData.firstName} ${formData.lastName}`,
-            addressLine1: formData.address,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.pincode,
-            phone: formData.phone
-          },
-          billingAddress: {
-            fullName: `${formData.firstName} ${formData.lastName}`,
-            addressLine1: formData.address,
-            city: formData.city,
-            state: formData.state,
-            pincode: formData.pincode,
-            phone: formData.phone
-          },
-          customerEmail: formData.email,
-          subtotal: totalPrice,
-          shippingCost: 0,
-          tax: 0,
-          total: totalPrice,
-          paymentMethod: 'cod',
-          paymentStatus: 'pending',
-          status: 'confirmed'
-        }
 
-        console.log('COD Order Data:', JSON.stringify(codOrderData, null, 2))
-
-        try {
-          console.log('Sending COD order to API...')
-          
-          // Use local Vercel API route
-          const response = await fetch('/api/orders', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(codOrderData)
-          })
-
-          console.log('COD API Response Status:', response.status)
-          console.log('COD API Response Headers:', Object.fromEntries(response.headers.entries()))
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }))
-            console.error('COD API Error Response:', errorData)
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
-          }
-
-          const orderResult = await response.json()
-          console.log('COD API Success Response:', orderResult)
-          
-          if (orderResult.success) {
-            // Clear cart after successful order creation
-            clearCart()
-            
-            // Redirect to success page
-            router.push(`/order-success?orderId=${orderResult.data._id}&orderNumber=${orderResult.data.orderNumber}`)
-            toast.success('Order placed successfully! You will pay on delivery.')
-            return
-          } else {
-            console.error('COD API returned success: false:', orderResult)
-            throw new Error(orderResult.error || 'Failed to create COD order')
-          }
-        } catch (error: any) {
-          console.error('COD order creation failed:', error)
-          toast.error(`Failed to create order: ${error.message}`)
-          setIsProcessing(false)
-          return
-        }
-      }
 
       // Prepare order data for online payment
       const orderData = {
@@ -607,17 +521,6 @@ export default function CheckoutPage() {
                     <div className="flex items-center space-x-2">
                       <input 
                         type="radio" 
-                        id="cod" 
-                        name="payment" 
-                        value="cod" 
-                        checked={paymentMethod === 'cod'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                      />
-                      <Label htmlFor="cod">Cash on Delivery</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input 
-                        type="radio" 
                         id="razorpay" 
                         name="payment" 
                         value="razorpay" 
@@ -626,6 +529,9 @@ export default function CheckoutPage() {
                       />
                       <Label htmlFor="razorpay">Online Payment (Razorpay)</Label>
                     </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      💳 We accept Credit/Debit Cards, UPI, Net Banking, and Digital Wallets
+                    </p>
                   </div>
                 </CardContent>
               </Card>

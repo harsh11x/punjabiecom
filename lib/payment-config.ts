@@ -91,14 +91,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     description: 'Pay with PhonePe, GPay, Paytm',
     icon: '📱'
   },
-  {
-    id: 'cod',
-    name: 'Cash on Delivery',
-    type: 'cod',
-    enabled: true,
-    description: 'Pay when your order arrives',
-    icon: '📦'
-  },
+
   {
     id: 'bank_transfer',
     name: 'Bank Transfer',
