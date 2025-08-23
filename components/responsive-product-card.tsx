@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -69,13 +70,15 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
         <CardContent className="p-3 lg:p-6">
           <div className="relative mb-4 lg:mb-6">
             <div className="absolute -inset-1 lg:-inset-2 bg-gradient-to-br from-amber-300 to-red-400 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-            <Image
-              src={getProductImage(product)}
-              alt={product.name}
-              width={350}
-              height={350}
-              className="relative w-full h-40 sm:h-48 lg:h-56 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 shadow-lg"
-            />
+            <Link href={`/products/${product._id}`} className="block">
+              <Image
+                src={getProductImage(product)}
+                alt={product.name}
+                width={350}
+                height={350}
+                className="relative w-full h-40 sm:h-48 lg:h-56 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 shadow-lg cursor-pointer"
+              />
+            </Link>
             <Button
               size="icon"
               variant="ghost"
@@ -91,14 +94,16 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
           </div>
 
           <div className="space-y-2 lg:space-y-4">
-            <div>
-              {product.punjabiName && (
-                <h3 className="font-bold text-red-900 group-hover:text-red-700 transition-colors text-sm lg:text-lg mb-1">
-                  {product.punjabiName}
-                </h3>
-              )}
-              <h4 className="font-semibold text-amber-800 text-xs lg:text-base">{product.name}</h4>
-            </div>
+            <Link href={`/products/${product._id}`} className="block hover:opacity-80 transition-opacity">
+              <div>
+                {product.punjabiName && (
+                  <h3 className="font-bold text-red-900 group-hover:text-red-700 transition-colors text-sm lg:text-lg mb-1">
+                    {product.punjabiName}
+                  </h3>
+                )}
+                <h4 className="font-semibold text-amber-800 text-xs lg:text-base cursor-pointer">{product.name}</h4>
+              </div>
+            </Link>
 
             <div className="flex items-center space-x-1 lg:space-x-2">
               <div className="flex items-center space-x-1">
