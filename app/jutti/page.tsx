@@ -48,15 +48,10 @@ export default function JuttiPage() {
         setLoading(true)
         setError(null)
         
-        // Build query parameters - get all juttis by default
+        // Build query parameters to get all products first, then filter for juttis
         const params = new URLSearchParams({
-          category: 'jutti',
-          limit: '100' // Get more products for jutti section
+          limit: '100' // Get more products for filtering
         })
-        
-        if (selectedCategory !== 'all') {
-          params.set('subcategory', selectedCategory)
-        }
         
         if (selectedPriceRange !== 'all') {
           params.set('priceRange', selectedPriceRange)
@@ -76,16 +71,25 @@ export default function JuttiPage() {
         
         if (data.success) {
           // Filter to show only juttis from all categories
-          let juttiProducts = data.data || []
+          let allProducts = data.data || []
           
-          // If no specific subcategory is selected, show all juttis
-          if (selectedCategory === 'all') {
-            juttiProducts = juttiProducts.filter((product: Product) => 
-              product.category === 'jutti' || 
-              (product.subcategory && ['men', 'women', 'kids'].includes(product.subcategory))
+          // Filter for all jutti products regardless of category (men, women, kids)
+          let juttiProducts = allProducts.filter((product: Product) => {
+            const isJutti = (
+              product.subcategory === 'jutti' ||
+              product.category === 'jutti' ||
+              ['men', 'women', 'kids'].includes(product.category)
             )
-          }
+            
+            // Apply category filter if selected
+            if (selectedCategory !== 'all') {
+              return isJutti && product.category === selectedCategory
+            }
+            
+            return isJutti
+          })
           
+          console.log(`🔍 Found ${juttiProducts.length} jutti products from ${allProducts.length} total products`)
           setProducts(juttiProducts)
         } else {
           throw new Error(data.error || 'Failed to fetch products')
