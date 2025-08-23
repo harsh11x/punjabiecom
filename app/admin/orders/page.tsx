@@ -96,8 +96,10 @@ export default function AdminOrdersPage() {
 
       const result = await response.json()
       if (result.success) {
-        setOrders(result.data)
-        toast.success(`Loaded ${result.data.length} orders`)
+        // Normalize the raw order data to match our interfaces
+        const normalizedOrders = (result.data || []).map((rawOrder: any) => normalizeOrder(rawOrder))
+        setOrders(normalizedOrders)
+        toast.success(`Loaded ${normalizedOrders.length} orders`)
       } else {
         throw new Error(result.error || 'Failed to fetch orders')
       }
@@ -182,7 +184,9 @@ export default function AdminOrdersPage() {
   }, [isAuthenticated])
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    if (!status || typeof status !== 'string') return 'bg-gray-100 text-gray-800'
+    
+    switch (status.toLowerCase()) {
       case 'pending': return 'bg-yellow-100 text-yellow-800'
       case 'confirmed': return 'bg-blue-100 text-blue-800'
       case 'processing': return 'bg-purple-100 text-purple-800'
@@ -194,13 +198,20 @@ export default function AdminOrdersPage() {
   }
 
   const getPaymentStatusColor = (status: string) => {
-    switch (status) {
+    if (!status || typeof status !== 'string') return 'bg-gray-100 text-gray-800'
+    
+    switch (status.toLowerCase()) {
       case 'paid': return 'bg-green-100 text-green-800'
       case 'pending': return 'bg-yellow-100 text-yellow-800'
       case 'failed': return 'bg-red-100 text-red-800'
       case 'refunded': return 'bg-gray-100 text-gray-800'
       default: return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  const capitalizeStatus = (status: string) => {
+    if (!status || typeof status !== 'string') return 'N/A'
+    return status.charAt(0).toUpperCase() + status.slice(1)
   }
 
   const formatDate = (dateString: string) => {
@@ -217,7 +228,50 @@ export default function AdminOrdersPage() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
-    }).format(amount)
+    }).format(amount || 0)
+  }
+
+  // Transform raw order data to match our strict interfaces
+  const normalizeOrder = (rawOrder: any): Order => {
+    // Normalize shipping address
+    const shippingAddress: ShippingAddress = {
+      fullName: rawOrder.shippingAddress?.fullName || 
+                (rawOrder.shippingAddress?.firstName && rawOrder.shippingAddress?.lastName 
+                  ? `${rawOrder.shippingAddress.firstName} ${rawOrder.shippingAddress.lastName}` 
+                  : 'N/A'),
+      addressLine1: rawOrder.shippingAddress?.addressLine1 || rawOrder.shippingAddress?.address || 'N/A',
+      addressLine2: rawOrder.shippingAddress?.addressLine2,
+      city: rawOrder.shippingAddress?.city || 'N/A',
+      state: rawOrder.shippingAddress?.state || 'N/A',
+      pincode: rawOrder.shippingAddress?.pincode || rawOrder.shippingAddress?.zipCode || 'N/A',
+      phone: rawOrder.shippingAddress?.phone || 'N/A'
+    }
+
+    // Normalize order data
+    const normalizedOrder: Order = {
+      _id: rawOrder._id || '',
+      orderNumber: rawOrder.orderNumber || 'N/A',
+      customerEmail: rawOrder.customerEmail || 'N/A',
+      items: rawOrder.items || [],
+      subtotal: rawOrder.subtotal || 0,
+      shippingCost: rawOrder.shippingCost || 0,
+      tax: rawOrder.tax || 0,
+      total: rawOrder.total || 0,
+      status: rawOrder.status || 'pending',
+      paymentStatus: rawOrder.paymentStatus || 'pending',
+      paymentMethod: rawOrder.paymentMethod || 'cod',
+      shippingAddress,
+      trackingNumber: rawOrder.trackingNumber,
+      estimatedDelivery: rawOrder.estimatedDelivery,
+      deliveredAt: rawOrder.deliveredAt,
+      cancelledAt: rawOrder.cancelledAt,
+      cancellationReason: rawOrder.cancellationReason,
+      notes: rawOrder.notes,
+      createdAt: rawOrder.createdAt || new Date().toISOString(),
+      updatedAt: rawOrder.updatedAt || new Date().toISOString()
+    }
+
+    return normalizedOrder
   }
 
   if (!isAuthenticated) {
@@ -285,8 +339,10 @@ export default function AdminOrdersPage() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {orders.map((order) => (
-            <Card key={order._id} className="hover:shadow-lg transition-shadow">
+          {orders.map((order, index) => {
+            try {
+              return (
+            <Card key={order._id || `order-${index}`} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -299,10 +355,10 @@ export default function AdminOrdersPage() {
                   </div>
                   <div className="flex gap-2">
                     <Badge className={getStatusColor(order.status)}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {capitalizeStatus(order.status)}
                     </Badge>
                     <Badge className={getPaymentStatusColor(order.paymentStatus)}>
-                      {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                      {capitalizeStatus(order.paymentStatus)}
                     </Badge>
                   </div>
                 </div>
@@ -480,7 +536,22 @@ export default function AdminOrdersPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+              )
+            } catch (error) {
+              console.error('Error rendering order:', error, order)
+              return (
+                <Card key={order._id || `error-${index}`} className="border-red-200">
+                  <CardContent className="p-4">
+                    <div className="text-red-600">
+                      <strong>Error loading order:</strong> {order.orderNumber || 'Unknown'}
+                      <br />
+                      <small className="text-gray-500">Check console for details</small>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            }
+          })}
         </div>
       )}
     </div>
