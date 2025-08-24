@@ -1,0 +1,30 @@
+{
+  "customerEmail": "test@example.com",
+  "items": [
+    {
+      "productId": "test",
+      "name": "Test Product",
+      "price": 1500,
+      "quantity": 1
+    }
+  ],
+  "subtotal": 1500,
+  "shippingCost": 0,
+  "tax": 0,
+  "total": 1500,
+  "status": "pending",
+  "paymentStatus": "pending",
+  "paymentMethod": "razorpay",
+  "shippingAddress": {
+    "address": "Test Address"
+  },
+  "billingAddress": {
+    "address": "Test Address"
+  },
+  "notes": "",
+  "_id": "order_1756066558352_rqwbm30",
+  "orderNumber": "PH1756066558352HI",
+  "createdAt": "2025-08-24T20:15:58.352Z",
+  "updatedAt": "2025-08-24T20:15:58.618Z",
+  "razorpayOrderId": "order_R9IfkyHP2yVF5t"
+}

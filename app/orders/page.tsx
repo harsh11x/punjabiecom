@@ -6,12 +6,13 @@ import { User } from 'firebase/auth'
 import { getApiUrl } from '@/config/environment'
 import { useAutoLogout } from '@/hooks/useAutoLogout'
 import { Header } from '@/components/header'
+import { InvoiceGenerator, InvoiceData } from '@/lib/invoice-generator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from 'lucide-react'
+import { Package, Truck, CheckCircle, Clock, AlertCircle, Search, Download, MessageCircle } from 'lucide-react'
 
 interface OrderItem {
   productId: string
@@ -197,6 +198,47 @@ export default function OrdersPage() {
       case 'cancelled': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  // Download invoice
+  const handleDownloadInvoice = async (order: Order) => {
+    try {
+      const invoiceData: InvoiceData = {
+        orderNumber: order.orderNumber,
+        orderDate: order.createdAt,
+        customerName: order.shippingAddress.fullName,
+        customerAddress: order.shippingAddress.addressLine1,
+        customerCity: order.shippingAddress.city,
+        customerState: order.shippingAddress.state,
+        customerPincode: order.shippingAddress.pincode,
+        customerPhone: order.shippingAddress.phone,
+        items: order.items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+          price: item.price,
+          total: item.price * item.quantity
+        })),
+        subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
+        tax: order.tax,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        status: order.status
+      }
+
+      await InvoiceGenerator.generateAndDownload(invoiceData)
+      toast.success('Invoice downloaded successfully!')
+    } catch (error: any) {
+      console.error('Error generating invoice:', error)
+      toast.error('Failed to generate invoice. Please try again.')
+    }
+  }
+
+  // Navigate to contact page
+  const handleContactSupport = () => {
+    window.location.href = '/contact'
   }
 
   const getPaymentStatusColor = (status: string) => {
@@ -513,10 +555,22 @@ export default function OrdersPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 mt-6 pt-4 border-t">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDownloadInvoice(order)}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
                     Download Invoice
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleContactSupport}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
                     Contact Support
                   </Button>
                   {order.status === 'delivered' && (
@@ -529,7 +583,7 @@ export default function OrdersPage() {
                       variant="outline" 
                       size="sm"
                       onClick={() => handleCancelOrder(order._id)}
-                      className="text-red-600 hover:text-red-700 border-red-600 hover:border-red-700"
+                      className="text-red-700 hover:text-red-800 border-red-700 hover:border-red-800"
                     >
                       Cancel Order
                     </Button>
