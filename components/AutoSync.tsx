@@ -18,7 +18,7 @@ interface SyncStatus {
 
 export default function AutoSync({ 
   interval = 30000, // 30 seconds
-  enabled = true,
+  enabled = false, // DISABLED - Using local products only
   showStatus = false 
 }: AutoSyncProps) {
   const [status, setStatus] = useState<SyncStatus>({

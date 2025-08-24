@@ -8,10 +8,10 @@
     }
   },
   "env": {
-    "AWS_SYNC_SERVER_URL": "http://3.111.208.77:3000",
-    "AWS_SYNC_SECRET": "punjabi-heritage-sync-secret-2024",
-    "WEBSITE_SYNC_TOKEN": "punjabi-heritage-website-sync-token-2024",
-    "SYNC_INTERVAL": "30000"
+    "AWS_SYNC_SERVER_URL": "DISABLED",
+    "AWS_SYNC_SECRET": "DISABLED",
+    "WEBSITE_SYNC_TOKEN": "DISABLED",
+    "SYNC_INTERVAL": "0"
   },
   "headers": [
     {

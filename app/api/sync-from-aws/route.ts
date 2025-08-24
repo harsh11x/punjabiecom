@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 
-// AWS Sync Configuration (Disabled for now)
-const AWS_SYNC_SERVER_URL = 'http://localhost:3000'; // Disabled
-const WEBSITE_SYNC_TOKEN = 'disabled';
+// AWS Sync Configuration (COMPLETELY DISABLED - Using local products only)
+const AWS_SYNC_SERVER_URL = 'DISABLED'; // Completely disabled
+const WEBSITE_SYNC_TOKEN = 'DISABLED';
 
 // Function to update website's product storage
 async function updateWebsiteProducts(products: any[]) {
@@ -86,6 +86,14 @@ export async function POST() {
 
 async function handleSync() {
   try {
+    // COMPLETELY DISABLED - Using local products only
+    return NextResponse.json({
+      success: false,
+      error: 'AWS sync is completely disabled - using local products only',
+      message: 'This endpoint is disabled to prevent overwriting local products',
+      timestamp: new Date().toISOString()
+    }, { status: 403 });
+    
     console.log('🔄 Starting sync from AWS server...');
     console.log('AWS Server URL:', AWS_SYNC_SERVER_URL);
     
