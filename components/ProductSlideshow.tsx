@@ -50,14 +50,9 @@ export function ProductSlideshow({
         const fetchedProducts = data.data || []
         
         if (fetchedProducts.length === 0) {
-          // If no products found, try seeding
-          await fetch('/api/seed-products', { method: 'POST' })
-          // Retry fetching
-          const retryResponse = await fetch('/api/products?limit=20')
-          if (retryResponse.ok) {
-            const retryData = await retryResponse.json()
-            setProducts(retryData.data || [])
-          }
+          // No auto-seeding - only show products manually added by admin
+          console.log('No products found for slideshow - admin must add products manually')
+          setProducts([])
         } else {
           setProducts(fetchedProducts)
         }

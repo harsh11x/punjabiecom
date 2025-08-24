@@ -74,10 +74,9 @@ export default function ProductsManagement() {
           }))
           setProducts(mappedProducts)
           
-          // If no products exist, automatically seed some sample products
+          // No auto-seeding - only show products manually added by admin
           if (mappedProducts.length === 0) {
-            console.log('No products found, seeding sample products...')
-            await seedSampleProducts()
+            console.log('No products found - admin must add products manually')
           }
         } else {
           toast.error('Failed to load products')
@@ -93,24 +92,7 @@ export default function ProductsManagement() {
     }
   }
 
-  const seedSampleProducts = async () => {
-    try {
-      const response = await fetch('/api/seed-products', { 
-        method: 'POST',
-        credentials: 'include' 
-      })
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          toast.success('Sample products added successfully!')
-          // Reload products to show the newly added ones
-          loadProducts()
-        }
-      }
-    } catch (error) {
-      console.error('Error seeding products:', error)
-    }
-  }
+
 
   const openCreateDialog = () => {
     setEditingProduct(null)
@@ -204,13 +186,7 @@ export default function ProductsManagement() {
             <p className="text-amber-700">Manage your store's product catalog</p>
           </div>
           <div className="flex space-x-2">
-            <Button 
-              onClick={seedSampleProducts}
-              variant="outline"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-            >
-              🌱 Seed Products
-            </Button>
+
             <Button 
               onClick={openCreateDialog}
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
