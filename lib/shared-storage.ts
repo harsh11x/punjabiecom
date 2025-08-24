@@ -5,6 +5,7 @@
 let sharedOrders: any[] = []
 let sharedCarts: any[] = []
 let sharedProducts: any[] = []
+let hasSeededProducts = false // Flag to prevent re-seeding
 
 // Function to identify fake/test orders
 function isFakeOrder(order: any): boolean {
@@ -201,14 +202,14 @@ export const productStorage = {
     return [...sharedProducts]
   },
 
-  // Get product by ID
+  // Get product by ID (check both id and _id fields)
   getProductById: (id: string) => {
-    return sharedProducts.find(product => product.id === id)
+    return sharedProducts.find(product => product.id === id || product._id === id)
   },
 
   // Update product
   updateProduct: (id: string, updates: any) => {
-    const productIndex = sharedProducts.findIndex(product => product.id === id)
+    const productIndex = sharedProducts.findIndex(product => product.id === id || product._id === id)
     if (productIndex !== -1) {
       sharedProducts[productIndex] = {
         ...sharedProducts[productIndex],
@@ -237,7 +238,7 @@ export const productStorage = {
 
   // Delete product
   deleteProduct: (id: string) => {
-    const productIndex = sharedProducts.findIndex(product => product.id === id)
+    const productIndex = sharedProducts.findIndex(product => product.id === id || product._id === id)
     if (productIndex !== -1) {
       const deletedProduct = sharedProducts.splice(productIndex, 1)[0]
       
@@ -309,8 +310,8 @@ export const productStorage = {
 
   // Seed products if none exist
   seedProductsIfEmpty: () => {
-    if (sharedProducts.length > 0) {
-      console.log('🌱 Products already exist, skipping seeding')
+    if (sharedProducts.length > 0 || hasSeededProducts) {
+      console.log('🌱 Products already exist or already seeded, skipping seeding')
       return false
     }
 
@@ -401,6 +402,7 @@ export const productStorage = {
     })
 
     console.log(`🌱 Seeded ${sampleProducts.length} sample products`)
+    hasSeededProducts = true
     return true
   }
 }
@@ -604,6 +606,10 @@ export const getStorageStats = () => ({
 console.log('🚀 Shared storage initialized')
 
 // Seed products if none exist after initialization
-if (sharedProducts.length === 0) {
+// Only seed if we're in development, no products exist, and we haven't seeded before
+if (sharedProducts.length === 0 && process.env.NODE_ENV === 'development' && !hasSeededProducts) {
+  console.log('🌱 Development mode: Seeding sample products...')
   productStorage.seedProductsIfEmpty()
+} else if (sharedProducts.length === 0) {
+  console.log('📁 No products found, but skipping auto-seeding in production')
 }
