@@ -80,19 +80,19 @@ function initializeFromFiles() {
     const fs = require('fs')
     const path = require('path')
     
-    // Load products from products.json
-    const productsFile = path.join(process.cwd(), 'data', 'products.json')
-    if (fs.existsSync(productsFile)) {
-      try {
-        const productsData = JSON.parse(fs.readFileSync(productsFile, 'utf8'))
-        if (Array.isArray(productsData)) {
-          sharedProducts.push(...productsData)
-          console.log(`📁 Loaded ${productsData.length} products from products.json into shared storage`)
-        }
-      } catch (err) {
-        console.warn('⚠️ Failed to load products.json:', err)
-      }
-    }
+    // No auto-loading of products from files - admin must add products manually
+    // const productsFile = path.join(process.cwd(), 'data', 'products.json')
+    // if (fs.existsSync(productsFile)) {
+    //   try {
+    //     const productsData = JSON.parse(fs.readFileSync(productsFile, 'utf8'))
+    //     if (Array.isArray(productsData)) {
+    //       sharedProducts.push(...productsData)
+    //       console.log(`📁 Loaded ${productsData.length} products from products.json into shared storage`)
+    //     }
+    //   } catch (err) {
+    //     console.warn('⚠️ Failed to load products.json:', err)
+    //   }
+    // }
     
     // Load individual order files from data/orders/
     const ordersDir = path.join(process.cwd(), 'data', 'orders')
