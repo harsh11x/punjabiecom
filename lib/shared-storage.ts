@@ -5,7 +5,6 @@
 let sharedOrders: any[] = []
 let sharedCarts: any[] = []
 let sharedProducts: any[] = []
-let hasSeededProducts = false // Flag to prevent re-seeding
 
 // Function to identify fake/test orders
 function isFakeOrder(order: any): boolean {
@@ -308,103 +307,7 @@ export const productStorage = {
     return false
   },
 
-  // Seed products if none exist
-  seedProductsIfEmpty: () => {
-    if (sharedProducts.length > 0 || hasSeededProducts) {
-      console.log('🌱 Products already exist or already seeded, skipping seeding')
-      return false
-    }
 
-    console.log('🌱 No products found, seeding sample products...')
-    
-    const sampleProducts = [
-      {
-        name: "Traditional Punjabi Jutti",
-        punjabiName: "ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ",
-        description: "Handcrafted traditional Punjabi jutti with intricate embroidery",
-        punjabiDescription: "ਹੱਥ ਨਾਲ ਬਣੀ ਪਰੰਪਰਾਗਤ ਪੰਜਾਬੀ ਜੁੱਤੀ ਜਿਸ ਵਿੱਚ ਸੁੰਦਰ ਕਢਾਈ ਹੈ",
-        price: 1299,
-        originalPrice: 1599,
-        category: "men",
-        subcategory: "jutti",
-        stock: 25,
-        isActive: true,
-        featured: true,
-        images: ["/placeholder.jpg"],
-        sizes: ["7", "8", "9", "10"],
-        colors: ["Brown", "Black"],
-        tags: ["traditional", "handcrafted", "embroidery"],
-        rating: 4.5,
-        reviews: 23
-      },
-      {
-        name: "Women's Bridal Jutti",
-        punjabiName: "ਔਰਤਾਂ ਦੀ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
-        description: "Elegant bridal jutti perfect for special occasions",
-        punjabiDescription: "ਵਿਸ਼ੇਸ਼ ਮੌਕਿਆਂ ਲਈ ਸੁੰਦਰ ਵਿਆਹੁਣੀ ਜੁੱਤੀ",
-        price: 1899,
-        originalPrice: 2299,
-        category: "women",
-        subcategory: "jutti",
-        stock: 15,
-        isActive: true,
-        featured: true,
-        images: ["/placeholder.jpg"],
-        sizes: ["6", "7", "8", "9"],
-        colors: ["Red", "Gold", "Silver"],
-        tags: ["bridal", "elegant", "special-occasion"],
-        rating: 4.8,
-        reviews: 18
-      },
-      {
-        name: "Kids Colorful Jutti",
-        punjabiName: "ਬੱਚਿਆਂ ਦੀ ਰੰਗੀਨ ਜੁੱਤੀ",
-        description: "Colorful and comfortable jutti for kids",
-        punjabiDescription: "ਬੱਚਿਆਂ ਲਈ ਰੰਗੀਨ ਅਤੇ ਆਰਾਮਦਾਇਕ ਜੁੱਤੀ",
-        price: 899,
-        originalPrice: 1199,
-        category: "kids",
-        subcategory: "jutti",
-        stock: 30,
-        isActive: true,
-        featured: true,
-        images: ["/placeholder.jpg"],
-        sizes: ["1", "2", "3", "4", "5"],
-        colors: ["Blue", "Pink", "Green", "Yellow"],
-        tags: ["kids", "colorful", "comfortable"],
-        rating: 4.2,
-        reviews: 12
-      },
-      {
-        name: "Phulkari Dupatta",
-        punjabiName: "ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
-        description: "Beautiful handcrafted Phulkari dupatta with traditional embroidery",
-        punjabiDescription: "ਪਰੰਪਰਾਗਤ ਕਢਾਈ ਨਾਲ ਸੁੰਦਰ ਹੱਥ ਨਾਲ ਬਣੀ ਫੁਲਕਾਰੀ ਦੁਪੱਟਾ",
-        price: 2499,
-        originalPrice: 2999,
-        category: "fulkari",
-        subcategory: "fulkari",
-        stock: 20,
-        isActive: true,
-        featured: true,
-        images: ["/placeholder.jpg"],
-        sizes: ["Free Size"],
-        colors: ["Red", "Pink", "Orange"],
-        tags: ["phulkari", "handcrafted", "traditional", "dupatta"],
-        rating: 4.9,
-        reviews: 8
-      }
-    ]
-
-    // Add each product
-    sampleProducts.forEach(productData => {
-      productStorage.addProduct(productData)
-    })
-
-    console.log(`🌱 Seeded ${sampleProducts.length} sample products`)
-    hasSeededProducts = true
-    return true
-  }
 }
 
 // Order Management
@@ -605,11 +508,7 @@ export const getStorageStats = () => ({
 
 console.log('🚀 Shared storage initialized')
 
-// Seed products if none exist after initialization
-// Only seed if we're in development, no products exist, and we haven't seeded before
-if (sharedProducts.length === 0 && process.env.NODE_ENV === 'development' && !hasSeededProducts) {
-  console.log('🌱 Development mode: Seeding sample products...')
-  productStorage.seedProductsIfEmpty()
-} else if (sharedProducts.length === 0) {
-  console.log('📁 No products found, but skipping auto-seeding in production')
+// No auto-seeding - only show products manually added by admin
+if (sharedProducts.length === 0) {
+  console.log('📁 No products found - admin must add products manually')
 }
