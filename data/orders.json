@@ -41,13 +41,15 @@
     "updatedAt": "2025-08-19T10:58:17.961Z"
   },
   {
-    "customerEmail": "test@example.com",
+    "customerEmail": "customer@example.com",
     "items": [
       {
         "productId": "test",
-        "name": "Test Product",
+        "name": "Test Punjabi Jutti",
         "price": 1500,
-        "quantity": 1
+        "quantity": 1,
+        "size": "UK 8",
+        "color": "Brown"
       }
     ],
     "subtotal": 1500,
@@ -58,16 +60,26 @@
     "paymentStatus": "pending",
     "paymentMethod": "razorpay",
     "shippingAddress": {
-      "address": "Test Address"
+      "fullName": "Test Customer",
+      "addressLine1": "123 Test Street",
+      "city": "Amritsar",
+      "state": "Punjab",
+      "pincode": "143115",
+      "phone": "7527072000"
     },
     "billingAddress": {
-      "address": "Test Address"
+      "fullName": "Test Customer",
+      "addressLine1": "123 Test Street",
+      "city": "Amritsar",
+      "state": "Punjab",
+      "pincode": "143115",
+      "phone": "7527072000"
     },
     "notes": "",
-    "_id": "order_1756066664975_iv57x9t",
-    "orderNumber": "PH1756066664975MB",
-    "createdAt": "2025-08-24T20:17:44.975Z",
-    "updatedAt": "2025-08-24T20:17:45.353Z",
-    "razorpayOrderId": "order_R9IhdPJlB3gJYC"
+    "_id": "order_1756098213180_pvge702",
+    "orderNumber": "PH1756098213180K2",
+    "createdAt": "2025-08-25T05:03:33.180Z",
+    "updatedAt": "2025-08-25T05:03:36.372Z",
+    "razorpayOrderId": "order_R9Rf6nmLg6GyMH"
   }
 ]

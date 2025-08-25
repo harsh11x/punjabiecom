@@ -1,0 +1,42 @@
+{
+  "customerEmail": "customer@example.com",
+  "items": [
+    {
+      "productId": "test",
+      "name": "Test Punjabi Jutti",
+      "price": 1500,
+      "quantity": 1,
+      "size": "UK 8",
+      "color": "Brown"
+    }
+  ],
+  "subtotal": 1500,
+  "shippingCost": 0,
+  "tax": 0,
+  "total": 1500,
+  "status": "pending",
+  "paymentStatus": "pending",
+  "paymentMethod": "razorpay",
+  "shippingAddress": {
+    "fullName": "Test Customer",
+    "addressLine1": "123 Test Street",
+    "city": "Amritsar",
+    "state": "Punjab",
+    "pincode": "143115",
+    "phone": "7527072000"
+  },
+  "billingAddress": {
+    "fullName": "Test Customer",
+    "addressLine1": "123 Test Street",
+    "city": "Amritsar",
+    "state": "Punjab",
+    "pincode": "143115",
+    "phone": "7527072000"
+  },
+  "notes": "",
+  "_id": "order_1756098213180_pvge702",
+  "orderNumber": "PH1756098213180K2",
+  "createdAt": "2025-08-25T05:03:33.180Z",
+  "updatedAt": "2025-08-25T05:03:36.372Z",
+  "razorpayOrderId": "order_R9Rf6nmLg6GyMH"
+}

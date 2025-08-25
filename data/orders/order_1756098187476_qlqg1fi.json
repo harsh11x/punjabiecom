@@ -1,0 +1,30 @@
+{
+  "customerEmail": "test@example.com",
+  "items": [
+    {
+      "productId": "test",
+      "name": "Test Punjabi Jutti",
+      "price": 1500,
+      "quantity": 1
+    }
+  ],
+  "subtotal": 1500,
+  "shippingCost": 0,
+  "tax": 0,
+  "total": 1500,
+  "status": "pending",
+  "paymentStatus": "pending",
+  "paymentMethod": "razorpay",
+  "shippingAddress": {
+    "address": "Test Address"
+  },
+  "billingAddress": {
+    "address": "Test Address"
+  },
+  "notes": "",
+  "_id": "order_1756098187476_qlqg1fi",
+  "orderNumber": "PH17560981874765Q",
+  "createdAt": "2025-08-25T05:03:07.476Z",
+  "updatedAt": "2025-08-25T05:03:11.526Z",
+  "razorpayOrderId": "order_R9RefgeUaYrLb6"
+}

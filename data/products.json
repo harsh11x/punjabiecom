@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Test Punjabi Jutti",
+    "punjabiName": "ਪੰਜਾਬੀ ਜੁੱਤੀ",
+    "description": "Traditional handmade Punjabi jutti",
+    "punjabiDescription": "",
+    "price": 1500,
+    "category": "men",
+    "subcategory": "jutti",
+    "images": [],
+    "sizes": [
+      "UK 7",
+      "UK 8",
+      "UK 9"
+    ],
+    "colors": [
+      "Brown",
+      "Black"
+    ],
+    "stock": 10,
+    "stockQuantity": 10,
+    "inStock": true,
+    "isActive": true,
+    "featured": false,
+    "tags": [],
+    "id": "prod_1756098137194_zd2odbm",
+    "createdAt": "2025-08-25T05:02:17.194Z",
+    "updatedAt": "2025-08-25T05:02:17.194Z"
+  }
+]
