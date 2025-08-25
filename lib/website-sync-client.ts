@@ -173,50 +173,25 @@ class WebsiteSyncClient {
 let websiteSyncClient: WebsiteSyncClient | null = null;
 
 export const getWebsiteSyncClient = (): WebsiteSyncClient | null => {
-  if (typeof window !== 'undefined') {
-    // Don't run sync client on client side
-    return null;
-  }
-
-  if (!websiteSyncClient) {
-    const serverUrl = process.env.AWS_SYNC_SERVER_URL;
-    const syncToken = process.env.WEBSITE_SYNC_TOKEN;
-
-    if (!serverUrl || !syncToken) {
-      console.warn('Website sync not configured - missing AWS_SYNC_SERVER_URL or WEBSITE_SYNC_TOKEN');
-      return null;
-    }
-
-    websiteSyncClient = new WebsiteSyncClient({
-      serverUrl,
-      syncToken,
-      syncInterval: parseInt(process.env.SYNC_INTERVAL || '30000')
-    });
-  }
-
-  return websiteSyncClient;
+  // COMPLETELY DISABLED - No more AWS sync
+  console.log('🚫 Website sync client is completely disabled');
+  return null;
 };
 
-// Helper functions for Next.js API routes
+// Helper functions for Next.js API routes - COMPLETELY DISABLED
 export const syncProductsFromAWS = async (): Promise<any[]> => {
-  const client = getWebsiteSyncClient();
-  if (!client) return [];
-  
-  return await client.pullProducts();
+  console.log('🚫 syncProductsFromAWS is completely disabled');
+  return [];
 };
 
 export const syncOrdersFromAWS = async (): Promise<any[]> => {
-  const client = getWebsiteSyncClient();
-  if (!client) return [];
-  
-  return await client.pullOrders();
+  console.log('🚫 syncOrdersFromAWS is completely disabled');
+  return [];
 };
 
 export const syncSettingsFromAWS = async (): Promise<any> => {
-  const client = getWebsiteSyncClient();
-  if (!client) return {};
-  
-  return await client.pullSettings();
+  console.log('🚫 syncSettingsFromAWS is completely disabled');
+  return {};
 };
 
 export default WebsiteSyncClient;
