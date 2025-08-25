@@ -32,21 +32,21 @@ export default function JuttiPage() {
     fetchProducts()
   }, [])
 
-  const fetchProducts = async () => {
-    try {
+    const fetchProducts = async () => {
+      try {
       setIsLoading(true)
-      setError(null)
-      
+        setError(null)
+        
       console.log('🔄 Fetching all products for Jutti page...')
       
       // Fetch all products first
       const response = await fetch('/api/products?limit=100')
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch products')
-      }
-      
-      const data = await response.json()
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch products')
+        }
+        
+        const data = await response.json()
       console.log('📦 Raw API response:', data)
       
       if (data.success) {
@@ -67,13 +67,13 @@ export default function JuttiPage() {
         
         console.log(`✅ Found ${juttiProducts.length} jutti products from ${allProducts.length} total products`)
         setProducts(juttiProducts)
-      } else {
+        } else {
         throw new Error(data.message || 'Failed to fetch products')
-      }
-    } catch (err) {
+        }
+      } catch (err) {
       console.error('❌ Error fetching products:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch products')
-    } finally {
+      } finally {
       setIsLoading(false)
     }
   }
@@ -133,7 +133,7 @@ export default function JuttiPage() {
             From men's classic designs to women's bridal elegance and kids' colorful styles.
           </p>
         </div>
-      </div>
+        </div>
 
       {/* Products Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -157,15 +157,15 @@ export default function JuttiPage() {
             >
               Refresh Products
             </button>
-          </div>
-        ) : (
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+              {products.map((product) => (
               <ResponsiveProductCard key={product._id || product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       <Footer />
     </div>

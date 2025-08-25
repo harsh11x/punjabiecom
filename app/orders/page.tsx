@@ -140,7 +140,7 @@ export default function OrdersPage() {
       toast.error('Please enter an order number and ensure you are logged in')
       return
     }
-
+    
     try {
       setLoading(true)
       const response = await fetch(`${getApiUrl('/api/user/orders')}?orderNumber=${searchOrderNumber.trim()}`, {
@@ -388,7 +388,7 @@ export default function OrdersPage() {
                   >
                     Go Home
                   </Button>
-                </div>
+      </div>
               </>
             )}
             {searchedOrder && (
@@ -400,46 +400,46 @@ export default function OrdersPage() {
                 className="bg-red-600 hover:bg-red-700"
               >
                 View All Orders
-              </Button>
+                </Button>
             )}
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-6">
+          ) : (
+            <div className="space-y-6">
           {displayOrders.map((order) => (
             <Card key={order._id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
                     <CardTitle className="text-lg">
                       Order #{order.orderNumber}
                     </CardTitle>
-                    <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600">
                       Placed on {formatDate(order.createdAt)}
-                    </p>
-                  </div>
+                        </p>
+                      </div>
                   <div className="flex gap-2">
                     <Badge className={getStatusColor(order.status)}>
-                      {getStatusIcon(order.status)}
+                          {getStatusIcon(order.status)}
                       <span className="ml-1">{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
                     </Badge>
                     <Badge className={getPaymentStatusColor(order.paymentStatus)}>
                       {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
-                    </Badge>
+                      </Badge>
                   </div>
-                </div>
-              </CardHeader>
+                    </div>
+                  </CardHeader>
 
-              <CardContent>
-                {/* Order Items */}
+                  <CardContent>
+                      {/* Order Items */}
                 <div className="mb-6">
                   <h4 className="font-semibold mb-3">Items</h4>
                   <div className="space-y-2">
-                    {order.items.map((item, index) => (
+                        {order.items.map((item, index) => (
                       <div key={index} className="flex justify-between items-center text-sm bg-gray-50 p-3 rounded">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                            {item.image ? (
+                              {item.image ? (
                               <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded" />
                             ) : (
                               <Package className="h-6 w-6 text-gray-400" />
@@ -526,7 +526,7 @@ export default function OrdersPage() {
                     <p>• Delivered orders cannot be cancelled</p>
                     <p>• Cancelled orders cannot be reinstated</p>
                   </div>
-                </div>
+                        </div>
 
                 {/* Order Progress */}
                 <div>
@@ -550,8 +550,8 @@ export default function OrdersPage() {
                         </span>
                       </div>
                     ))}
-                  </div>
-                </div>
+                        </div>
+                      </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 mt-6 pt-4 border-t">
@@ -572,12 +572,12 @@ export default function OrdersPage() {
                   >
                     <MessageCircle className="h-4 w-4" />
                     Contact Support
-                  </Button>
-                  {order.status === 'delivered' && (
-                    <Button variant="outline" size="sm">
+                        </Button>
+                        {order.status === 'delivered' && (
+                          <Button variant="outline" size="sm">
                       Rate & Review
-                    </Button>
-                  )}
+                          </Button>
+                        )}
                   {order.status !== 'cancelled' && order.status !== 'delivered' && (
                     <Button 
                       variant="outline" 
@@ -585,16 +585,16 @@ export default function OrdersPage() {
                       onClick={() => handleCancelOrder(order._id)}
                       className="text-red-700 hover:text-red-800 border-red-700 hover:border-red-800"
                     >
-                      Cancel Order
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                            Cancel Order
+                          </Button>
+                        )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-      </div>
     </>
   )
 }

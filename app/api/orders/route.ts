@@ -67,12 +67,12 @@ export async function GET(request: NextRequest) {
                          request.headers.get('x-user-email')
     
     let filteredOrders = orderStorage.getAllOrders()
-    
-    if (orderId) {
+      
+      if (orderId) {
       filteredOrders = filteredOrders.filter((order: any) => order._id === orderId)
-    } else if (orderNumber) {
+      } else if (orderNumber) {
       filteredOrders = filteredOrders.filter((order: any) => order.orderNumber === orderNumber)
-    } else if (customerEmail) {
+      } else if (customerEmail) {
       filteredOrders = filteredOrders.filter((order: any) => 
         order.customerEmail.toLowerCase() === customerEmail.toLowerCase()
       )
@@ -118,9 +118,9 @@ export async function PUT(request: NextRequest) {
     }
     
     console.log('✅ Order updated successfully:', orderId)
-    
-    return NextResponse.json({
-      success: true,
+      
+      return NextResponse.json({
+        success: true,
       data: updatedOrder
     })
     
