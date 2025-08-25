@@ -1,0 +1,19 @@
+# Python Product Manager GUI Requirements
+# All packages are part of Python standard library (tkinter, json, os, etc.)
+# No external packages required!
+
+# The application uses only built-in Python modules:
+# - tkinter: GUI framework
+# - json: JSON file handling
+# - os: File system operations
+# - shutil: File operations
+# - datetime: Date and time handling
+# - uuid: Unique ID generation
+# - csv: CSV export functionality
+# - subprocess: System commands
+# - platform: Platform detection
+
+# To run the application, simply use:
+# python3 product_manager.py
+
+# No pip install required!

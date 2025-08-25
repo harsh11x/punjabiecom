@@ -85,9 +85,11 @@ function initializeFromFiles() {
     if (fs.existsSync(productsFile)) {
       try {
         const productsData = JSON.parse(fs.readFileSync(productsFile, 'utf8'))
-        if (Array.isArray(productsData) && productsData.length > 0) {
-          sharedProducts.push(...productsData)
-          console.log(`📁 Loaded ${productsData.length} products from products.json into shared storage`)
+        // Handle both array format and object with products key
+        const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || [])
+        if (productsArray.length > 0) {
+          sharedProducts.push(...productsArray)
+          console.log(`📁 Loaded ${productsArray.length} products from products.json into shared storage`)
         } else {
           console.log('📁 products.json exists but is empty - no products to load')
         }
