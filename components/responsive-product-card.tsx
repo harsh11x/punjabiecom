@@ -160,8 +160,18 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
               >
                 <Heart className="h-3 lg:h-5 w-3 lg:w-5" />
               </Button>
+              {/* Category Badge */}
+              <Badge className="absolute top-2 lg:top-3 left-2 lg:left-3 bg-blue-600 hover:bg-blue-700 text-white font-bold px-2 lg:px-3 py-1 shadow-lg text-xs lg:text-sm z-10">
+                {product.category === 'fulkari' ? 'Fulkari' : 
+                 product.category === 'men' ? 'Men' : 
+                 product.category === 'women' ? 'Women' : 
+                 product.category === 'kids' ? 'Kids' : 
+                 product.category}
+              </Badge>
+              
+              {/* Product Badge */}
               {product.badge && (
-                <Badge className="absolute top-2 lg:top-3 left-2 lg:left-3 bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-2 lg:px-3 py-1 shadow-lg text-xs lg:text-sm">
+                <Badge className="absolute top-2 lg:top-3 left-20 lg:left-24 bg-gradient-to-r from-amber-500 to-red-600 text-white font-bold px-2 lg:px-3 py-1 shadow-lg text-xs lg:text-sm">
                   {product.badge}
                 </Badge>
               )}

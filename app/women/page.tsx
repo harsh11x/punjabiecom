@@ -163,8 +163,19 @@ export default function WomenPage() {
               className="object-cover cursor-pointer group-hover:scale-105 transition-transform"
             />
           </Link>
+          
+          {/* Category Badge */}
+          <Badge className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-medium capitalize z-10">
+            {product.category === 'fulkari' ? 'Fulkari' : 
+             product.category === 'men' ? 'Men' : 
+             product.category === 'women' ? 'Women' : 
+             product.category === 'kids' ? 'Kids' : 
+             product.category}
+          </Badge>
+          
+          {/* Product Badge */}
           {product.badge && (
-            <Badge className="absolute top-2 left-2 bg-pink-600 text-white text-xs">
+            <Badge className="absolute top-2 left-20 bg-pink-600 text-white text-xs">
               {product.badge}
             </Badge>
           )}

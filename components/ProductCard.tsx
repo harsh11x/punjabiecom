@@ -104,8 +104,19 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
+        {/* Category Badge */}
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium capitalize">
+            {product.category === 'fulkari' ? 'Fulkari' : 
+             product.category === 'men' ? 'Men' : 
+             product.category === 'women' ? 'Women' : 
+             product.category === 'kids' ? 'Kids' : 
+             product.category}
+          </Badge>
+        </div>
+        
+        {/* Other Badges */}
+        <div className="absolute top-2 left-20 flex flex-col gap-1">
           {product.featured && (
             <Badge className="bg-orange-500 hover:bg-orange-600">
               Featured
