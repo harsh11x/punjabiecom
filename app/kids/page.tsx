@@ -95,13 +95,54 @@ export default function KidsPage() {
   const ProductCard = ({ product }: { product: Product }) => {
     const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     const isWishlisted = wishlist.includes(product.id)
+    
+    // Hover slideshow state
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [isHovering, setIsHovering] = useState(false)
+    const slideshowRef = useRef<NodeJS.Timeout | null>(null)
+    
+    const images = product.images || []
+    const hasMultipleImages = images.length > 1
+    
+    // Start slideshow on hover
+    const startSlideshow = () => {
+      if (!hasMultipleImages) return
+      
+      setIsHovering(true)
+      slideshowRef.current = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length)
+      }, 2000) // Change image every 2 seconds
+    }
+    
+    // Stop slideshow when not hovering
+    const stopSlideshow = () => {
+      setIsHovering(false)
+      if (slideshowRef.current) {
+        clearInterval(slideshowRef.current)
+        slideshowRef.current = null
+      }
+      setCurrentImageIndex(0) // Reset to first image
+    }
+    
+    // Cleanup on unmount
+    useEffect(() => {
+      return () => {
+        if (slideshowRef.current) {
+          clearInterval(slideshowRef.current)
+        }
+      }
+    }, [])
 
     return (
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+      <Card 
+        className="overflow-hidden hover:shadow-lg transition-shadow group"
+        onMouseEnter={startSlideshow}
+        onMouseLeave={stopSlideshow}
+      >
         <div className="relative aspect-square">
           <Link href={`/products/${product.id}`}>
             <Image
-              src={product.images?.[0] || '/placeholder.jpg'}
+              src={hasMultipleImages ? images[currentImageIndex] : (product.images?.[0] || '/placeholder.jpg')}
               alt={product.name}
               fill
               className="object-cover cursor-pointer group-hover:scale-105 transition-transform"
@@ -116,6 +157,29 @@ export default function KidsPage() {
             <Badge className="absolute top-2 right-2 bg-green-600 text-white text-xs">
               {discountPercentage}% OFF
             </Badge>
+          )}
+          
+          {/* Image Counter (only show if multiple images) */}
+          {hasMultipleImages && (
+            <div className="absolute top-2 right-16 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+              {currentImageIndex + 1} / {images.length}
+            </div>
+          )}
+          
+          {/* Slideshow Indicator Dots */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+              {images.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentImageIndex 
+                      ? 'bg-white scale-125 shadow-lg' 
+                      : 'bg-white bg-opacity-50'
+                  }`}
+                />
+              ))}
+            </div>
           )}
           <Button
             variant="ghost"

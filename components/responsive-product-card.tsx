@@ -53,6 +53,43 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [selectedSize, setSelectedSize] = useState(getProductSize(product))
   const [selectedColor, setSelectedColor] = useState(getProductColor(product))
+  
+  // Hover slideshow state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isHovering, setIsHovering] = useState(false)
+  const slideshowRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const images = product.images || []
+  const hasMultipleImages = images.length > 1
+  
+  // Start slideshow on hover
+  const startSlideshow = () => {
+    if (!hasMultipleImages) return
+    
+    setIsHovering(true)
+    slideshowRef.current = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length)
+    }, 2000) // Change image every 2 seconds
+  }
+  
+  // Stop slideshow when not hovering
+  const stopSlideshow = () => {
+    setIsHovering(false)
+    if (slideshowRef.current) {
+      clearInterval(slideshowRef.current)
+      slideshowRef.current = null
+    }
+    setCurrentImageIndex(0) // Reset to first image
+  }
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (slideshowRef.current) {
+        clearInterval(slideshowRef.current)
+      }
+    }
+  }, [])
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -74,19 +111,47 @@ export function ResponsiveProductCard({ product }: ResponsiveProductCardProps) {
 
   return (
     <>
-      <Card className="group hover:shadow-2xl transition-all duration-500 border-2 lg:border-3 border-amber-200 hover:border-amber-400 bg-gradient-to-b from-white to-amber-50 overflow-hidden">
+      <Card 
+        className="group hover:shadow-2xl transition-all duration-500 border-2 lg:border-3 border-amber-200 hover:border-amber-400 bg-gradient-to-b from-white to-amber-50 overflow-hidden"
+        onMouseEnter={startSlideshow}
+        onMouseLeave={stopSlideshow}
+      >
         <CardContent className="p-3 lg:p-6">
           {/* Clickable Product Information Area */}
           <Link href={`/products/${product._id || product.id}`} className="block">
             <div className="relative mb-4 lg:mb-6">
               <div className="absolute -inset-1 lg:-inset-2 bg-gradient-to-br from-amber-300 to-red-400 rounded-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+              {/* Main Product Image with Slideshow */}
               <Image
-                src={getProductImage(product)}
+                src={hasMultipleImages ? images[currentImageIndex] : getProductImage(product)}
                 alt={product.name}
                 width={350}
                 height={350}
-                className="relative w-full h-40 sm:h-48 lg:h-56 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 shadow-lg"
+                className="relative w-full h-40 sm:h-48 lg:h-56 object-cover rounded-lg group-hover:scale-105 transition-all duration-500 shadow-lg"
               />
+              
+              {/* Image Counter (only show if multiple images) */}
+              {hasMultipleImages && (
+                <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+                  {currentImageIndex + 1} / {images.length}
+                </div>
+              )}
+              
+              {/* Slideshow Indicator Dots */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+                  {images.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        index === currentImageIndex 
+                          ? 'bg-white scale-125 shadow-lg' 
+                          : 'bg-white bg-opacity-50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
               <Button
                 size="icon"
                 variant="ghost"

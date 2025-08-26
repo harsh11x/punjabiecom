@@ -8,7 +8,7 @@ import { useCart } from '@/components/providers/CartProvider'
 import { Heart, ShoppingCart, Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 interface ProductCardProps {
   product: Product
@@ -18,6 +18,43 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart()
   const [isLiked, setIsLiked] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  
+  // Hover slideshow state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isHovering, setIsHovering] = useState(false)
+  const slideshowRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const images = product.images || []
+  const hasMultipleImages = images.length > 1
+  
+  // Start slideshow on hover
+  const startSlideshow = () => {
+    if (!hasMultipleImages) return
+    
+    setIsHovering(true)
+    slideshowRef.current = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length)
+    }, 2000) // Change image every 2 seconds
+  }
+  
+  // Stop slideshow when not hovering
+  const stopSlideshow = () => {
+    setIsHovering(false)
+    if (slideshowRef.current) {
+      clearInterval(slideshowRef.current)
+      slideshowRef.current = null
+    }
+    setCurrentImageIndex(0) // Reset to first image
+  }
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (slideshowRef.current) {
+        clearInterval(slideshowRef.current)
+      }
+    }
+  }, [])
 
   const handleAddToCart = async () => {
     setIsAddingToCart(true)
@@ -41,13 +78,17 @@ export function ProductCard({ product }: ProductCardProps) {
     : 0
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+    <Card 
+      className="group hover:shadow-lg transition-all duration-300 overflow-hidden"
+      onMouseEnter={startSlideshow}
+      onMouseLeave={stopSlideshow}
+    >
       <div className="relative">
         {/* Product Image */}
         <div className="aspect-square overflow-hidden bg-gray-100">
           {product.images && product.images.length > 0 ? (
             <Image
-              src={product.images[0]}
+              src={hasMultipleImages ? images[currentImageIndex] : product.images[0]}
               alt={product.name}
               width={300}
               height={300}
@@ -81,6 +122,29 @@ export function ProductCard({ product }: ProductCardProps) {
             </Badge>
           )}
         </div>
+        
+        {/* Image Counter (only show if multiple images) */}
+        {hasMultipleImages && (
+          <div className="absolute top-2 right-12 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+            {currentImageIndex + 1} / {images.length}
+          </div>
+        )}
+        
+        {/* Slideshow Indicator Dots */}
+        {hasMultipleImages && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex 
+                    ? 'bg-white scale-125 shadow-lg' 
+                    : 'bg-white bg-opacity-50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Wishlist Button */}
         <button
