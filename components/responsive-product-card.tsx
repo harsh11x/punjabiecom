@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Heart, Star, ShoppingCart } from "lucide-react"
 import { useCart } from "@/components/providers/CartProvider"
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { AuthModal } from "@/components/auth/AuthModal"
 import { getProductImage, getProductSize, getProductColor, createCartItem, isValidProduct } from "@/lib/product-utils"
 
