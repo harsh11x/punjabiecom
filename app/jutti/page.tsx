@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { ResponsiveProductCard } from '@/components/responsive-product-card'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { Button } from '@/components/ui/button'
 
 interface Product {
   _id?: string
@@ -25,28 +26,35 @@ interface Product {
 
 export default function JuttiPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [productsPerPage] = useState(12)
 
   useEffect(() => {
     fetchProducts()
   }, [])
 
-    const fetchProducts = async () => {
-      try {
+  const fetchProducts = async () => {
+    try {
       setIsLoading(true)
-        setError(null)
-        
+      setError(null)
+      
       console.log('🔄 Fetching all products for Jutti page...')
       
       // Fetch all products first
-      const response = await fetch('/api/products?limit=100')
+      const response = await fetch('/api/products?limit=1000')
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch products')
-        }
+      if (!response.ok) {
+        throw new Error('Failed to fetch products')
+      }
         
-        const data = await response.json()
+      const data = await response.json()
       console.log('📦 Raw API response:', data)
       
       if (data.success) {
@@ -67,16 +75,42 @@ export default function JuttiPage() {
         
         console.log(`✅ Found ${juttiProducts.length} jutti products from ${allProducts.length} total products`)
         setProducts(juttiProducts)
-        } else {
+        setFilteredProducts(juttiProducts)
+        
+        // Calculate total pages
+        const total = Math.ceil(juttiProducts.length / productsPerPage)
+        setTotalPages(total)
+        
+        // Initialize displayed products with first page
+        setDisplayedProducts(juttiProducts.slice(0, productsPerPage))
+        console.log(`Showing page 1 of ${total} pages, ${productsPerPage} products per page`)
+      } else {
         throw new Error(data.message || 'Failed to fetch products')
-        }
-      } catch (err) {
+      }
+    } catch (err) {
       console.error('❌ Error fetching products:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch products')
-      } finally {
+    } finally {
       setIsLoading(false)
     }
   }
+
+  // Pagination function
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return
+    
+    setCurrentPage(page)
+    const startIndex = (page - 1) * productsPerPage
+    const endIndex = startIndex + productsPerPage
+    setDisplayedProducts(filteredProducts.slice(startIndex, endIndex))
+  }
+
+  // Update displayed products when current page changes
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * productsPerPage
+    const endIndex = startIndex + productsPerPage
+    setDisplayedProducts(filteredProducts.slice(startIndex, endIndex))
+  }, [currentPage, filteredProducts, productsPerPage])
 
   if (isLoading) {
     return (
@@ -142,11 +176,11 @@ export default function JuttiPage() {
             Our Jutti Collection
           </h2>
           <p className="text-lg text-amber-800">
-            {products.length} beautiful jutti designs to choose from
+            {displayedProducts.length} of {products.length} beautiful jutti designs to choose from
           </p>
         </div>
 
-        {products.length === 0 ? (
+        {displayedProducts.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-amber-600 text-6xl mb-4">👟</div>
             <h3 className="text-2xl font-semibold text-amber-800 mb-2">No Jutti Products Found</h3>
@@ -157,14 +191,69 @@ export default function JuttiPage() {
             >
               Refresh Products
             </button>
-            </div>
-          ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-              <ResponsiveProductCard key={product._id || product.id} product={product} />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {displayedProducts.map((product) => (
+                <ResponsiveProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
-          )}
+
+
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  Previous
+                </Button>
+                
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      onClick={() => goToPage(page)}
+                      className={`px-3 py-2 min-w-[40px] ${
+                        currentPage === page 
+                          ? "bg-amber-600 text-white hover:bg-amber-700" 
+                          : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                      }`}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+
+            {/* Page Info */}
+            {totalPages > 1 && (
+              <div className="text-center mt-4 text-gray-600">
+                <p className="text-sm">
+                  Showing page {currentPage} of {totalPages} • 
+                  {displayedProducts.length} of {filteredProducts.length} products
+                </p>
+              </div>
+            )}
+          </>
+        )}
         </div>
 
       <Footer />

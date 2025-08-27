@@ -49,57 +49,55 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
   
-  // Infinite scroll state
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [productsPerPage] = useState(20) // Show 20 products at a time for smooth loading
-  const observerRef = useRef<IntersectionObserver | null>(null)
-  const loadingRef = useRef<HTMLDivElement>(null)
+  const [totalPages, setTotalPages] = useState(1)
+  const [productsPerPage] = useState(12) // Show 12 products per page
 
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/products')
+        // Request ALL products by setting a high limit
+        const response = await fetch('/api/products?limit=1000')
         if (!response.ok) {
           throw new Error('Failed to fetch products')
         }
         const data = await response.json()
         console.log('Products API response:', data)
+        console.log('API returned:', data.data?.length, 'products')
         
-        // No auto-seeding - only show products manually added by admin
-        if (data.success && data.data && data.data.length === 0) {
-          console.log('No products found - admin must add products manually')
-        }
-        
-        // Show all active products from all categories
         if (data.success && data.data) {
           const activeProducts = data.data.filter((product: Product) => 
             product.isActive !== false && (product.inStock || product.stock > 0)
           )
-          console.log(`Found ${activeProducts.length} active products`)
+          console.log(`Found ${activeProducts.length} active products after filtering`)
+          
           setProducts(activeProducts)
           setFilteredProducts(activeProducts)
           
-          // If we have 22 or fewer products, show them all immediately
-          if (activeProducts.length <= productsPerPage) {
-            setDisplayedProducts(activeProducts)
-            setHasMore(false)
-            console.log(`Showing all ${activeProducts.length} products immediately`)
-          } else {
-            // Initialize displayed products with first batch
-            setDisplayedProducts(activeProducts.slice(0, productsPerPage))
-            setHasMore(activeProducts.length > productsPerPage)
-            console.log(`Showing first ${productsPerPage} products, ${activeProducts.length - productsPerPage} more to load`)
-          }
+          // Calculate total pages
+          const total = Math.ceil(activeProducts.length / productsPerPage)
+          setTotalPages(total)
+          
+          // Initialize displayed products with first page
+          setDisplayedProducts(activeProducts.slice(0, productsPerPage))
+          console.log(`Showing page 1 of ${total} pages, ${productsPerPage} products per page`)
         } else {
           console.warn('No products data in response:', data)
+          setProducts([])
+          setFilteredProducts([])
+          setDisplayedProducts([])
+          setTotalPages(1)
         }
       } catch (error) {
         console.error('Error fetching products:', error)
         toast.error('Failed to load products')
+        setProducts([])
+        setFilteredProducts([])
+        setDisplayedProducts([])
+        setTotalPages(1)
       } finally {
         setLoading(false)
       }
@@ -147,53 +145,27 @@ export default function ProductsPage() {
     setFilteredProducts(filtered)
     // Reset pagination when filters change
     setCurrentPage(1)
+    const total = Math.ceil(filtered.length / productsPerPage)
+    setTotalPages(total)
     setDisplayedProducts(filtered.slice(0, productsPerPage))
-    setHasMore(filtered.length > productsPerPage)
   }, [products, searchTerm, selectedCategory, sortBy, productsPerPage])
 
-  // Load more products function
-  const loadMoreProducts = useCallback(() => {
-    if (isLoadingMore || !hasMore) return
-
-    setIsLoadingMore(true)
+  // Pagination function
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return
     
-    // Simulate loading delay for smooth UX
-    setTimeout(() => {
-      const nextPage = currentPage + 1
-      const startIndex = (nextPage - 1) * productsPerPage
-      const endIndex = startIndex + productsPerPage
-      const newProducts = filteredProducts.slice(startIndex, endIndex)
-      
-      setDisplayedProducts(prev => [...prev, ...newProducts])
-      setCurrentPage(nextPage)
-      setHasMore(endIndex < filteredProducts.length)
-      setIsLoadingMore(false)
-    }, 300)
-  }, [currentPage, filteredProducts, productsPerPage, hasMore, isLoadingMore])
+    setCurrentPage(page)
+    const startIndex = (page - 1) * productsPerPage
+    const endIndex = startIndex + productsPerPage
+    setDisplayedProducts(filteredProducts.slice(startIndex, endIndex))
+  }
 
-  // Intersection Observer for infinite scroll
+  // Update displayed products when current page changes
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-          loadMoreProducts()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    observerRef.current = observer
-
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current)
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-      }
-    }
-  }, [loadMoreProducts, hasMore, isLoadingMore])
+    const startIndex = (currentPage - 1) * productsPerPage
+    const endIndex = startIndex + productsPerPage
+    setDisplayedProducts(filteredProducts.slice(startIndex, endIndex))
+  }, [currentPage, filteredProducts, productsPerPage])
 
   // Get unique categories
   const categories = ['all', ...new Set(products.map(product => product.category))]
@@ -369,7 +341,7 @@ export default function ProductsPage() {
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
             <h1 className="text-5xl font-bold text-gray-900 mb-3">
               ਸਾਡੇ ਉਤਪਾਦ
-            </h1>
+          </h1>
             <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
           </div>
           <h2 className="text-3xl font-semibold text-amber-800 mb-4">
@@ -450,14 +422,14 @@ export default function ProductsPage() {
             <div className="flex flex-col lg:flex-row items-center justify-between mt-6 pt-6 border-t border-amber-200">
               <p className="text-lg text-gray-700 font-medium">
                 Showing <span className="text-amber-600 font-bold">{displayedProducts.length}</span> of <span className="text-amber-600 font-bold">{filteredProducts.length}</span> traditional products
-                {hasMore && (
+                {totalPages > 1 && (
                   <span className="text-sm text-gray-500 ml-2">
-                    (Scroll down to load more)
+                    (Page {currentPage} of {totalPages})
                   </span>
                 )}
-                {!hasMore && displayedProducts.length > 0 && (
+                {totalPages === 1 && displayedProducts.length > 0 && (
                   <span className="text-sm text-green-600 ml-2">
-                    (All products loaded!)
+                    (All products on this page!)
                   </span>
                 )}
               </p>
@@ -491,7 +463,7 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
-        {/* Products Grid/List with Infinite Scroll */}
+        {/* Products Grid/List with Pagination */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-gray-400 mb-6">
@@ -514,105 +486,74 @@ export default function ProductsPage() {
           </div>
         ) : (
           <>
-            <div className={
-              viewMode === 'grid'
+          <div className={
+            viewMode === 'grid'
                 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
                 : "space-y-6"
-            }>
+          }>
               {displayedProducts.map((product) => (
-                <div key={product.id} className={viewMode === 'list' ? 'w-full' : ''}>
+              <div key={product.id} className={viewMode === 'list' ? 'w-full' : ''}>
                   <EnhancedProductCard product={product} />
-                </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
 
-            {/* Infinite Scroll Loading Indicator */}
-            {hasMore && (
-              <div 
-                ref={loadingRef}
-                className="text-center py-12 mt-8"
-              >
-                {isLoadingMore ? (
-                  <div className="flex items-center justify-center space-x-3">
-                    <Loader2 className="h-6 w-6 animate-spin text-amber-600" />
-                    <span className="text-gray-600 font-medium">Loading more products...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center space-x-3 text-gray-500">
-                    <ArrowDown className="h-5 w-5 animate-bounce" />
-                    <span className="font-medium">Scroll down to load more products</span>
-                  </div>
-                )}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  Previous
+                </Button>
+                
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      onClick={() => goToPage(page)}
+                      className={`px-3 py-2 min-w-[40px] ${
+                        currentPage === page 
+                          ? "bg-amber-600 text-white hover:bg-amber-700" 
+                          : "border-amber-300 text-amber-700 hover:bg-amber-50"
+                      }`}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                >
+                  Next
+                </Button>
               </div>
             )}
 
-            {/* End of Products Message */}
-            {!hasMore && displayedProducts.length > 0 && (
-              <div className="text-center py-8 mt-8">
-                <div className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 rounded-2xl p-6 max-w-2xl mx-auto">
-                  <h3 className="text-xl font-bold text-green-800 mb-2">
-                    🎉 All Products Loaded!
-                  </h3>
-                  <p className="text-gray-700">
-                    You've reached the end of our collection. All {displayedProducts.length} traditional products are now displayed.
-                  </p>
-                  {/* Debug Info */}
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                    <p><strong>Debug Info:</strong></p>
-                    <p>Total Products: {products.length}</p>
-                    <p>Filtered Products: {filteredProducts.length}</p>
-                    <p>Displayed Products: {displayedProducts.length}</p>
-                    <p>Has More: {hasMore ? 'Yes' : 'No'}</p>
-                    <p>Current Page: {currentPage}</p>
-                  </div>
-                </div>
+            {/* Page Info */}
+            {totalPages > 1 && (
+              <div className="text-center mt-4 text-gray-600">
+                <p className="text-sm">
+                  Showing page {currentPage} of {totalPages} • 
+                  {displayedProducts.length} of {filteredProducts.length} products
+                </p>
               </div>
             )}
           </>
         )}
 
-        {/* Debug Section - Always Visible */}
-        <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-300">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">🔍 Product Loading Debug Info</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="bg-white p-3 rounded border">
-              <p className="font-medium text-gray-700">Total Products</p>
-              <p className="text-2xl font-bold text-blue-600">{products.length}</p>
-            </div>
-            <div className="bg-white p-3 rounded border">
-              <p className="font-medium text-gray-700">Filtered Products</p>
-              <p className="text-2xl font-bold text-green-600">{filteredProducts.length}</p>
-            </div>
-            <div className="bg-white p-3 rounded border">
-              <p className="font-medium text-gray-700">Displayed Products</p>
-              <p className="text-2xl font-bold text-orange-600">{displayedProducts.length}</p>
-            </div>
-            <div className="bg-white p-3 rounded border">
-              <p className="font-medium text-gray-700">Has More</p>
-              <p className="text-2xl font-bold text-red-600">{hasMore ? 'Yes' : 'No'}</p>
-            </div>
-          </div>
-          <div className="mt-3 text-xs text-gray-600">
-            <p><strong>Current Page:</strong> {currentPage} | <strong>Products Per Page:</strong> {productsPerPage}</p>
-            <p><strong>Loading More:</strong> {isLoadingMore ? 'Yes' : 'No'}</p>
-          </div>
-        </div>
 
-        {/* Traditional Footer Message */}
-        {displayedProducts.length > 0 && (
-          <div className="text-center mt-16">
-            <div className="bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300 rounded-2xl p-8 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-amber-800 mb-3">
-                ਪੰਜਾਬੀ ਵਿਰਾਸਤ - Punjabi Heritage
-              </h3>
-              <p className="text-gray-700 text-lg leading-relaxed">
-                Each product in our collection represents the rich cultural heritage of Punjab. 
-                From intricate embroidery to traditional craftsmanship, we bring you authentic pieces 
-                that connect you to our roots. {hasMore ? 'Scroll down to explore more products.' : `Showing all ${displayedProducts.length} carefully curated products.`}
-              </p>
-            </div>
-          </div>
-        )}
+
+
       </div>
 
       <Footer />

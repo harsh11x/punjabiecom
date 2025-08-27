@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Filter, Heart, ShoppingBag, Star, Search, User, Package, Grid3X3, List } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -41,57 +41,146 @@ interface Product {
 
 export default function MenPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [subcategoryFilter, setSubcategoryFilter] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [priceRange, setPriceRange] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
   const [wishlist, setWishlist] = useState<string[]>([])
+  
+  // Infinite scroll state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [productsPerPage] = useState(20)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadingRef = useRef<HTMLDivElement>(null)
 
-  // Temporarily disable socket to fix errors
-  // const socket = useSocket({
-  //   onProductUpdate: () => {
-  //     fetchProducts()
-  //   }
-  // })
-
+  // Fetch all men's products initially
   useEffect(() => {
-    fetchProducts()
-  }, [searchTerm, subcategoryFilter, sortBy, priceRange, currentPage])
-
-  const fetchProducts = async () => {
-    try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '12',
-        category: 'men', // Only fetch men's products
-        ...(searchTerm && { search: searchTerm }),
-        ...(subcategoryFilter !== 'all' && { subcategory: subcategoryFilter }),
-        ...(sortBy && { sort: sortBy }),
-        ...(priceRange !== 'all' && { priceRange })
-      })
-
-      const response = await fetch(`/api/products?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        console.log('API Response:', data) // Debug log
-        setProducts(data.products || data.data || [])
-        setTotalPages(data.pagination?.pages || 1)
-      } else {
-        console.error('API Error:', response.status, response.statusText)
-        toast.error('Failed to fetch men\'s products')
+    const fetchAllProducts = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/products?limit=1000&category=men')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            const activeProducts = data.data.filter((product: Product) => 
+              product.isActive !== false && (product.inStock || (product.stock && product.stock > 0))
+            )
+            setProducts(activeProducts)
+            setFilteredProducts(activeProducts)
+            setDisplayedProducts(activeProducts.slice(0, productsPerPage))
+            setHasMore(activeProducts.length > productsPerPage)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching men\'s products:', error)
+        toast.error('Error loading men\'s products')
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error fetching men\'s products:', error)
-      toast.error('Error loading men\'s products')
-      setProducts([]) // Set empty array to prevent crashes
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchAllProducts()
+  }, [productsPerPage])
+
+  // Filter and sort products
+  useEffect(() => {
+    let filtered = [...products]
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.punjabiName && product.punjabiName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    }
+
+    // Subcategory filter
+    if (subcategoryFilter !== 'all') {
+      filtered = filtered.filter(product => product.subcategory === subcategoryFilter)
+    }
+
+    // Price range filter
+    if (priceRange !== 'all') {
+      const [min, max] = priceRange.split('-').map(p => p.replace('+', ''))
+      if (max) {
+        filtered = filtered.filter(product => product.price >= parseInt(min) && product.price <= parseInt(max))
+      } else {
+        filtered = filtered.filter(product => product.price >= parseInt(min))
+      }
+    }
+
+    // Sort products
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price)
+        break
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price)
+        break
+      case 'name':
+        filtered.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case 'newest':
+      default:
+        filtered.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
+        break
+    }
+
+    setFilteredProducts(filtered)
+    setCurrentPage(1)
+    setDisplayedProducts(filtered.slice(0, productsPerPage))
+    setHasMore(filtered.length > productsPerPage)
+  }, [products, searchTerm, subcategoryFilter, sortBy, priceRange, productsPerPage])
+
+  // Load more products function
+  const loadMoreProducts = useCallback(() => {
+    if (isLoadingMore || !hasMore) return
+
+    setIsLoadingMore(true)
+    
+    setTimeout(() => {
+      const nextPage = currentPage + 1
+      const startIndex = (nextPage - 1) * productsPerPage
+      const endIndex = startIndex + productsPerPage
+      const newProducts = filteredProducts.slice(startIndex, endIndex)
+      
+      setDisplayedProducts(prev => [...prev, ...newProducts])
+      setCurrentPage(nextPage)
+      setHasMore(endIndex < filteredProducts.length)
+      setIsLoadingMore(false)
+    }, 300)
+  }, [currentPage, filteredProducts, productsPerPage, hasMore, isLoadingMore])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMoreProducts()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observerRef.current = observer
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [loadMoreProducts, hasMore, isLoadingMore])
 
   const toggleWishlist = (productId: string) => {
     setWishlist(prev => 
@@ -476,12 +565,54 @@ export default function MenPage() {
           </div>
 
           {/* Products Grid */}
-          {products.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+          {displayedProducts.length > 0 ? (
+            <>
+              <div className={
+                viewMode === 'grid'
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+                  : "space-y-6"
+              }>
+                {displayedProducts.map((product) => (
+                  <div key={product.id} className={viewMode === 'list' ? 'w-full' : ''}>
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Infinite Scroll Loading Indicator */}
+              {hasMore && (
+                <div 
+                  ref={loadingRef}
+                  className="text-center py-12 mt-8"
+                >
+                  {isLoadingMore ? (
+                    <div className="flex items-center justify-center space-x-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600"></div>
+                      <span className="text-gray-600 font-medium">Loading more products...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-3 text-gray-500">
+                      <div className="animate-bounce">↓</div>
+                      <span className="font-medium">Scroll down to load more products</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* End of Products Message */}
+              {!hasMore && displayedProducts.length > 0 && (
+                <div className="text-center py-8 mt-8">
+                  <div className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 rounded-2xl p-6 max-w-2xl mx-auto">
+                    <h3 className="text-xl font-bold text-green-800 mb-2">
+                      🎉 All Men's Products Loaded!
+                    </h3>
+                    <p className="text-gray-700">
+                      You've reached the end of our men's collection. All {displayedProducts.length} products are now displayed.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -490,28 +621,28 @@ export default function MenPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2 mt-8">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <span className="px-4 py-2">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
+          {/* Debug Info */}
+          <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-300">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">🔍 Men's Products Debug Info</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="bg-white p-3 rounded border">
+                <p className="font-medium text-gray-700">Total Products</p>
+                <p className="text-2xl font-bold text-blue-600">{products.length}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <p className="font-medium text-gray-700">Filtered Products</p>
+                <p className="text-2xl font-bold text-green-600">{filteredProducts.length}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <p className="font-medium text-gray-700">Displayed Products</p>
+                <p className="text-2xl font-bold text-orange-600">{displayedProducts.length}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <p className="font-medium text-gray-700">Has More</p>
+                <p className="text-2xl font-bold text-red-600">{hasMore ? 'Yes' : 'No'}</p>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </section>
     </div>

@@ -94,21 +94,31 @@ export async function GET(request: NextRequest) {
     // Get total before pagination
     const total = products.length
     
-    // Paginate
-    const skip = (page - 1) * limit
-    const paginatedProducts = products.slice(skip, skip + limit)
+    // Handle pagination vs. limit requests
+    let finalProducts = products
+    let paginationInfo = null
     
-    console.log(`✅ Retrieved ${paginatedProducts.length} products (page ${page} of ${Math.ceil(total / limit)})`)
-    
-    return NextResponse.json({
-      success: true,
-      data: paginatedProducts,
-      pagination: {
+    if (limit >= total) {
+      // If limit is high enough to get all products, return all without pagination
+      finalProducts = products
+      console.log(`✅ Retrieved ALL ${finalProducts.length} products (limit ${limit} >= total ${total})`)
+    } else {
+      // Apply pagination for smaller limits
+      const skip = (page - 1) * limit
+      finalProducts = products.slice(skip, skip + limit)
+      paginationInfo = {
         page,
         limit,
         total,
         pages: Math.ceil(total / limit)
       }
+      console.log(`✅ Retrieved ${finalProducts.length} products (page ${page} of ${Math.ceil(total / limit)})`)
+    }
+    
+    return NextResponse.json({
+      success: true,
+      data: finalProducts,
+      pagination: paginationInfo
     })
   } catch (error) {
     console.error('❌ Error fetching products:', error)
