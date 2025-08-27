@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/ProductCard'
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, Search, Filter, Grid, List, SlidersHorizontal, Star, Heart, ShoppingCart } from 'lucide-react'
+import { Loader2, Search, Filter, Grid, List, SlidersHorizontal, Star, Heart, ShoppingCart, ArrowDown } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -41,12 +41,21 @@ interface Product {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
+  
+  // Infinite scroll state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [productsPerPage] = useState(20) // Show 20 products at a time for smooth loading
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadingRef = useRef<HTMLDivElement>(null)
 
   // Fetch products
   useEffect(() => {
@@ -72,6 +81,9 @@ export default function ProductsPage() {
           )
           setProducts(activeProducts)
           setFilteredProducts(activeProducts)
+          // Initialize displayed products with first batch
+          setDisplayedProducts(activeProducts.slice(0, productsPerPage))
+          setHasMore(activeProducts.length > productsPerPage)
         } else {
           console.warn('No products data in response:', data)
         }
@@ -84,7 +96,7 @@ export default function ProductsPage() {
     }
 
     fetchProducts()
-  }, [])
+  }, [productsPerPage])
 
   // Filter and sort products
   useEffect(() => {
@@ -123,7 +135,55 @@ export default function ProductsPage() {
     }
 
     setFilteredProducts(filtered)
-  }, [products, searchTerm, selectedCategory, sortBy])
+    // Reset pagination when filters change
+    setCurrentPage(1)
+    setDisplayedProducts(filtered.slice(0, productsPerPage))
+    setHasMore(filtered.length > productsPerPage)
+  }, [products, searchTerm, selectedCategory, sortBy, productsPerPage])
+
+  // Load more products function
+  const loadMoreProducts = useCallback(() => {
+    if (isLoadingMore || !hasMore) return
+
+    setIsLoadingMore(true)
+    
+    // Simulate loading delay for smooth UX
+    setTimeout(() => {
+      const nextPage = currentPage + 1
+      const startIndex = (nextPage - 1) * productsPerPage
+      const endIndex = startIndex + productsPerPage
+      const newProducts = filteredProducts.slice(startIndex, endIndex)
+      
+      setDisplayedProducts(prev => [...prev, ...newProducts])
+      setCurrentPage(nextPage)
+      setHasMore(endIndex < filteredProducts.length)
+      setIsLoadingMore(false)
+    }, 300)
+  }, [currentPage, filteredProducts, productsPerPage, hasMore, isLoadingMore])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMoreProducts()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observerRef.current = observer
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [loadMoreProducts, hasMore, isLoadingMore])
 
   // Get unique categories
   const categories = ['all', ...new Set(products.map(product => product.category))]
@@ -379,7 +439,12 @@ export default function ProductsPage() {
             {/* Results Count and Active Filters */}
             <div className="flex flex-col lg:flex-row items-center justify-between mt-6 pt-6 border-t border-amber-200">
               <p className="text-lg text-gray-700 font-medium">
-                Showing <span className="text-amber-600 font-bold">{filteredProducts.length}</span> of <span className="text-amber-600 font-bold">{products.length}</span> traditional products
+                Showing <span className="text-amber-600 font-bold">{displayedProducts.length}</span> of <span className="text-amber-600 font-bold">{filteredProducts.length}</span> traditional products
+                {hasMore && (
+                  <span className="text-sm text-gray-500 ml-2">
+                    (Scroll down to load more)
+                  </span>
+                )}
               </p>
               
               {/* Active Filters */}
@@ -411,7 +476,7 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
-        {/* Products Grid/List */}
+        {/* Products Grid/List with Infinite Scroll */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-gray-400 mb-6">
@@ -433,21 +498,57 @@ export default function ProductsPage() {
             </Button>
           </div>
         ) : (
-          <div className={
-            viewMode === 'grid'
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-              : "space-y-6"
-          }>
-            {filteredProducts.map((product) => (
-              <div key={product.id} className={viewMode === 'list' ? 'w-full' : ''}>
-                <EnhancedProductCard product={product} />
+          <>
+            <div className={
+              viewMode === 'grid'
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+                : "space-y-6"
+            }>
+              {displayedProducts.map((product) => (
+                <div key={product.id} className={viewMode === 'list' ? 'w-full' : ''}>
+                  <EnhancedProductCard product={product} />
+                </div>
+              ))}
+            </div>
+
+            {/* Infinite Scroll Loading Indicator */}
+            {hasMore && (
+              <div 
+                ref={loadingRef}
+                className="text-center py-12 mt-8"
+              >
+                {isLoadingMore ? (
+                  <div className="flex items-center justify-center space-x-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-amber-600" />
+                    <span className="text-gray-600 font-medium">Loading more products...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center space-x-3 text-gray-500">
+                    <ArrowDown className="h-5 w-5 animate-bounce" />
+                    <span className="font-medium">Scroll down to load more products</span>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* End of Products Message */}
+            {!hasMore && displayedProducts.length > 0 && (
+              <div className="text-center py-8 mt-8">
+                <div className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 rounded-2xl p-6 max-w-2xl mx-auto">
+                  <h3 className="text-xl font-bold text-green-800 mb-2">
+                    🎉 All Products Loaded!
+                  </h3>
+                  <p className="text-gray-700">
+                    You've reached the end of our collection. All {displayedProducts.length} traditional products are now displayed.
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Traditional Footer Message */}
-        {filteredProducts.length > 0 && (
+        {displayedProducts.length > 0 && (
           <div className="text-center mt-16">
             <div className="bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-300 rounded-2xl p-8 max-w-4xl mx-auto">
               <h3 className="text-2xl font-bold text-amber-800 mb-3">
@@ -456,7 +557,7 @@ export default function ProductsPage() {
               <p className="text-gray-700 text-lg leading-relaxed">
                 Each product in our collection represents the rich cultural heritage of Punjab. 
                 From intricate embroidery to traditional craftsmanship, we bring you authentic pieces 
-                that connect you to our roots. Showing all {filteredProducts.length} carefully curated products.
+                that connect you to our roots. {hasMore ? 'Scroll down to explore more products.' : `Showing all ${displayedProducts.length} carefully curated products.`}
               </p>
             </div>
           </div>
