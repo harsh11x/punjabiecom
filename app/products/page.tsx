@@ -79,11 +79,21 @@ export default function ProductsPage() {
           const activeProducts = data.data.filter((product: Product) => 
             product.isActive !== false && (product.inStock || product.stock > 0)
           )
+          console.log(`Found ${activeProducts.length} active products`)
           setProducts(activeProducts)
           setFilteredProducts(activeProducts)
-          // Initialize displayed products with first batch
-          setDisplayedProducts(activeProducts.slice(0, productsPerPage))
-          setHasMore(activeProducts.length > productsPerPage)
+          
+          // If we have 22 or fewer products, show them all immediately
+          if (activeProducts.length <= productsPerPage) {
+            setDisplayedProducts(activeProducts)
+            setHasMore(false)
+            console.log(`Showing all ${activeProducts.length} products immediately`)
+          } else {
+            // Initialize displayed products with first batch
+            setDisplayedProducts(activeProducts.slice(0, productsPerPage))
+            setHasMore(activeProducts.length > productsPerPage)
+            console.log(`Showing first ${productsPerPage} products, ${activeProducts.length - productsPerPage} more to load`)
+          }
         } else {
           console.warn('No products data in response:', data)
         }
@@ -445,6 +455,11 @@ export default function ProductsPage() {
                     (Scroll down to load more)
                   </span>
                 )}
+                {!hasMore && displayedProducts.length > 0 && (
+                  <span className="text-sm text-green-600 ml-2">
+                    (All products loaded!)
+                  </span>
+                )}
               </p>
               
               {/* Active Filters */}
@@ -541,11 +556,47 @@ export default function ProductsPage() {
                   <p className="text-gray-700">
                     You've reached the end of our collection. All {displayedProducts.length} traditional products are now displayed.
                   </p>
+                  {/* Debug Info */}
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p><strong>Debug Info:</strong></p>
+                    <p>Total Products: {products.length}</p>
+                    <p>Filtered Products: {filteredProducts.length}</p>
+                    <p>Displayed Products: {displayedProducts.length}</p>
+                    <p>Has More: {hasMore ? 'Yes' : 'No'}</p>
+                    <p>Current Page: {currentPage}</p>
+                  </div>
                 </div>
               </div>
             )}
           </>
         )}
+
+        {/* Debug Section - Always Visible */}
+        <div className="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-300">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">🔍 Product Loading Debug Info</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="bg-white p-3 rounded border">
+              <p className="font-medium text-gray-700">Total Products</p>
+              <p className="text-2xl font-bold text-blue-600">{products.length}</p>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <p className="font-medium text-gray-700">Filtered Products</p>
+              <p className="text-2xl font-bold text-green-600">{filteredProducts.length}</p>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <p className="font-medium text-gray-700">Displayed Products</p>
+              <p className="text-2xl font-bold text-orange-600">{displayedProducts.length}</p>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <p className="font-medium text-gray-700">Has More</p>
+              <p className="text-2xl font-bold text-red-600">{hasMore ? 'Yes' : 'No'}</p>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-600">
+            <p><strong>Current Page:</strong> {currentPage} | <strong>Products Per Page:</strong> {productsPerPage}</p>
+            <p><strong>Loading More:</strong> {isLoadingMore ? 'Yes' : 'No'}</p>
+          </div>
+        </div>
 
         {/* Traditional Footer Message */}
         {displayedProducts.length > 0 && (
