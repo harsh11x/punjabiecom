@@ -112,10 +112,7 @@ export default function ProductForm({
       return
     }
 
-    if (!formData.sizes || formData.sizes.length === 0) {
-      toast.error('Please select at least one size')
-      return
-    }
+    // Sizes are now optional - no validation needed
 
     console.log('Saving product with data:', formData)
     setIsSaving(true)
@@ -381,7 +378,7 @@ export default function ProductForm({
         <SizeSelector
           selectedSizes={formData.sizes}
           onSizesChange={handleSizesChange}
-          required={true}
+          required={false}
         />
         
         {/* Colors */}

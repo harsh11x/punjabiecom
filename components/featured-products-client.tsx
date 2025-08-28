@@ -32,6 +32,7 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [loading, setLoading] = useState(false)
   const [shouldLoadProducts, setShouldLoadProducts] = useState(false)
+  const [totalProducts, setTotalProducts] = useState(0)
 
   useEffect(() => {
     // Only load products after component is visible (lazy loading)
@@ -45,13 +46,13 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
   useEffect(() => {
     if (shouldLoadProducts && initialProducts.length === 0) {
       setLoading(true)
-      // Fetch products on client side if not available from server
+      // Fetch all products on client side if not available from server
       const fetchProducts = async () => {
         try {
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout for all products
           
-          const response = await fetch('/api/products/featured?limit=8', {
+          const response = await fetch('/api/products/featured', {
             signal: controller.signal
           })
           
@@ -60,6 +61,7 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
           if (response.ok) {
             const data = await response.json()
             setProducts(data.data || [])
+            setTotalProducts(data.total || 0)
           }
         } catch (error: any) {
           if (error.name !== 'AbortError') {
@@ -77,8 +79,8 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
   // Show loading state
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
-        {[...Array(8)].map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-8">
+        {[...Array(20)].map((_, i) => (
           <div key={i} className="bg-white/80 rounded-lg border border-amber-200 overflow-hidden animate-pulse">
             <div className="h-64 bg-gradient-to-r from-amber-100 to-red-100"></div>
             <div className="p-4 space-y-3">
@@ -93,27 +95,41 @@ export function FeaturedProductsClient({ initialProducts }: FeaturedProductsClie
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
-      {products.length > 0 ? (
-        products
-          .filter(isValidProduct)
-          .map((product: Product) => (
-            <ProductErrorBoundary key={product._id}>
-              <ResponsiveProductCard product={product} />
-            </ProductErrorBoundary>
-          ))
-      ) : (
-        // No products message
-        <div className="col-span-full text-center py-12">
-          <div className="bg-white/80 rounded-lg p-8 shadow-lg border border-amber-200">
-            <h3 className="text-2xl font-bold text-red-900 mb-4">ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲੇ</h3>
-            <p className="text-amber-700 mb-6">No products available at the moment</p>
-            <p className="text-sm text-gray-600">
-              Our artisans are working on new collections. Check back soon!
+    <div>
+      {/* Product count display */}
+      {products.length > 0 && (
+        <div className="text-center mb-8">
+          <div className="bg-gradient-to-r from-amber-50 to-red-50 p-4 rounded-xl border border-amber-200 inline-block">
+            <p className="text-lg font-semibold text-amber-800">
+              Showing <span className="text-red-700 font-bold">{totalProducts}</span> Products
             </p>
           </div>
         </div>
       )}
+      
+      {/* Products grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-8">
+        {products.length > 0 ? (
+          products
+            .filter(isValidProduct)
+            .map((product: Product) => (
+              <ProductErrorBoundary key={product._id}>
+                <ResponsiveProductCard product={product} />
+              </ProductErrorBoundary>
+            ))
+        ) : (
+          // No products message
+          <div className="col-span-full text-center py-12">
+            <div className="bg-white/80 rounded-lg p-8 shadow-lg border border-amber-200">
+              <h3 className="text-2xl font-bold text-red-900 mb-4">ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲੇ</h3>
+              <p className="text-amber-700 mb-6">No products available at the moment</p>
+              <p className="text-sm text-gray-600">
+                Our artisans are working on new collections. Check back soon!
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

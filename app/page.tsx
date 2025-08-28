@@ -412,7 +412,7 @@ export default function HomePage() {
             </h3>
             <p className="text-lg lg:text-xl text-red-700 leading-relaxed">ਸਾਡੇ ਕਾਰੀਗਰ ਸੰਗ੍ਰਹਿ ਤੋਂ ਹੱਥ ਨਾਲ ਚੁਣੇ ਗਏ ਖਜ਼ਾਨੇ</p>
             <p className="text-base lg:text-lg text-amber-700 italic">
-              Handpicked treasures from our artisan collection
+              Handpicked treasures from our artisan collection - All our products showcased
             </p>
           </div>
 
